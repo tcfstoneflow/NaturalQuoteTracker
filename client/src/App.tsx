@@ -30,7 +30,7 @@ function Router() {
   return (
     <Switch>
       {/* Public routes - accessible without authentication */}
-      <Route path="/inventory/browse" component={PublicInventory} />
+      <Route path="/public-inventory" component={PublicInventory} />
       
       {/* Admin/Staff routes - require authentication */}
       {isAuthenticated ? (
