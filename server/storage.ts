@@ -174,7 +174,7 @@ export class DatabaseStorage implements IStorage {
       .insert(products)
       .values({
         ...product,
-        bundleId,
+        bundleId: bundleId,
         barcodes
       })
       .returning();
