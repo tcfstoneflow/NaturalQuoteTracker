@@ -56,6 +56,10 @@ export default function Inventory() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [gradeFilter, setGradeFilter] = useState<string>("all");
+  const [supplierFilter, setSupplierFilter] = useState<string>("all");
+  const [stockFilter, setStockFilter] = useState<string>("all");
+  const [priceRangeFilter, setPriceRangeFilter] = useState<string>("all");
   
   const [formData, setFormData] = useState({
     name: "",
@@ -201,13 +205,42 @@ export default function Inventory() {
     });
   };
 
+  // Get unique values for dynamic filters
+  const uniqueSuppliers = Array.from(new Set(products?.map((p: Product) => p.supplier) || []));
+  const uniqueGrades = Array.from(new Set(products?.map((p: Product) => p.grade) || []));
+
   const filteredProducts = products?.filter((product: Product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.bundleId?.toLowerCase().includes(searchQuery.toLowerCase());
+    
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesGrade = gradeFilter === "all" || product.grade === gradeFilter;
+    const matchesSupplier = supplierFilter === "all" || product.supplier === supplierFilter;
+    
+    // Stock level filtering
+    const matchesStock = (() => {
+      switch (stockFilter) {
+        case "low": return product.stockQuantity <= 5;
+        case "medium": return product.stockQuantity > 5 && product.stockQuantity <= 20;
+        case "high": return product.stockQuantity > 20;
+        default: return true;
+      }
+    })();
+
+    // Price range filtering
+    const price = parseFloat(product.price);
+    const matchesPriceRange = (() => {
+      switch (priceRangeFilter) {
+        case "low": return price < 50;
+        case "medium": return price >= 50 && price <= 100;
+        case "high": return price > 100;
+        default: return true;
+      }
+    })();
+
+    return matchesSearch && matchesCategory && matchesGrade && matchesSupplier && matchesStock && matchesPriceRange;
   });
 
   return (
@@ -218,19 +251,22 @@ export default function Inventory() {
         onSearch={setSearchQuery}
       />
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search bundles..."
+              placeholder="Search bundles, suppliers, categories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
+              className="pl-10 w-80"
             />
           </div>
+        </div>
+        
+        <div className="flex items-center space-x-3 flex-wrap gap-y-2">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-36">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -243,6 +279,79 @@ export default function Inventory() {
               ))}
             </SelectContent>
           </Select>
+
+          <Select value={gradeFilter} onValueChange={setGradeFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Grade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Grades</SelectItem>
+              {uniqueGrades.map((grade) => (
+                <SelectItem key={grade} value={grade}>
+                  {grade}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Supplier" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Suppliers</SelectItem>
+              {uniqueSuppliers.map((supplier) => (
+                <SelectItem key={supplier} value={supplier}>
+                  {supplier}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={stockFilter} onValueChange={setStockFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Stock" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stock</SelectItem>
+              <SelectItem value="low">Low (5 or less)</SelectItem>
+              <SelectItem value="medium">Medium (6-20)</SelectItem>
+              <SelectItem value="high">High (20+)</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={priceRangeFilter} onValueChange={setPriceRangeFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Price" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Prices</SelectItem>
+              <SelectItem value="low">Under $50</SelectItem>
+              <SelectItem value="medium">$50-$100</SelectItem>
+              <SelectItem value="high">Over $100</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              setSearchQuery("");
+              setCategoryFilter("all");
+              setGradeFilter("all");
+              setSupplierFilter("all");
+              setStockFilter("all");
+              setPriceRangeFilter("all");
+            }}
+          >
+            Clear Filters
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          Showing {filteredProducts?.length || 0} of {products?.length || 0} bundles
         </div>
         <div className="flex space-x-2">
           <Button asChild variant="outline">
