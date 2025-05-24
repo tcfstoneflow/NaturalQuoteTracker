@@ -46,6 +46,8 @@ export default function Inventory() {
     price: "",
     unit: "sqft",
     stockQuantity: "",
+    slabLength: "",
+    slabWidth: "",
     description: "",
     imageUrl: "",
   });
@@ -143,6 +145,8 @@ export default function Inventory() {
       price: product.price || "",
       unit: product.unit || "sqft",
       stockQuantity: product.stockQuantity?.toString() || "",
+      slabLength: product.slabLength || "",
+      slabWidth: product.slabWidth || "",
       description: product.description || "",
       imageUrl: product.imageUrl || "",
     });
@@ -319,7 +323,7 @@ export default function Inventory() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="stockQuantity">Stock Quantity</Label>
+                      <Label htmlFor="stockQuantity">Stock Quantity (Slabs)</Label>
                       <Input
                         id="stockQuantity"
                         type="number"
@@ -327,7 +331,29 @@ export default function Inventory() {
                         onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
                       />
                     </div>
-                    <div className="md:col-span-2">
+                    <div>
+                      <Label htmlFor="slabLength">Slab Length (ft)</Label>
+                      <Input
+                        id="slabLength"
+                        type="number"
+                        step="0.1"
+                        value={formData.slabLength}
+                        onChange={(e) => setFormData({ ...formData, slabLength: e.target.value })}
+                        placeholder="10.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="slabWidth">Slab Width (ft)</Label>
+                      <Input
+                        id="slabWidth"
+                        type="number"
+                        step="0.1"
+                        value={formData.slabWidth}
+                        onChange={(e) => setFormData({ ...formData, slabWidth: e.target.value })}
+                        placeholder="5.5"
+                      />
+                    </div>
+                    <div className="md:col-span-3">
                       <Label htmlFor="image">Product Image</Label>
                       <ImageUpload
                         value={formData.imageUrl}

@@ -26,12 +26,14 @@ export const clients = pgTable("clients", {
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  category: text("category").notNull(), // "marble", "granite", "quartz", "travertine"
+  category: text("category").notNull(), // "marble", "granite", "quartz", "travertine", "porcelain"
   grade: text("grade").notNull(), // "premium", "standard", "economy"
   thickness: text("thickness").notNull(), // "2cm", "3cm"
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   unit: text("unit").notNull().default("sqft"),
   stockQuantity: integer("stock_quantity").notNull().default(0),
+  slabLength: decimal("slab_length", { precision: 8, scale: 2 }), // length in feet
+  slabWidth: decimal("slab_width", { precision: 8, scale: 2 }), // width in feet
   description: text("description"),
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
