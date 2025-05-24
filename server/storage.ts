@@ -1,11 +1,12 @@
 import { 
-  users, clients, products, quotes, quoteLineItems, activities,
+  users, clients, products, quotes, quoteLineItems, activities, slabs,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
   type Quote, type InsertQuote, type QuoteWithDetails,
   type QuoteLineItem, type InsertQuoteLineItem,
   type Activity, type InsertActivity,
+  type Slab, type InsertSlab, type ProductWithSlabs,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -62,6 +63,15 @@ export interface IStorage {
 
   // SQL Query
   executeQuery(query: string): Promise<any[]>;
+
+  // Slabs
+  getSlabs(bundleId?: string): Promise<Slab[]>;
+  getSlab(id: number): Promise<Slab | undefined>;
+  createSlab(slab: InsertSlab): Promise<Slab>;
+  updateSlab(id: number, slab: Partial<InsertSlab>): Promise<Slab>;
+  deleteSlab(id: number): Promise<boolean>;
+  getProductWithSlabs(id: number): Promise<ProductWithSlabs | undefined>;
+  updateSlabStatus(id: number, status: string, date?: Date): Promise<Slab>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -526,8 +536,75 @@ export class DatabaseStorage implements IStorage {
       const result = await db.execute(sql.raw(query));
       return result.rows || [];
     } catch (error) {
-      throw new Error(`SQL execution failed: ${error.message}`);
+      throw new Error(`SQL execution failed: ${(error as Error).message}`);
     }
+  }
+
+  // Slab Management Methods
+  async getSlabs(bundleId?: string): Promise<Slab[]> {
+    if (bundleId) {
+      return await db.select().from(slabs).where(eq(slabs.bundleId, bundleId)).orderBy(asc(slabs.slabNumber));
+    }
+    return await db.select().from(slabs).orderBy(asc(slabs.bundleId), asc(slabs.slabNumber));
+  }
+
+  async getSlab(id: number): Promise<Slab | undefined> {
+    const [slab] = await db.select().from(slabs).where(eq(slabs.id, id));
+    return slab;
+  }
+
+  async createSlab(slab: InsertSlab): Promise<Slab> {
+    const [newSlab] = await db.insert(slabs).values({
+      ...slab,
+      updatedAt: new Date(),
+    }).returning();
+    return newSlab;
+  }
+
+  async updateSlab(id: number, slab: Partial<InsertSlab>): Promise<Slab> {
+    const [updatedSlab] = await db.update(slabs)
+      .set({
+        ...slab,
+        updatedAt: new Date(),
+      })
+      .where(eq(slabs.id, id))
+      .returning();
+    return updatedSlab;
+  }
+
+  async deleteSlab(id: number): Promise<boolean> {
+    const result = await db.delete(slabs).where(eq(slabs.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getProductWithSlabs(id: number): Promise<ProductWithSlabs | undefined> {
+    const product = await this.getProduct(id);
+    if (!product) return undefined;
+
+    const productSlabs = await this.getSlabs(product.bundleId);
+    return {
+      ...product,
+      slabs: productSlabs,
+    };
+  }
+
+  async updateSlabStatus(id: number, status: string, date?: Date): Promise<Slab> {
+    const updateData: Partial<InsertSlab> = {
+      status,
+      updatedAt: new Date(),
+    };
+
+    if (status === 'sold') {
+      updateData.soldDate = date || new Date();
+    } else if (status === 'delivered') {
+      updateData.deliveredDate = date || new Date();
+    }
+
+    const [updatedSlab] = await db.update(slabs)
+      .set(updateData)
+      .where(eq(slabs.id, id))
+      .returning();
+    return updatedSlab;
   }
 }
 

@@ -396,6 +396,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Slab Management Routes
+  app.get("/api/slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const { bundleId } = req.query;
+      const slabs = await storage.getSlabs(bundleId as string);
+      res.json(slabs);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch slabs", details: error.message });
+    }
+  });
+
+  app.get("/api/slabs/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const slab = await storage.getSlab(parseInt(req.params.id));
+      if (!slab) {
+        return res.status(404).json({ error: "Slab not found" });
+      }
+      res.json(slab);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch slab", details: error.message });
+    }
+  });
+
+  app.post("/api/slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const slab = await storage.createSlab(req.body);
+      res.status(201).json(slab);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to create slab", details: error.message });
+    }
+  });
+
+  app.patch("/api/slabs/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const slab = await storage.updateSlab(parseInt(req.params.id), req.body);
+      res.json(slab);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update slab", details: error.message });
+    }
+  });
+
+  app.patch("/api/slabs/:id/status", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const { status, date } = req.body;
+      const slab = await storage.updateSlabStatus(parseInt(req.params.id), status, date ? new Date(date) : undefined);
+      res.json(slab);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update slab status", details: error.message });
+    }
+  });
+
+  app.delete("/api/slabs/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const success = await storage.deleteSlab(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ error: "Slab not found" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to delete slab", details: error.message });
+    }
+  });
+
+  app.get("/api/products/:id/with-slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const productWithSlabs = await storage.getProductWithSlabs(parseInt(req.params.id));
+      if (!productWithSlabs) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      res.json(productWithSlabs);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch product with slabs", details: error.message });
+    }
+  });
+
   // Constant Contact Marketing Routes
   app.get('/api/marketing/lists', async (req, res) => {
     try {
