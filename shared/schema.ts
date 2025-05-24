@@ -117,6 +117,10 @@ export const productsRelations = relations(products, ({ many }) => ({
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
+  createdAt: true,
+  lastLogin: true,
+}).extend({
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const insertClientSchema = createInsertSchema(clients).omit({

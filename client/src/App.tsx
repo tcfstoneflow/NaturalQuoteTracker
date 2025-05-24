@@ -41,6 +41,7 @@ function Router() {
           <Route path="/quotes" component={Quotes} />
           <Route path="/reports" component={Reports} />
           <Route path="/sql-query" component={SQLQuery} />
+          <Route path="/user-management" component={UserManagement} />
           <Route component={NotFound} />
         </Switch>
       </main>
