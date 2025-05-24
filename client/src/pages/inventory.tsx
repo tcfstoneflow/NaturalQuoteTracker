@@ -135,10 +135,25 @@ export default function Inventory() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Ensure all required fields are provided
+    if (!formData.name || !formData.supplier || !formData.category || !formData.grade || !formData.thickness) {
+      toast({ title: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
+    
     const submitData = {
-      ...formData,
-      stockQuantity: parseInt(formData.stockQuantity) || 0,
+      name: formData.name.trim(),
+      supplier: formData.supplier.trim(),
+      category: formData.category,
+      grade: formData.grade,
+      thickness: formData.thickness.trim(),
       price: parseFloat(formData.price) || 0,
+      unit: formData.unit || "sq ft",
+      stockQuantity: parseInt(formData.stockQuantity) || 0,
+      slabLength: formData.slabLength ? parseFloat(formData.slabLength) : null,
+      slabWidth: formData.slabWidth ? parseFloat(formData.slabWidth) : null,
+      location: formData.location.trim() || null,
+      imageUrl: formData.imageUrl.trim() || null,
     };
 
     if (editingProduct) {
