@@ -311,30 +311,30 @@ export default function SlabManagement() {
           {/* Add Slab Button */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Individual Slabs</h2>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => generateBarcodesMutation.mutate()}
-            disabled={generateBarcodesMutation.isPending}
-          >
-            {generateBarcodesMutation.isPending ? "Generating..." : "Generate Barcodes"}
-          </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => addSlabForm.reset({ bundleId: productWithSlabs.bundleId })}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Slab
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => generateBarcodesMutation.mutate()}
+                disabled={generateBarcodesMutation.isPending}
+              >
+                {generateBarcodesMutation.isPending ? "Generating..." : "Generate Barcodes"}
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Slab</DialogTitle>
-                <DialogDescription>
-                  Add a new slab to bundle {productWithSlabs.bundleId}
-                </DialogDescription>
-              </DialogHeader>
-            <Form {...addSlabForm}>
-              <form onSubmit={addSlabForm.handleSubmit(handleAddSlab)} className="space-y-4">
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => addSlabForm.reset({ bundleId: productWithSlabs.bundleId })}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Slab
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New Slab</DialogTitle>
+                    <DialogDescription>
+                      Add a new slab to bundle {productWithSlabs.bundleId}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...addSlabForm}>
+                    <form onSubmit={addSlabForm.handleSubmit(handleAddSlab)} className="space-y-4">
                 <FormField
                   control={addSlabForm.control}
                   name="slabNumber"
@@ -676,8 +676,10 @@ export default function SlabManagement() {
               </div>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
         </div>
       </div>
     </div>
