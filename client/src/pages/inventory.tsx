@@ -480,11 +480,13 @@ export default function Inventory() {
                         <img 
                           src={product.imageUrl || getProductImage(product.category.toLowerCase())}
                           alt={product.name}
-                          className="w-12 h-12 rounded-lg object-cover border"
+                          className="w-12 h-12 rounded-lg object-cover border cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+                          onClick={() => handleEdit(product)}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.src = getProductImage(product.category.toLowerCase());
                           }}
+                          title={`Click to edit ${product.name}`}
                         />
                       </TableCell>
                       <TableCell className="font-medium">
