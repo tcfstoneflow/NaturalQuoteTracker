@@ -401,6 +401,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/test-email', async (req, res) => {
+    try {
+      const { testEmailConfiguration } = await import('./email');
+      const isConfigured = await testEmailConfiguration();
+      res.json({ success: true, configured: isConfigured });
+    } catch (error: any) {
+      console.error('Email test failed:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
