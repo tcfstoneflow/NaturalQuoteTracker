@@ -9,7 +9,8 @@ import {
   Mountain,
   Settings,
   User,
-  UserCog
+  UserCog,
+  ExternalLink
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
