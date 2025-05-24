@@ -243,7 +243,7 @@ export default function PublicInventory() {
       <footer className="bg-gray-900 text-white mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">TCF Supply Premium Materials</h3>
+            <h3 className="text-lg font-semibold mb-2">Texas Counter Fitters</h3>
             <p className="text-gray-400">
               Quality natural stone for discerning professionals and homeowners
             </p>

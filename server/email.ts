@@ -54,7 +54,7 @@ export async function sendQuoteEmail({ quote, pdfBuffer, additionalMessage, prov
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #1976D2; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0;">TCF Supply CRM</h1>
+            <h1 style="margin: 0;">Texas Counter Fitters CRM</h1>
             <p style="margin: 5px 0 0 0;">Natural Stone Distribution</p>
           </div>
           
