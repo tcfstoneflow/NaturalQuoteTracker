@@ -63,6 +63,7 @@ export default function Inventory() {
   const [priceRangeFilter, setPriceRangeFilter] = useState<string>("all");
   
   const [formData, setFormData] = useState({
+    bundleId: "",
     name: "",
     supplier: "",
     category: "",
@@ -141,12 +142,13 @@ export default function Inventory() {
     e.preventDefault();
     
     // Ensure all required fields are provided
-    if (!formData.name || !formData.supplier || !formData.category || !formData.grade || !formData.thickness) {
-      toast({ title: "Please fill in all required fields", variant: "destructive" });
+    if (!formData.bundleId || !formData.name || !formData.supplier || !formData.category || !formData.grade || !formData.thickness) {
+      toast({ title: "Please fill in all required fields including Bundle ID", variant: "destructive" });
       return;
     }
     
     const submitData = {
+      bundleId: formData.bundleId.trim(),
       name: formData.name.trim(),
       supplier: formData.supplier.trim(),
       category: formData.category,

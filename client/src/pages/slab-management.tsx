@@ -674,6 +674,7 @@ export default function SlabManagement() {
           </Form>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

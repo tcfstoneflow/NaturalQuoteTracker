@@ -174,19 +174,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
-    // Generate bundle ID
-    const bundleId = await this.generateBundleId();
-    
-    // Generate barcodes for each slab
-    const barcodes = this.generateBarcodes(bundleId, product.stockQuantity || 0);
-    
+    // Bundle ID is now provided manually in the product data
     const [newProduct] = await db
       .insert(products)
-      .values({
-        ...product,
-        bundleId: bundleId,
-        barcodes
-      })
+      .values(product)
       .returning();
     return newProduct;
   }
