@@ -156,14 +156,6 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-  lastLogin: true,
-}).extend({
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
