@@ -471,6 +471,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auto-create slabs based on stock quantity
+  app.post('/api/products/:id/auto-create-slabs', requireAuth, requireInventoryAccess(), async (req: any, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Check if slabs already exist
+      const existingSlabs = await storage.getSlabs(product.bundleId);
+      if (existingSlabs.length > 0) {
+        return res.status(400).json({ error: 'Slabs already exist for this bundle' });
+      }
+
+      // Create slabs based on stock quantity
+      const slabPromises = [];
+      for (let i = 1; i <= product.stockQuantity; i++) {
+        const slabData = {
+          bundleId: product.bundleId,
+          slabNumber: `S${i.toString().padStart(3, '0')}`,
+          length: product.slabLength,
+          width: product.slabWidth,
+          status: 'available' as const,
+          barcode: null,
+          location: product.location,
+          notes: null,
+        };
+        slabPromises.push(storage.createSlab(slabData));
+      }
+
+      await Promise.all(slabPromises);
+      
+      // Log activity
+      await storage.createActivity({
+        type: 'slab_auto_created',
+        description: `Auto-created ${product.stockQuantity} slabs for ${product.name}`,
+        userId: req.user.id,
+        metadata: { productId, slabCount: product.stockQuantity }
+      });
+
+      res.json({ 
+        message: `Successfully created ${product.stockQuantity} slabs`,
+        count: product.stockQuantity 
+      });
+    } catch (error: any) {
+      console.error('Auto-create slabs error:', error);
+      res.status(500).json({ error: 'Failed to auto-create slabs', details: error.message });
+    }
+  });
+
   // Constant Contact Marketing Routes
   app.get('/api/marketing/lists', async (req, res) => {
     try {

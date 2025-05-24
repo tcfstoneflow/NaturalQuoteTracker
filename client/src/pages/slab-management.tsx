@@ -50,6 +50,28 @@ export default function SlabManagement() {
     enabled: !!productId,
   });
 
+  // Auto-create slabs mutation
+  const autoCreateSlabsMutation = useMutation({
+    mutationFn: (productId: string) => 
+      apiRequest(`/api/products/${productId}/auto-create-slabs`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
+      toast({
+        title: "Slabs Created",
+        description: "Individual slabs have been automatically created based on stock quantity.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create slabs automatically.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const addSlabForm = useForm<InsertSlab>({
     resolver: zodResolver(insertSlabSchema),
     defaultValues: {
@@ -403,11 +425,21 @@ export default function SlabManagement() {
           <CardContent className="text-center py-12">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No slabs yet</h3>
-            <p className="text-muted-foreground mb-4">Start tracking individual slabs by adding them to this bundle.</p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add First Slab
-            </Button>
+            <p className="text-muted-foreground mb-4">
+              This bundle has {productWithSlabs.stockQuantity} slabs. You can automatically create individual slab records or add them manually.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button 
+                onClick={() => autoCreateSlabsMutation.mutate(productId!)}
+                disabled={autoCreateSlabsMutation.isPending}
+              >
+                {autoCreateSlabsMutation.isPending ? "Creating..." : `Auto-Create ${productWithSlabs.stockQuantity} Slabs`}
+              </Button>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Manually
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
