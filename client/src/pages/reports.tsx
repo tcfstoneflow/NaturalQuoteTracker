@@ -64,10 +64,19 @@ export default function Reports() {
 
     const categoryStats = products.reduce((acc: any, product: any) => {
       if (!acc[product.category]) {
-        acc[product.category] = { count: 0, totalValue: 0 };
+        acc[product.category] = { count: 0, totalSlabs: 0, totalSquareFeet: 0 };
       }
       acc[product.category].count++;
-      acc[product.category].totalValue += parseFloat(product.price) * product.stockQuantity;
+      acc[product.category].totalSlabs += product.stockQuantity;
+      
+      // Calculate square feet if dimensions are available
+      if (product.slabLength && product.slabWidth) {
+        const lengthFt = parseFloat(product.slabLength) / 12;
+        const widthFt = parseFloat(product.slabWidth) / 12;
+        const slabArea = lengthFt * widthFt;
+        acc[product.category].totalSquareFeet += slabArea * product.stockQuantity;
+      }
+      
       return acc;
     }, {});
 
@@ -119,7 +128,7 @@ export default function Reports() {
                 <div>
                   <p className="text-secondary-custom text-sm font-medium">Total Revenue</p>
                   <p className="text-2xl font-bold text-primary-custom">
-                    ${metrics?.totalRevenue.toLocaleString() || '0'}
+                    ${metrics?.totalRevenue?.toLocaleString() || '0'}
                   </p>
                   <p className="text-success-green text-sm font-medium mt-1 flex items-center">
                     <TrendingUp size={12} className="mr-1" />
@@ -139,7 +148,7 @@ export default function Reports() {
                 <div>
                   <p className="text-secondary-custom text-sm font-medium">Conversion Rate</p>
                   <p className="text-2xl font-bold text-primary-custom">
-                    {metrics?.conversionRate.toFixed(1) || '0'}%
+                    {metrics?.conversionRate?.toFixed(1) || '0'}%
                   </p>
                   <p className="text-secondary-custom text-sm font-medium mt-1">
                     Quote to approval rate
@@ -158,7 +167,7 @@ export default function Reports() {
                 <div>
                   <p className="text-secondary-custom text-sm font-medium">Average Quote Value</p>
                   <p className="text-2xl font-bold text-primary-custom">
-                    ${metrics?.averageQuoteValue.toLocaleString() || '0'}
+                    ${metrics?.averageQuoteValue?.toLocaleString() || '0'}
                   </p>
                   <p className="text-secondary-custom text-sm font-medium mt-1">
                     Across all quotes
@@ -256,9 +265,13 @@ export default function Reports() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-primary-custom">
-                          ${stats.totalValue.toLocaleString()}
+                          {stats.totalSlabs} slabs
                         </p>
-                        <p className="text-sm text-secondary-custom">total value</p>
+                        <p className="text-sm text-secondary-custom">
+                          {stats.totalSquareFeet > 0 
+                            ? `${stats.totalSquareFeet.toFixed(0)} sq ft` 
+                            : 'dimensions needed'}
+                        </p>
                       </div>
                     </div>
                   ))}
