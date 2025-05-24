@@ -47,14 +47,14 @@ export async function sendQuoteEmail({ quote, pdfBuffer, additionalMessage, prov
   // SMTP fallback or direct SMTP usage
   try {
     const mailOptions = {
-      from: process.env.SMTP_USER || process.env.EMAIL_USER || 'quotes@stoneflow.com',
+      from: process.env.SMTP_USER || process.env.EMAIL_USER || 'quotes@tcfsupply.com',
       to: quote.client.email,
       cc: process.env.CC_EMAIL || '',
       subject: `Quote ${quote.quoteNumber} - ${quote.projectName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #1976D2; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0;">StoneFlow CRM</h1>
+            <h1 style="margin: 0;">TCF Supply CRM</h1>
             <p style="margin: 5px 0 0 0;">Natural Stone Distribution</p>
           </div>
           

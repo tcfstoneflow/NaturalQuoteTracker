@@ -14,10 +14,10 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
       });
 
       // Header
-      doc.fontSize(20).text('StoneFlow CRM', 50, 50);
+      doc.fontSize(20).text('TCF Supply CRM', 50, 50);
       doc.fontSize(12).text('Natural Stone Distribution', 50, 75);
       doc.fontSize(10).text('123 Stone Street, City, State 12345', 50, 90);
-      doc.text('Phone: (555) 123-4567 | Email: quotes@stoneflow.com', 50, 105);
+      doc.text('Phone: (555) 123-4567 | Email: quotes@tcfsupply.com', 50, 105);
 
       // Quote title
       doc.fontSize(18).text('QUOTE', 400, 50);

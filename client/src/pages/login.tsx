@@ -60,7 +60,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">
-            StoneFlow CRM
+            TCF Supply CRM
           </CardTitle>
           <CardDescription>
             Sign in to your sales account

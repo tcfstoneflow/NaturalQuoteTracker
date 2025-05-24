@@ -64,7 +64,7 @@ export default function Sidebar() {
             <Mountain className="text-white" size={20} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-primary-custom">StoneFlow</h1>
+            <h1 className="text-xl font-bold text-primary-custom">TCF Supply</h1>
             <p className="text-sm text-secondary-custom">CRM System</p>
           </div>
         </div>
