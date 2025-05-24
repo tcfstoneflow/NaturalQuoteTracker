@@ -31,6 +31,7 @@ import {
 import { productsApi } from "@/lib/api";
 import { Plus, Edit, Trash2, Package, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function Inventory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -324,14 +325,12 @@ export default function Inventory() {
                         onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="imageUrl">Image URL</Label>
-                      <Input
-                        id="imageUrl"
-                        type="url"
+                    <div className="md:col-span-2">
+                      <Label htmlFor="image">Product Image</Label>
+                      <ImageUpload
                         value={formData.imageUrl}
-                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                        placeholder="https://example.com/image.jpg"
+                        onChange={(value) => setFormData({ ...formData, imageUrl: value })}
+                        className="mt-2"
                       />
                     </div>
                   </div>
