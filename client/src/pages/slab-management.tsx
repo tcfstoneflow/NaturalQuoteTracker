@@ -206,9 +206,9 @@ export default function SlabManagement() {
     );
   }
 
-  const availableSlabs = productWithSlabs.slabs.filter(slab => slab.status === 'available').length;
-  const soldSlabs = productWithSlabs.slabs.filter(slab => slab.status === 'sold').length;
-  const deliveredSlabs = productWithSlabs.slabs.filter(slab => slab.status === 'delivered').length;
+  const availableSlabs = productWithSlabs.slabs?.filter(slab => slab.status === 'available').length || 0;
+  const soldSlabs = productWithSlabs.slabs?.filter(slab => slab.status === 'sold').length || 0;
+  const deliveredSlabs = productWithSlabs.slabs?.filter(slab => slab.status === 'delivered').length || 0;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -247,7 +247,7 @@ export default function SlabManagement() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Slabs</p>
-              <p className="text-lg font-semibold">{productWithSlabs.slabs.length}</p>
+              <p className="text-lg font-semibold">{productWithSlabs.slabs?.length || 0}</p>
             </div>
           </div>
           
@@ -398,7 +398,7 @@ export default function SlabManagement() {
       </div>
 
       {/* Slabs Grid */}
-      {productWithSlabs.slabs.length === 0 ? (
+      {(!productWithSlabs.slabs || productWithSlabs.slabs.length === 0) ? (
         <Card>
           <CardContent className="text-center py-12">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -412,7 +412,7 @@ export default function SlabManagement() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {productWithSlabs.slabs.map((slab) => {
+          {productWithSlabs.slabs?.map((slab) => {
             const StatusIcon = statusIcons[slab.status as keyof typeof statusIcons];
             return (
               <Card key={slab.id} className="relative">
