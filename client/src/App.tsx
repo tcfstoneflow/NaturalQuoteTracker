@@ -14,6 +14,7 @@ import SQLQuery from "@/pages/sql-query";
 import UserManagement from "@/pages/user-management";
 import Login from "@/pages/login";
 import PublicInventory from "@/pages/public-inventory";
+import SlabManagement from "@/pages/slab-management";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -47,6 +48,7 @@ function Router() {
                   <Route path="/reports" component={Reports} />
                   <Route path="/sql-query" component={SQLQuery} />
                   <Route path="/user-management" component={UserManagement} />
+                  <Route path="/slab-management/:productId" component={SlabManagement} />
                   <Route component={NotFound} />
                 </Switch>
               </main>
