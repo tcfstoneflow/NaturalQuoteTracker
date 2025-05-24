@@ -22,10 +22,7 @@ export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest({
-        url: "/api/auth/logout",
-        method: "POST",
-      });
+      return await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
