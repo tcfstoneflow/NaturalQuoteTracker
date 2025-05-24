@@ -11,6 +11,7 @@ import Inventory from "@/pages/inventory";
 import Quotes from "@/pages/quotes";
 import Reports from "@/pages/reports";
 import SQLQuery from "@/pages/sql-query";
+import UserManagement from "@/pages/user-management";
 import Login from "@/pages/login";
 import Sidebar from "@/components/layout/sidebar";
 

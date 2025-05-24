@@ -14,6 +14,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", logout);
   app.get("/api/auth/user", requireAuth, getCurrentUser);
 
+  // User management routes (admin only)
+  app.get("/api/users", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error: any) {
+      console.error('Get users error:', error);
+      res.status(500).json({ error: 'Failed to fetch users' });
+    }
+  });
+
+  app.patch("/api/users/:id/toggle", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      const user = await storage.toggleUserStatus(userId, isActive);
+      res.json(user);
+    } catch (error: any) {
+      console.error('Toggle user status error:', error);
+      res.status(500).json({ error: 'Failed to update user status' });
+    }
+  });
+
   // Dashboard
   app.get("/api/dashboard/stats", async (req, res) => {
     try {

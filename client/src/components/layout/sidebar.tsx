@@ -8,8 +8,10 @@ import {
   Database,
   Mountain,
   Settings,
-  User
+  User,
+  UserCog
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
@@ -20,8 +22,15 @@ const navigation = [
   { name: "SQL Query Tool", href: "/sql-query", icon: Database },
 ];
 
+const adminNavigation = [
+  { name: "User Management", href: "/user-management", icon: UserCog },
+];
+
 export default function Sidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
+  
+  const isAdmin = user?.role === 'admin';
 
   return (
     <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col">
@@ -61,6 +70,39 @@ export default function Sidebar() {
               </li>
             );
           })}
+          
+          {/* Admin-only navigation */}
+          {isAdmin && (
+            <>
+              <li className="pt-4">
+                <div className="px-4 py-2">
+                  <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">
+                    Administration
+                  </p>
+                </div>
+              </li>
+              {adminNavigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = location === item.href;
+                
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                        isActive
+                          ? "text-primary bg-blue-50"
+                          : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span>{item.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </>
+          )}
         </ul>
       </nav>
 

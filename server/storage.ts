@@ -17,6 +17,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLastLogin(id: number): Promise<void>;
+  getAllUsers(): Promise<User[]>;
+  toggleUserStatus(id: number, isActive: boolean): Promise<User>;
 
   // Clients
   getClients(): Promise<Client[]>;
@@ -86,6 +88,19 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ lastLogin: new Date() })
       .where(eq(users.id, id));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async toggleUserStatus(id: number, isActive: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isActive })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 
   // Clients
