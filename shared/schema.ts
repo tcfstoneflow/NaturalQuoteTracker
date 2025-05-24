@@ -125,6 +125,8 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
   quoteNumber: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  validUntil: z.string().or(z.date()).transform((val) => typeof val === 'string' ? new Date(val) : val),
 });
 
 export const insertQuoteLineItemSchema = createInsertSchema(quoteLineItems).omit({

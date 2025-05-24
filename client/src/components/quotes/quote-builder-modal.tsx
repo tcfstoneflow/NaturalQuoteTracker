@@ -178,7 +178,7 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
     const quoteData = {
       clientId: parseInt(clientId),
       projectName,
-      validUntil: new Date(validUntil),
+      validUntil: validUntil,
       notes,
       subtotal: totals.subtotal,
       taxRate: totals.taxRate,
