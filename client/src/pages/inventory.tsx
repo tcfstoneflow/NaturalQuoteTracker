@@ -41,10 +41,13 @@ export default function Inventory() {
 
   const calculateTotalSquareFeet = (product: any) => {
     if (product.slabLength && product.slabWidth && product.stockQuantity) {
-      const length = parseFloat(product.slabLength);
-      const width = parseFloat(product.slabWidth);
+      const lengthInches = parseFloat(product.slabLength);
+      const widthInches = parseFloat(product.slabWidth);
       const quantity = parseFloat(product.stockQuantity);
-      return (length * width * quantity).toFixed(1);
+      // Convert inches to feet and calculate square footage
+      const lengthFeet = lengthInches / 12;
+      const widthFeet = widthInches / 12;
+      return (lengthFeet * widthFeet * quantity).toFixed(1);
     }
     return "N/A";
   };
@@ -346,25 +349,25 @@ export default function Inventory() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="slabLength">Slab Length (ft)</Label>
+                      <Label htmlFor="slabLength">Slab Length (inches)</Label>
                       <Input
                         id="slabLength"
                         type="number"
-                        step="0.1"
+                        step="0.25"
                         value={formData.slabLength}
                         onChange={(e) => setFormData({ ...formData, slabLength: e.target.value })}
-                        placeholder="10.5"
+                        placeholder="126"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="slabWidth">Slab Width (ft)</Label>
+                      <Label htmlFor="slabWidth">Slab Width (inches)</Label>
                       <Input
                         id="slabWidth"
                         type="number"
-                        step="0.1"
+                        step="0.25"
                         value={formData.slabWidth}
                         onChange={(e) => setFormData({ ...formData, slabWidth: e.target.value })}
-                        placeholder="5.5"
+                        placeholder="66"
                       />
                     </div>
                     <div className="md:col-span-3">
@@ -474,7 +477,7 @@ export default function Inventory() {
                               <span className="font-medium">{product.stockQuantity}</span>
                               {product.slabLength && product.slabWidth && (
                                 <p className="text-xs text-secondary-custom">
-                                  {product.slabLength}' × {product.slabWidth}'
+                                  {product.slabLength}" × {product.slabWidth}"
                                 </p>
                               )}
                             </div>
