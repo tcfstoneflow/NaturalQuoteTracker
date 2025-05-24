@@ -79,6 +79,22 @@ export const quoteLineItems = pgTable("quote_line_items", {
   notes: text("notes"),
 });
 
+export const slabs = pgTable("slabs", {
+  id: serial("id").primaryKey(),
+  bundleId: text("bundle_id").notNull(),
+  slabNumber: text("slab_number").notNull(),
+  status: text("status").notNull().default("available"), // "available", "sold", "delivered"
+  length: decimal("length", { precision: 8, scale: 2 }), // length in inches
+  width: decimal("width", { precision: 8, scale: 2 }), // width in inches
+  barcode: text("barcode"),
+  location: text("location"),
+  notes: text("notes"),
+  soldDate: timestamp("sold_date"),
+  deliveredDate: timestamp("delivered_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(), // "quote_created", "quote_sent", "quote_approved", "quote_rejected", "client_added", "product_updated"
@@ -115,6 +131,14 @@ export const quoteLineItemsRelations = relations(quoteLineItems, ({ one }) => ({
 
 export const productsRelations = relations(products, ({ many }) => ({
   quoteLineItems: many(quoteLineItems),
+  slabs: many(slabs),
+}));
+
+export const slabsRelations = relations(slabs, ({ one }) => ({
+  product: one(products, {
+    fields: [slabs.bundleId],
+    references: [products.bundleId],
+  }),
 }));
 
 // Insert schemas
@@ -175,6 +199,19 @@ export const insertQuoteLineItemSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
+export const insertSlabSchema = createInsertSchema(slabs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  length: z.union([z.string(), z.number(), z.null()]).optional().transform(val => 
+    val === null || val === undefined || val === '' ? null : (typeof val === 'string' ? parseFloat(val) : val)
+  ),
+  width: z.union([z.string(), z.number(), z.null()]).optional().transform(val => 
+    val === null || val === undefined || val === '' ? null : (typeof val === 'string' ? parseFloat(val) : val)
+  ),
+});
+
 export const insertActivitySchema = createInsertSchema(activities).omit({
   id: true,
   createdAt: true,
@@ -204,10 +241,17 @@ export type InsertQuoteLineItem = z.infer<typeof insertQuoteLineItemSchema>;
 export type Activity = typeof activities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
+export type Slab = typeof slabs.$inferSelect;
+export type InsertSlab = z.infer<typeof insertSlabSchema>;
+
 // Extended types for API responses
 export type QuoteWithDetails = Quote & {
   client: Client;
   lineItems: (QuoteLineItem & { product: Product })[];
+};
+
+export type ProductWithSlabs = Product & {
+  slabs: Slab[];
 };
 
 export type DashboardStats = {
