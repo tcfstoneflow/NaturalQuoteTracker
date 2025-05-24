@@ -4,6 +4,8 @@ import RecentQuotes from "@/components/dashboard/recent-quotes";
 import TopProducts from "@/components/dashboard/top-products";
 import RecentActivity from "@/components/dashboard/recent-activity";
 import AIQueryAssistant from "@/components/sql/ai-query-assistant";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 
 export default function Dashboard() {
   return (
@@ -14,6 +16,17 @@ export default function Dashboard() {
       />
       
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
+        {/* Quick Access to Client Page */}
+        <div className="mb-6">
+          <Button 
+            onClick={() => window.open('/public-inventory', '_blank')}
+            className="bg-accent-orange hover:bg-accent-orange/90 text-white"
+          >
+            <ExternalLink size={16} className="mr-2" />
+            View Client-Facing Inventory
+          </Button>
+        </div>
+
         {/* Stats Cards */}
         <StatsCards />
 

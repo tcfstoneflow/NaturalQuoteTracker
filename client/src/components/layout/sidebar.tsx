@@ -125,6 +125,22 @@ export default function Sidebar() {
               })}
             </>
           )}
+          
+          {/* Client Page Quick Access */}
+          <li className="mt-6 pt-4 border-t border-neutral-200">
+            <div className="px-4 py-2">
+              <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">
+                Client Access
+              </p>
+            </div>
+            <button
+              onClick={() => window.open('/public-inventory', '_blank')}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors text-secondary-custom hover:text-primary hover:bg-neutral-100"
+            >
+              <ExternalLink size={18} />
+              <span>View Client Inventory</span>
+            </button>
+          </li>
         </ul>
       </nav>
 
