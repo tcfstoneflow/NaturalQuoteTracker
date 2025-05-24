@@ -4,85 +4,81 @@ import { QuoteWithDetails } from '@shared/schema';
 export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
+      // Create a single page document with fixed height
       const doc = new PDFDocument({ 
-        margin: 30, 
+        margin: 40, 
         size: 'A4',
-        bufferPages: true
+        autoFirstPage: false
       });
+      
+      // Add single page
+      doc.addPage();
+      
       const buffers: Buffer[] = [];
-
       doc.on('data', buffers.push.bind(buffers));
       doc.on('end', () => {
-        const pdfData = Buffer.concat(buffers);
-        resolve(pdfData);
+        resolve(Buffer.concat(buffers));
       });
 
-      // Header section - compact
-      doc.fontSize(16).text('Texas Counter Fitters', 50, 40);
-      doc.fontSize(8).text('Natural Stone Distribution | Phone: (555) 123-4567 | Email: quotes@texascounterfitters.com', 50, 58);
+      // All content positioned absolutely to prevent page overflow
+      let currentY = 50;
 
-      // Quote info - right aligned
-      doc.fontSize(14).text('QUOTE', 450, 40);
-      doc.fontSize(8)
-        .text(`Quote #: ${quote.quoteNumber}`, 420, 58)
-        .text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, 420, 68)
-        .text(`Valid Until: ${new Date(quote.validUntil).toLocaleDateString()}`, 420, 78);
+      // Header
+      doc.fontSize(14).text('Texas Counter Fitters', 50, currentY);
+      doc.fontSize(8).text('Natural Stone Distribution | (555) 123-4567 | quotes@texascounterfitters.com', 50, currentY + 18);
 
-      // Client and Project info - side by side, compact
-      doc.fontSize(9).text('Bill To:', 50, 100);
-      doc.fontSize(8)
-        .text(quote.client.name, 50, 112)
-        .text(quote.client.email, 50, 122);
+      // Quote number - right side
+      doc.fontSize(12).text('QUOTE', 420, currentY);
+      doc.fontSize(8).text(`#${quote.quoteNumber}`, 420, currentY + 18);
+      doc.text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, 420, currentY + 30);
 
-      doc.fontSize(9).text(`Project: ${quote.projectName}`, 300, 100);
+      currentY += 60;
 
-      // Table header - compact
-      let y = 140;
-      doc.fontSize(9).fillColor('black');
-      doc.rect(50, y, 500, 16).fillAndStroke('#f5f5f5', '#ddd');
-      doc.fillColor('black')
-        .text('Item Description', 55, y + 4)
-        .text('Qty', 320, y + 4)
-        .text('Unit Price', 380, y + 4)
-        .text('Total', 480, y + 4);
+      // Client info
+      doc.fontSize(9).text(`Bill To: ${quote.client.name}`, 50, currentY);
+      doc.fontSize(8).text(quote.client.email, 50, currentY + 12);
+      doc.fontSize(9).text(`Project: ${quote.projectName}`, 280, currentY);
 
-      y += 18;
+      currentY += 40;
 
-      // Line items - more compact
+      // Items table header
+      doc.fontSize(8).text('Item', 50, currentY);
+      doc.text('Qty', 280, currentY);
+      doc.text('Price', 330, currentY);
+      doc.text('Total', 400, currentY);
+      
+      // Line under header
+      doc.moveTo(50, currentY + 12).lineTo(450, currentY + 12).stroke();
+      currentY += 20;
+
+      // Line items
       quote.lineItems.forEach((item) => {
         doc.fontSize(8)
-          .text(`${item.product.name} - ${item.product.thickness}`, 55, y)
-          .text(item.quantity.toString(), 320, y)
-          .text(`$${item.unitPrice}`, 380, y)
-          .text(`$${item.totalPrice}`, 480, y);
-        y += 14;
+          .text(`${item.product.name} - ${item.product.thickness}`, 50, currentY, { width: 220 })
+          .text(item.quantity, 280, currentY)
+          .text(`$${item.unitPrice}`, 330, currentY)
+          .text(`$${item.totalPrice}`, 400, currentY);
+        currentY += 16;
       });
 
-      y += 10;
+      currentY += 20;
 
-      // Totals - compact
+      // Totals
       doc.fontSize(8)
-        .text(`Subtotal: $${quote.subtotal}`, 420, y)
-        .text(`Tax (${(parseFloat(quote.taxRate) * 100).toFixed(2)}%): $${quote.taxAmount}`, 420, y + 10);
+        .text(`Subtotal: $${quote.subtotal}`, 350, currentY)
+        .text(`Tax: $${quote.taxAmount}`, 350, currentY + 12);
       
-      doc.fontSize(9).text(`Total: $${quote.totalAmount}`, 420, y + 22);
+      doc.fontSize(10).text(`Total: $${quote.totalAmount}`, 350, currentY + 26);
 
-      y += 40;
+      currentY += 50;
 
-      // Terms - single line
-      doc.fontSize(7)
-        .text('Terms: Payment due within 30 days • Prices valid for period specified • Installation/delivery charges may apply', 50, y);
+      // Terms
+      doc.fontSize(7).text('Terms: Payment due 30 days • Installation/delivery extra', 50, currentY);
 
-      y += 15;
+      currentY += 20;
 
-      // Notes if present
-      if (quote.notes && quote.notes.trim()) {
-        doc.fontSize(7).text(`Notes: ${quote.notes}`, 50, y);
-        y += 12;
-      }
-
-      // Footer
-      doc.fontSize(7).text('Thank you for choosing Texas Counter Fitters!', 50, y);
+      // Simple footer
+      doc.fontSize(7).text('Thank you for your business!', 50, currentY);
 
       doc.end();
     } catch (error) {
