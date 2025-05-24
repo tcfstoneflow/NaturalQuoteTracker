@@ -131,6 +131,7 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
 
 export const insertQuoteLineItemSchema = createInsertSchema(quoteLineItems).omit({
   id: true,
+  quoteId: true,
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
