@@ -64,17 +64,21 @@ export default function Reports() {
 
     const categoryStats = products.reduce((acc: any, product: any) => {
       if (!acc[product.category]) {
-        acc[product.category] = { count: 0, totalSlabs: 0, totalSquareFeet: 0 };
+        acc[product.category] = { count: 0, totalSlabs: 0, totalSquareFeet: 0, totalValue: 0 };
       }
       acc[product.category].count++;
       acc[product.category].totalSlabs += product.stockQuantity;
       
-      // Calculate square feet if dimensions are available
+      // Calculate square feet and value if dimensions are available
       if (product.slabLength && product.slabWidth) {
         const lengthFt = parseFloat(product.slabLength) / 12;
         const widthFt = parseFloat(product.slabWidth) / 12;
         const slabArea = lengthFt * widthFt;
-        acc[product.category].totalSquareFeet += slabArea * product.stockQuantity;
+        const totalSlabSquareFeet = slabArea * product.stockQuantity;
+        acc[product.category].totalSquareFeet += totalSlabSquareFeet;
+        
+        // Calculate inventory value: total square feet × price per square foot
+        acc[product.category].totalValue += totalSlabSquareFeet * parseFloat(product.price);
       }
       
       return acc;
@@ -265,12 +269,14 @@ export default function Reports() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-primary-custom">
-                          {stats.totalSlabs} slabs
+                          {stats.totalValue > 0 
+                            ? `$${stats.totalValue.toLocaleString()}`
+                            : `${stats.totalSlabs} slabs`}
                         </p>
                         <p className="text-sm text-secondary-custom">
-                          {stats.totalSquareFeet > 0 
-                            ? `${stats.totalSquareFeet.toFixed(0)} sq ft` 
-                            : 'dimensions needed'}
+                          {stats.totalValue > 0 
+                            ? `${stats.totalSlabs} slabs • ${stats.totalSquareFeet.toFixed(0)} sq ft`
+                            : 'dimensions needed for value'}
                         </p>
                       </div>
                     </div>
