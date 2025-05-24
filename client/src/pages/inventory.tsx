@@ -53,6 +53,7 @@ export default function Inventory() {
   };
   const [formData, setFormData] = useState({
     name: "",
+    supplier: "",
     category: "",
     grade: "",
     thickness: "",
@@ -155,6 +156,7 @@ export default function Inventory() {
     setEditingProduct(product);
     setFormData({
       name: product.name || "",
+      supplier: product.supplier || "",
       category: product.category || "",
       grade: product.grade || "",
       thickness: product.thickness || "",
@@ -273,6 +275,16 @@ export default function Inventory() {
                         id="name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="supplier">Supplier *</Label>
+                      <Input
+                        id="supplier"
+                        value={formData.supplier}
+                        onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                        placeholder="Enter supplier/quarry name"
                         required
                       />
                     </div>
@@ -427,7 +439,9 @@ export default function Inventory() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Bundle</TableHead>
+                    <TableHead>Bundle ID</TableHead>
+                    <TableHead>Bundle Name</TableHead>
+                    <TableHead>Supplier</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Grade & Thickness</TableHead>
                     <TableHead>Price ($/sqft)</TableHead>
@@ -444,17 +458,31 @@ export default function Inventory() {
                     return (
                       <TableRow key={product.id}>
                         <TableCell>
+                          <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                            {product.bundleId || 'N/A'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
                           <div className="flex items-center space-x-3">
                             <img 
                               src={getProductImage(product.category, product.imageUrl)}
                               alt={product.name}
-                              className="w-12 h-12 rounded-lg object-cover"
+                              className="w-10 h-10 rounded-lg object-cover"
                             />
                             <div>
                               <p className="font-medium text-primary-custom">{product.name}</p>
-                              <p className="text-sm text-secondary-custom">{product.description}</p>
+                              {product.barcodes && product.barcodes.length > 0 && (
+                                <p className="text-xs text-secondary-custom">
+                                  {product.barcodes.length} barcode{product.barcodes.length !== 1 ? 's' : ''}
+                                </p>
+                              )}
                             </div>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium">
+                            {product.supplier || 'Unknown'}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="capitalize">

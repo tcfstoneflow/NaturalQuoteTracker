@@ -169,8 +169,20 @@ export default function PublicInventory() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <CardTitle className="text-xl mb-1">{product.name}</CardTitle>
-                      <CardDescription className="capitalize">
-                        {product.category} • {product.grade} Grade
+                      <CardDescription className="space-y-1">
+                        <div className="capitalize">
+                          {product.category} • {product.grade} Grade
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">
+                            ID: {product.bundleId || 'N/A'}
+                          </span>
+                          {product.supplier && (
+                            <span className="text-gray-600">
+                              • {product.supplier}
+                            </span>
+                          )}
+                        </div>
                       </CardDescription>
                     </div>
                   </div>
