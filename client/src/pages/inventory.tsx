@@ -136,6 +136,7 @@ export default function Inventory() {
     setEditingProduct(null);
     setFormData({
       name: "",
+      supplier: "",
       category: "",
       grade: "",
       thickness: "",

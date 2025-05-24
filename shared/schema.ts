@@ -33,7 +33,9 @@ export const clients = pgTable("clients", {
 
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
+  bundleId: text("bundle_id").notNull().unique(), // auto-generated bundle identifier
   name: text("name").notNull(),
+  supplier: text("supplier").notNull(), // supplier/quarry name
   category: text("category").notNull(), // "marble", "granite", "quartz", "travertine", "porcelain"
   grade: text("grade").notNull(), // "premium", "standard", "economy"
   thickness: text("thickness").notNull(), // "2cm", "3cm"
@@ -43,6 +45,7 @@ export const products = pgTable("products", {
   slabLength: decimal("slab_length", { precision: 8, scale: 2 }), // length in inches
   slabWidth: decimal("slab_width", { precision: 8, scale: 2 }), // width in inches
   location: text("location"), // storage location
+  barcodes: text("barcodes").array(), // array of barcode strings for individual slabs
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -137,6 +140,8 @@ export const insertClientSchema = createInsertSchema(clients).omit({
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
+  bundleId: true, // will be auto-generated
+  barcodes: true, // will be auto-generated based on stock quantity
   createdAt: true,
 });
 

@@ -164,11 +164,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
+    // Generate bundle ID
+    const bundleId = await this.generateBundleId();
+    
+    // Generate barcodes for each slab
+    const barcodes = this.generateBarcodes(bundleId, product.stockQuantity || 0);
+    
     const [newProduct] = await db
       .insert(products)
-      .values(product)
+      .values({
+        ...product,
+        bundleId,
+        barcodes
+      })
       .returning();
     return newProduct;
+  }
+
+  private async generateBundleId(): Promise<string> {
+    // Get the next sequential number
+    const [lastProduct] = await db
+      .select({ id: products.id })
+      .from(products)
+      .orderBy(desc(products.id))
+      .limit(1);
+    
+    const nextId = (lastProduct?.id || 0) + 1;
+    return `BDL-${nextId.toString().padStart(4, '0')}`;
+  }
+
+  private generateBarcodes(bundleId: string, slabCount: number): string[] {
+    const barcodes: string[] = [];
+    for (let i = 1; i <= slabCount; i++) {
+      // Generate barcode: BundleID-SlabNumber
+      barcodes.push(`${bundleId}-${i.toString().padStart(3, '0')}`);
+    }
+    return barcodes;
   }
 
   async updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product> {
