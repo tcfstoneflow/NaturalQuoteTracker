@@ -171,7 +171,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
-      const validatedData = insertProductSchema.parse(req.body);
+      // Transform the incoming data to match schema requirements
+      const transformedData = {
+        ...req.body,
+        price: parseFloat(req.body.price) || 0,
+        stockQuantity: parseInt(req.body.stockQuantity) || 0,
+        slabLength: req.body.slabLength ? parseFloat(req.body.slabLength) : null,
+        slabWidth: req.body.slabWidth ? parseFloat(req.body.slabWidth) : null,
+        unit: req.body.unit || "sq ft",
+        isActive: true
+      };
+
+      const validatedData = insertProductSchema.parse(transformedData);
       
       // Check if user is trying to set price and if they have permission
       if (validatedData.price && req.user?.role !== 'admin') {
