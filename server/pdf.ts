@@ -13,36 +13,36 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
         resolve(pdfData);
       });
 
-      // Header
-      doc.fontSize(20).text('Texas Counter Fitters CRM', 50, 50);
-      doc.fontSize(12).text('Natural Stone Distribution', 50, 75);
-      doc.fontSize(10).text('123 Stone Street, City, State 12345', 50, 90);
-      doc.text('Phone: (555) 123-4567 | Email: quotes@texascounterfitters.com', 50, 105);
+      // Header - more compact
+      doc.fontSize(18).text('Texas Counter Fitters', 50, 40);
+      doc.fontSize(10).text('Natural Stone Distribution | 123 Stone Street, City, State 12345', 50, 60);
+      doc.text('Phone: (555) 123-4567 | Email: quotes@texascounterfitters.com', 50, 75);
 
-      // Quote title
-      doc.fontSize(18).text('QUOTE', 400, 50);
-      doc.fontSize(12).text(`Quote #: ${quote.quoteNumber}`, 400, 75);
-      doc.text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, 400, 90);
-      doc.text(`Valid Until: ${new Date(quote.validUntil).toLocaleDateString()}`, 400, 105);
+      // Quote title - align right
+      doc.fontSize(16).text('QUOTE', 400, 40);
+      doc.fontSize(10)
+        .text(`Quote #: ${quote.quoteNumber}`, 400, 60)
+        .text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, 400, 75)
+        .text(`Valid Until: ${new Date(quote.validUntil).toLocaleDateString()}`, 400, 90);
 
       // Line separator
-      doc.moveTo(50, 130).lineTo(550, 130).stroke();
+      doc.moveTo(50, 105).lineTo(550, 105).stroke();
 
-      // Client information
-      doc.fontSize(14).text('Bill To:', 50, 150);
-      doc.fontSize(11)
-        .text(quote.client.name, 50, 170)
-        .text(quote.client.company || '', 50, 185)
-        .text(quote.client.address || '', 50, 200)
-        .text(`${quote.client.city || ''} ${quote.client.state || ''} ${quote.client.zipCode || ''}`.trim(), 50, 215)
-        .text(quote.client.email, 50, 230);
+      // Client and Project info side by side - more compact
+      doc.fontSize(12).text('Bill To:', 50, 115);
+      doc.fontSize(10)
+        .text(quote.client.name, 50, 130)
+        .text(quote.client.company || '', 50, 142)
+        .text(quote.client.address || '', 50, 154)
+        .text(`${quote.client.city || ''} ${quote.client.state || ''} ${quote.client.zipCode || ''}`.trim(), 50, 166)
+        .text(quote.client.email, 50, 178);
 
-      // Project information
-      doc.fontSize(14).text('Project:', 300, 150);
-      doc.fontSize(11).text(quote.projectName, 300, 170);
+      // Project information - right side
+      doc.fontSize(12).text('Project:', 300, 115);
+      doc.fontSize(10).text(quote.projectName, 300, 130);
 
-      // Line items table
-      let yPosition = 270;
+      // Line items table - start higher
+      let yPosition = 200;
       
       // Table header
       doc.fontSize(11).fillColor('black');
@@ -69,29 +69,34 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
         yPosition += 20;
       });
 
-      // Totals
-      yPosition += 20;
+      // Totals - more compact
+      yPosition += 15;
       const totalsX = 400;
       
-      doc.text(`Subtotal: $${quote.subtotal}`, totalsX, yPosition);
-      yPosition += 15;
-      doc.text(`Tax (${(parseFloat(quote.taxRate) * 100).toFixed(2)}%): $${quote.taxAmount}`, totalsX, yPosition);
-      yPosition += 15;
-      doc.fontSize(12).text(`Total: $${quote.totalAmount}`, totalsX, yPosition);
-
-      // Terms and conditions
-      yPosition += 40;
       doc.fontSize(10)
-        .text('Terms & Conditions:', 50, yPosition)
-        .text('• Payment is due within 30 days of quote acceptance', 50, yPosition + 15)
-        .text('• Prices are valid for the period specified above', 50, yPosition + 30)
-        .text('• Installation and delivery charges may apply', 50, yPosition + 45)
-        .text('• All sales are subject to our standard terms and conditions', 50, yPosition + 60);
+        .text(`Subtotal: $${quote.subtotal}`, totalsX, yPosition)
+        .text(`Tax (${(parseFloat(quote.taxRate) * 100).toFixed(2)}%): $${quote.taxAmount}`, totalsX, yPosition + 12)
+        .fontSize(11)
+        .text(`Total: $${quote.totalAmount}`, totalsX, yPosition + 24);
 
-      // Footer
+      // Terms and conditions - more compact
+      yPosition += 50;
+      doc.fontSize(9)
+        .text('Terms & Conditions:', 50, yPosition)
+        .text('• Payment due within 30 days of acceptance  • Prices valid for period specified above', 50, yPosition + 12)
+        .text('• Installation/delivery charges may apply  • Subject to standard terms and conditions', 50, yPosition + 24);
+
+      // Notes section if any
+      if (quote.notes && quote.notes.trim()) {
+        yPosition += 40;
+        doc.fontSize(9)
+          .text('Notes:', 50, yPosition)
+          .text(quote.notes, 50, yPosition + 12);
+      }
+
+      // Footer - compact
       doc.fontSize(8)
-        .text('Thank you for your business!', 50, doc.page.height - 50)
-        .text('StoneFlow CRM - Natural Stone Distribution', 50, doc.page.height - 35);
+        .text('Thank you for choosing Texas Counter Fitters!', 50, doc.page.height - 30);
 
       doc.end();
     } catch (error) {
