@@ -294,11 +294,12 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
                       </Select>
                     </div>
                     <div>
-                      <Label>Quantity *</Label>
+                      <Label>Quantity (slabs) *</Label>
                       <Input
                         type="number"
-                        step="0.01"
-                        placeholder="0"
+                        step="1"
+                        min="1"
+                        placeholder="1"
                         value={item.quantity}
                         onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
                       />
