@@ -80,7 +80,7 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/top-products'] });
       toast({
         title: "Success",
-        description: "Product created successfully",
+        description: "Bundle created successfully",
       });
       handleCloseModal();
     },
@@ -100,7 +100,7 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/top-products'] });
       toast({
         title: "Success",
-        description: "Product updated successfully",
+        description: "Bundle updated successfully",
       });
       handleCloseModal();
     },
@@ -120,7 +120,7 @@ export default function Inventory() {
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/top-products'] });
       toast({
         title: "Success",
-        description: "Product deleted successfully",
+        description: "Bundle deleted successfully",
       });
     },
     onError: (error: any) => {
@@ -234,7 +234,7 @@ export default function Inventory() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Product Inventory</CardTitle>
+              <CardTitle>Bundle Inventory</CardTitle>
               <div className="flex space-x-4 mt-4">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger className="w-48">
@@ -255,19 +255,19 @@ export default function Inventory() {
               <DialogTrigger asChild>
                 <Button onClick={handleOpenCreateModal} className="bg-primary hover:bg-primary-dark">
                   <Plus size={16} className="mr-2" />
-                  Add Product
+                  Add Bundle
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingProduct ? "Edit Product" : "Add New Product"}
+                    {editingProduct ? "Edit Bundle" : "Add New Bundle"}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name">Product Name *</Label>
+                      <Label htmlFor="name">Bundle Name *</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -402,7 +402,7 @@ export default function Inventory() {
                       className="flex-1"
                       disabled={createMutation.isPending || updateMutation.isPending}
                     >
-                      {editingProduct ? "Update Product" : "Create Product"}
+                      {editingProduct ? "Update Bundle" : "Create Bundle"}
                     </Button>
                   </div>
                 </form>
