@@ -173,12 +173,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Transform the incoming data to match schema requirements
       const transformedData = {
-        ...req.body,
+        name: req.body.name || "",
+        supplier: req.body.supplier || "",
+        category: req.body.category || "",
+        grade: req.body.grade || "",
+        thickness: req.body.thickness || "",
         price: parseFloat(req.body.price) || 0,
+        unit: req.body.unit || "sq ft",
         stockQuantity: parseInt(req.body.stockQuantity) || 0,
         slabLength: req.body.slabLength ? parseFloat(req.body.slabLength) : null,
         slabWidth: req.body.slabWidth ? parseFloat(req.body.slabWidth) : null,
-        unit: req.body.unit || "sq ft",
+        location: req.body.location || null,
+        imageUrl: req.body.imageUrl || null,
         isActive: true
       };
 
