@@ -143,6 +143,15 @@ export const insertProductSchema = createInsertSchema(products).omit({
   bundleId: true, // will be auto-generated
   barcodes: true, // will be auto-generated based on stock quantity
   createdAt: true,
+}).extend({
+  price: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
+  stockQuantity: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
+  slabLength: z.union([z.string(), z.number(), z.null()]).optional().transform(val => 
+    val === null || val === undefined || val === '' ? null : (typeof val === 'string' ? parseFloat(val) : val)
+  ),
+  slabWidth: z.union([z.string(), z.number(), z.null()]).optional().transform(val => 
+    val === null || val === undefined || val === '' ? null : (typeof val === 'string' ? parseFloat(val) : val)
+  ),
 });
 
 export const insertQuoteSchema = createInsertSchema(quotes).omit({
