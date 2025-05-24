@@ -139,6 +139,8 @@ export default function Inventory() {
       price: "",
       unit: "sqft",
       stockQuantity: "",
+      slabLength: "",
+      slabWidth: "",
       description: "",
       imageUrl: "",
     });
@@ -175,6 +177,8 @@ export default function Inventory() {
       ...formData,
       price: parseFloat(formData.price),
       stockQuantity: parseInt(formData.stockQuantity) || 0,
+      slabLength: formData.slabLength ? parseFloat(formData.slabLength) : null,
+      slabWidth: formData.slabWidth ? parseFloat(formData.slabWidth) : null,
     };
 
     if (editingProduct) {
