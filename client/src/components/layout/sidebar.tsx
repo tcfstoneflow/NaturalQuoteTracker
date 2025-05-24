@@ -30,7 +30,7 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
   
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.user?.role === 'admin';
 
   return (
     <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col">
