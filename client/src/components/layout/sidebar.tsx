@@ -61,11 +61,7 @@ export default function Sidebar() {
       <div className="p-6 border-b border-neutral-200">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-8 bg-black rounded flex items-center justify-center px-2">
-            <img 
-              src="@assets/image_1748061400594.png" 
-              alt="TCF Logo" 
-              className="w-full h-full object-contain"
-            />
+            <span className="text-white font-bold text-sm">TCF</span>
           </div>
           <div>
             <h1 className="text-xl font-bold text-primary-custom">Texas Counter Fitters</h1>
