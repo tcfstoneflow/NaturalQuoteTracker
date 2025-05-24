@@ -558,32 +558,32 @@ export default function SlabManagement() {
         </div>
       )}
 
-      {/* Edit Slab Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Slab</DialogTitle>
-            <DialogDescription>
-              Update slab information
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...editSlabForm}>
-            <form onSubmit={editSlabForm.handleSubmit(handleEditSlab)} className="space-y-4">
-              <FormField
-                control={editSlabForm.control}
-                name="slabNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Slab Number *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., S001, 1, A-1" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-2 gap-4">
+          {/* Edit Slab Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Slab</DialogTitle>
+                <DialogDescription>
+                  Update slab information
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...editSlabForm}>
+                <form onSubmit={editSlabForm.handleSubmit(handleEditSlab)} className="space-y-4">
+                  <FormField
+                    control={editSlabForm.control}
+                    name="slabNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Slab Number *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., S001, 1, A-1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={editSlabForm.control}
                   name="length"
@@ -674,12 +674,10 @@ export default function SlabManagement() {
                   Cancel
                 </Button>
               </div>
-            </form>
-          </Form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
