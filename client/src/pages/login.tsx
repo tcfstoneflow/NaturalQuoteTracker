@@ -35,7 +35,12 @@ export default function Login() {
         title: "Welcome back!",
         description: "You've successfully logged in.",
       });
-      setLocation("/");
+      // Invalidate auth queries to refresh user state
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Small delay to ensure auth state updates before navigation
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error: any) => {
       toast({
