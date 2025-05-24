@@ -5,8 +5,15 @@ import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuote
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";
+import { login, register, logout, getCurrentUser, requireAuth, requireRole } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/login", login);
+  app.post("/api/auth/register", requireAuth, requireRole(['admin']), register);
+  app.post("/api/auth/logout", logout);
+  app.get("/api/auth/user", requireAuth, getCurrentUser);
+
   // Dashboard
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
