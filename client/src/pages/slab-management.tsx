@@ -45,8 +45,9 @@ export default function SlabManagement() {
   // Get product ID from URL params
   const productId = window.location.pathname.split('/').pop();
 
-  const { data: productWithSlabs, isLoading } = useQuery({
+  const { data: productWithSlabs, isLoading, error } = useQuery({
     queryKey: ['/api/products', productId, 'with-slabs'],
+    queryFn: () => apiRequest('GET', `/api/products/${productId}/with-slabs`).then(res => res.json()),
     enabled: !!productId,
   });
 
