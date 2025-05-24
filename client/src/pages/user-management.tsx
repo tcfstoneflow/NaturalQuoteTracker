@@ -215,6 +215,7 @@ export default function UserManagement() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="sales_rep">Sales Representative</SelectItem>
+                              <SelectItem value="inventory_specialist">Inventory Specialist</SelectItem>
                               <SelectItem value="admin">Administrator</SelectItem>
                             </SelectContent>
                           </Select>
@@ -271,7 +272,11 @@ export default function UserManagement() {
                     <div className="flex items-center justify-between">
                       <span className="text-secondary-custom">Role:</span>
                       <Badge variant="outline">
-                        {user.role === 'admin' ? 'Administrator' : 'Sales Rep'}
+                        {user.role === 'admin' 
+                          ? 'Administrator' 
+                          : user.role === 'inventory_specialist' 
+                          ? 'Inventory Specialist' 
+                          : 'Sales Rep'}
                       </Badge>
                     </div>
                     {user.lastLogin && (

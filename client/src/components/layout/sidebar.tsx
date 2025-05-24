@@ -31,6 +31,28 @@ export default function Sidebar() {
   const { user } = useAuth();
   
   const isAdmin = user?.user?.role === 'admin';
+  const isInventorySpecialist = user?.user?.role === 'inventory_specialist';
+  const isSalesRep = user?.user?.role === 'sales_rep';
+  
+  // Filter navigation based on user role
+  const getVisibleNavigation = () => {
+    if (isAdmin) {
+      return navigation; // Admins see everything
+    } else if (isInventorySpecialist) {
+      // Inventory specialists can see dashboard, inventory, and reports
+      return navigation.filter(item => 
+        ['/', '/inventory', '/reports', '/sql-query'].includes(item.href)
+      );
+    } else if (isSalesRep) {
+      // Sales reps can see dashboard, clients, quotes, and reports
+      return navigation.filter(item => 
+        ['/', '/clients', '/quotes', '/reports'].includes(item.href)
+      );
+    }
+    return navigation;
+  };
+  
+  const visibleNavigation = getVisibleNavigation();
 
   return (
     <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col">
@@ -50,7 +72,7 @@ export default function Sidebar() {
       {/* Navigation Menu */}
       <nav className="flex-1 pt-6">
         <ul className="space-y-2 px-4">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
             
