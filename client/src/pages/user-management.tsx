@@ -109,22 +109,22 @@ export default function UserManagement() {
           {/* Header with Add User Button */}
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-semibold text-primary-custom">Sales Team</h3>
-              <p className="text-secondary-custom">Manage your sales representatives and their access</p>
+              <h3 className="text-lg font-semibold text-primary-custom">Team Management</h3>
+              <p className="text-secondary-custom">Manage users and their role-based access permissions</p>
             </div>
             
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-accent-orange hover:bg-accent-orange text-white">
                   <Plus size={16} className="mr-2" />
-                  Add Sales Rep
+                  Add User
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Add New Sales Representative</DialogTitle>
+                  <DialogTitle>Add New User</DialogTitle>
                   <DialogDescription>
-                    Create a new account for a sales team member
+                    Create a new account and assign the appropriate role
                   </DialogDescription>
                 </DialogHeader>
                 
