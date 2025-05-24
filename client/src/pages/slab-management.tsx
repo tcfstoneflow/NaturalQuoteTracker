@@ -56,16 +56,18 @@ export default function SlabManagement() {
       apiRequest('POST', `/api/products/${productId}/auto-create-slabs`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
+      queryClient.refetchQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       toast({
         title: "Slabs Created",
         description: "Individual slabs have been automatically created based on stock quantity.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      const message = error?.response?.data?.error || "Failed to create slabs automatically.";
       toast({
-        title: "Error",
-        description: "Failed to create slabs automatically.",
-        variant: "destructive",
+        title: message.includes("already exist") ? "Slabs Already Created" : "Error",
+        description: message.includes("already exist") ? "Slabs have already been created for this bundle." : message,
+        variant: message.includes("already exist") ? "default" : "destructive",
       });
     },
   });
