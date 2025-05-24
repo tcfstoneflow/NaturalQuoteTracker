@@ -38,6 +38,16 @@ export default function Inventory() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+
+  const calculateTotalSquareFeet = (product: any) => {
+    if (product.slabLength && product.slabWidth && product.stockQuantity) {
+      const length = parseFloat(product.slabLength);
+      const width = parseFloat(product.slabWidth);
+      const quantity = parseFloat(product.stockQuantity);
+      return (length * width * quantity).toFixed(1);
+    }
+    return "N/A";
+  };
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -411,8 +421,9 @@ export default function Inventory() {
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Grade & Thickness</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Stock</TableHead>
+                    <TableHead>Price ($/sqft)</TableHead>
+                    <TableHead>Stock (Slabs)</TableHead>
+                    <TableHead>Total Sqft</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -454,11 +465,23 @@ export default function Inventory() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <span className="font-medium">{product.stockQuantity}</span>
+                            <div>
+                              <span className="font-medium">{product.stockQuantity}</span>
+                              {product.slabLength && product.slabWidth && (
+                                <p className="text-xs text-secondary-custom">
+                                  {product.slabLength}' × {product.slabWidth}'
+                                </p>
+                              )}
+                            </div>
                             {product.stockQuantity <= 10 && product.stockQuantity > 0 && (
                               <AlertTriangle size={16} className="text-warning-orange" />
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">
+                            {calculateTotalSquareFeet(product)} sqft
+                          </span>
                         </TableCell>
                         <TableCell>
                           <Badge className={`${stockStatus.color} border-0`}>
