@@ -116,7 +116,7 @@ export async function register(req: Request, res: Response) {
     // Hash password
     const passwordHash = await hashPassword(userData.password);
 
-    // Create user without the password field
+    // Create user without the password field, add passwordHash
     const { password, ...userDataWithoutPassword } = userData;
     const newUser = await storage.createUser({
       ...userDataWithoutPassword,
