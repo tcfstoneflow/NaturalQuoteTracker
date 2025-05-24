@@ -28,7 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { quotesApi } from "@/lib/api";
-import { Eye, Edit, Send, Download, FileText, Calendar, DollarSign, Plus } from "lucide-react";
+import { Eye, Edit, Send, Download, FileText, Calendar, DollarSign, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
 
@@ -63,6 +63,25 @@ export default function Quotes() {
     onError: (error: any) => {
       toast({
         title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => quotesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/recent-quotes'] });
+      toast({
+        title: "Success",
+        description: "Quote deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
         description: error.message,
         variant: "destructive",
       });
@@ -291,6 +310,20 @@ export default function Quotes() {
                               disabled={sendEmailMutation.isPending}
                             >
                               <Send size={16} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete quote ${quote.quoteNumber}?`)) {
+                                  deleteMutation.mutate(quote.id);
+                                }
+                              }}
+                              title="Delete Quote"
+                              disabled={deleteMutation.isPending}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            >
+                              <Trash2 size={16} />
                             </Button>
                           </div>
                         </TableCell>
