@@ -5,10 +5,10 @@ import { constantContactService } from './constant-contact';
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false,
+  secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.SMTP_USER || process.env.EMAIL_USER || 'your-email@example.com',
-    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || 'your-app-password',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
@@ -19,7 +19,7 @@ export interface EmailQuoteOptions {
   provider?: 'constantcontact' | 'smtp';
 }
 
-export async function sendQuoteEmail({ quote, pdfBuffer, additionalMessage, provider = 'constantcontact' }: EmailQuoteOptions): Promise<void> {
+export async function sendQuoteEmail({ quote, pdfBuffer, additionalMessage, provider = 'smtp' }: EmailQuoteOptions): Promise<void> {
   // Try Constant Contact first if configured
   if (provider === 'constantcontact') {
     try {
