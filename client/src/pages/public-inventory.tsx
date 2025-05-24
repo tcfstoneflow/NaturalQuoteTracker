@@ -29,10 +29,10 @@ export default function PublicInventory() {
     switch (sortBy) {
       case "name":
         return a.name.localeCompare(b.name);
-      case "price":
-        return parseFloat(a.price) - parseFloat(b.price);
       case "stock":
         return b.stockQuantity - a.stockQuantity;
+      case "category":
+        return a.category.localeCompare(b.category);
       default:
         return 0;
     }
@@ -117,7 +117,7 @@ export default function PublicInventory() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="name">Name A-Z</SelectItem>
-                <SelectItem value="price">Price: Low to High</SelectItem>
+                <SelectItem value="category">Category</SelectItem>
                 <SelectItem value="stock">Stock Quantity</SelectItem>
               </SelectContent>
             </Select>
@@ -167,17 +167,11 @@ export default function PublicInventory() {
 
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-xl mb-1">{product.name}</CardTitle>
                       <CardDescription className="capitalize">
                         {product.category} • {product.grade} Grade
                       </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">
-                        {formatPrice(product.price)}
-                      </div>
-                      <div className="text-sm text-gray-600">per {product.unit}</div>
                     </div>
                   </div>
                 </CardHeader>
