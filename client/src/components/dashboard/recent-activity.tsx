@@ -4,12 +4,33 @@ import { Button } from "@/components/ui/button";
 import { dashboardApi } from "@/lib/api";
 import { Check, UserPlus, FileText, Package, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLocation } from "wouter";
 
 export default function RecentActivity() {
+  const [, setLocation] = useLocation();
   const { data: activities, isLoading } = useQuery({
     queryKey: ['/api/dashboard/recent-activities'],
     queryFn: dashboardApi.getRecentActivities,
   });
+
+  const handleActivityClick = (activity: any) => {
+    switch (activity.type) {
+      case 'quote_created':
+      case 'quote_sent':
+      case 'quote_approved':
+      case 'quote_rejected':
+        setLocation('/quotes');
+        break;
+      case 'client_added':
+        setLocation('/clients');
+        break;
+      case 'product_updated':
+        setLocation('/inventory');
+        break;
+      default:
+        break;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -63,7 +84,11 @@ export default function RecentActivity() {
             const { icon: Icon, color } = getActivityIcon(activity.type);
             
             return (
-              <div key={activity.id} className="flex items-start space-x-3">
+              <div 
+                key={activity.id} 
+                className="flex items-start space-x-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors"
+                onClick={() => handleActivityClick(activity)}
+              >
                 <div className={`w-8 h-8 ${color} rounded-full flex items-center justify-center flex-shrink-0`}>
                   <Icon size={14} />
                 </div>
