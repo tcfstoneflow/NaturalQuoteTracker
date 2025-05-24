@@ -449,6 +449,7 @@ export default function Inventory() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Image</TableHead>
                   <TableHead>Bundle ID</TableHead>
                   <TableHead>Bundle Name</TableHead>
                   <TableHead>Supplier</TableHead>
@@ -462,46 +463,69 @@ export default function Inventory() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product: Product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">
-                      {product.bundleId || `B${product.id.toString().padStart(4, '0')}`}
-                    </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.supplier}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{product.category}</Badge>
-                    </TableCell>
-                    <TableCell>{product.grade}</TableCell>
-                    <TableCell>{product.thickness}</TableCell>
-                    <TableCell>${product.price}/{product.unit}</TableCell>
-                    <TableCell>
-                      <span className={product.stockQuantity <= 5 ? "text-red-600 font-medium" : ""}>
-                        {product.stockQuantity}
-                      </span>
-                    </TableCell>
-                    <TableCell>{product.location || "Not specified"}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(product)}
-                        >
-                          <Pencil size={14} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => deleteMutation.mutate(product.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredProducts.map((product: Product) => {
+                  const getProductImage = (category: string) => {
+                    const images = {
+                      marble: "https://images.unsplash.com/photo-1541123437800-1bb1317badc2?w=60&h=60&fit=crop",
+                      granite: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=60&h=60&fit=crop",
+                      travertine: "https://images.unsplash.com/photo-1615971677499-5467cbab01dc?w=60&h=60&fit=crop",
+                      quartz: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=60&h=60&fit=crop",
+                    };
+                    return images[category as keyof typeof images] || images.marble;
+                  };
+
+                  return (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <img 
+                          src={product.imageUrl || getProductImage(product.category.toLowerCase())}
+                          alt={product.name}
+                          className="w-12 h-12 rounded-lg object-cover border"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = getProductImage(product.category.toLowerCase());
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {product.bundleId || `B${product.id.toString().padStart(4, '0')}`}
+                      </TableCell>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>{product.supplier}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{product.category}</Badge>
+                      </TableCell>
+                      <TableCell>{product.grade}</TableCell>
+                      <TableCell>{product.thickness}</TableCell>
+                      <TableCell>${product.price}/{product.unit}</TableCell>
+                      <TableCell>
+                        <span className={product.stockQuantity <= 5 ? "text-red-600 font-medium" : ""}>
+                          {product.stockQuantity}
+                        </span>
+                      </TableCell>
+                      <TableCell>{product.location || "Not specified"}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(product)}
+                          >
+                            <Pencil size={14} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => deleteMutation.mutate(product.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
