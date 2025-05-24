@@ -204,9 +204,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { quote: quoteData, lineItems } = req.body;
       
       const validatedQuote = insertQuoteSchema.parse(quoteData);
-      const validatedLineItems = lineItems.map((item: any) => 
-        insertQuoteLineItemSchema.parse(item)
-      );
+      // Don't validate line items with schema since quoteId is added later
+      const validatedLineItems = lineItems.map((item: any) => ({
+        productId: parseInt(item.productId),
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+        notes: item.notes || null
+      }));
       
       const quote = await storage.createQuote(validatedQuote, validatedLineItems);
       res.status(201).json(quote);
