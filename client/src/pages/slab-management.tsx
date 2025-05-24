@@ -53,9 +53,7 @@ export default function SlabManagement() {
   // Auto-create slabs mutation
   const autoCreateSlabsMutation = useMutation({
     mutationFn: (productId: string) => 
-      apiRequest(`/api/products/${productId}/auto-create-slabs`, {
-        method: 'POST',
-      }),
+      apiRequest('POST', `/api/products/${productId}/auto-create-slabs`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       toast({
