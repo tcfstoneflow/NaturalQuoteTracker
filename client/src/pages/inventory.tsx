@@ -175,10 +175,10 @@ export default function Inventory() {
     
     const submissionData = {
       ...formData,
-      price: parseFloat(formData.price),
+      price: formData.price,
       stockQuantity: parseInt(formData.stockQuantity) || 0,
-      slabLength: formData.slabLength ? parseFloat(formData.slabLength) : null,
-      slabWidth: formData.slabWidth ? parseFloat(formData.slabWidth) : null,
+      slabLength: formData.slabLength || null,
+      slabWidth: formData.slabWidth || null,
     };
 
     if (editingProduct) {
