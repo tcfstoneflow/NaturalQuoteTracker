@@ -13,6 +13,7 @@ import Reports from "@/pages/reports";
 import SQLQuery from "@/pages/sql-query";
 import UserManagement from "@/pages/user-management";
 import Login from "@/pages/login";
+import PublicInventory from "@/pages/public-inventory";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -26,26 +27,36 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-hidden">
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/clients" component={Clients} />
-          <Route path="/inventory" component={Inventory} />
-          <Route path="/quotes" component={Quotes} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/sql-query" component={SQLQuery} />
-          <Route path="/user-management" component={UserManagement} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-    </div>
+    <Switch>
+      {/* Public routes - accessible without authentication */}
+      <Route path="/inventory/browse" component={PublicInventory} />
+      
+      {/* Admin/Staff routes - require authentication */}
+      {isAuthenticated ? (
+        <Route path="*">
+          {() => (
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar />
+              <main className="flex-1 overflow-hidden">
+                <Switch>
+                  <Route path="/" component={Dashboard} />
+                  <Route path="/clients" component={Clients} />
+                  <Route path="/inventory" component={Inventory} />
+                  <Route path="/quotes" component={Quotes} />
+                  <Route path="/reports" component={Reports} />
+                  <Route path="/sql-query" component={SQLQuery} />
+                  <Route path="/user-management" component={UserManagement} />
+                  <Route component={NotFound} />
+                </Switch>
+              </main>
+            </div>
+          )}
+        </Route>
+      ) : (
+        <Route path="*" component={Login} />
+      )}
+    </Switch>
   );
 }
 
