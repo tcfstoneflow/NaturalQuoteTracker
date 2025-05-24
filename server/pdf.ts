@@ -4,7 +4,7 @@ import { QuoteWithDetails } from '@shared/schema';
 export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ margin: 50 });
+      const doc = new PDFDocument({ margin: 40, size: 'A4' });
       const buffers: Buffer[] = [];
 
       doc.on('data', buffers.push.bind(buffers));
@@ -13,90 +13,97 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
         resolve(pdfData);
       });
 
-      // Header - more compact
-      doc.fontSize(18).text('Texas Counter Fitters', 50, 40);
-      doc.fontSize(10).text('Natural Stone Distribution | 123 Stone Street, City, State 12345', 50, 60);
-      doc.text('Phone: (555) 123-4567 | Email: quotes@texascounterfitters.com', 50, 75);
+      let y = 40;
 
-      // Quote title - align right
-      doc.fontSize(16).text('QUOTE', 400, 40);
-      doc.fontSize(10)
-        .text(`Quote #: ${quote.quoteNumber}`, 400, 60)
-        .text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, 400, 75)
-        .text(`Valid Until: ${new Date(quote.validUntil).toLocaleDateString()}`, 400, 90);
+      // Header section
+      doc.fontSize(16).text('Texas Counter Fitters', 50, y);
+      doc.fontSize(9).text('Natural Stone Distribution | Phone: (555) 123-4567 | Email: quotes@texascounterfitters.com', 50, y + 20);
 
-      // Line separator
-      doc.moveTo(50, 105).lineTo(550, 105).stroke();
+      // Quote info - right aligned
+      doc.fontSize(14).text('QUOTE', 450, y);
+      doc.fontSize(9)
+        .text(`Quote #: ${quote.quoteNumber}`, 400, y + 20)
+        .text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, 400, y + 32)
+        .text(`Valid Until: ${new Date(quote.validUntil).toLocaleDateString()}`, 400, y + 44);
 
-      // Client and Project info side by side - more compact
-      doc.fontSize(12).text('Bill To:', 50, 115);
-      doc.fontSize(10)
-        .text(quote.client.name, 50, 130)
-        .text(quote.client.company || '', 50, 142)
-        .text(quote.client.address || '', 50, 154)
-        .text(`${quote.client.city || ''} ${quote.client.state || ''} ${quote.client.zipCode || ''}`.trim(), 50, 166)
-        .text(quote.client.email, 50, 178);
+      y += 70;
 
-      // Project information - right side
-      doc.fontSize(12).text('Project:', 300, 115);
-      doc.fontSize(10).text(quote.projectName, 300, 130);
+      // Client info
+      doc.fontSize(10).text('Bill To:', 50, y);
+      y += 15;
+      doc.fontSize(9)
+        .text(quote.client.name, 50, y)
+        .text(quote.client.email, 50, y + 12);
 
-      // Line items table - start higher
-      let yPosition = 200;
-      
+      // Project info
+      doc.fontSize(10).text(`Project: ${quote.projectName}`, 300, y);
+
+      y += 40;
+
       // Table header
-      doc.fontSize(11).fillColor('black');
-      doc.rect(50, yPosition, 500, 20).fillAndStroke('#f5f5f5', '#000');
+      doc.fontSize(10).fillColor('black');
+      doc.rect(50, y, 500, 18).fillAndStroke('#f0f0f0', '#ccc');
       doc.fillColor('black')
-        .text('Item', 60, yPosition + 6)
-        .text('Qty', 300, yPosition + 6)
-        .text('Unit Price', 360, yPosition + 6)
-        .text('Total', 480, yPosition + 6);
+        .text('Item Description', 55, y + 5)
+        .text('Qty', 320, y + 5)
+        .text('Unit Price', 370, y + 5)
+        .text('Total', 480, y + 5);
 
-      yPosition += 25;
+      y += 20;
 
-      // Line items
-      quote.lineItems.forEach((item, index) => {
-        const bgColor = index % 2 === 0 ? '#ffffff' : '#f9f9f9';
-        doc.rect(50, yPosition, 500, 20).fillAndStroke(bgColor, '#ddd');
+      // Line items with images
+      quote.lineItems.forEach((item) => {
+        const rowHeight = item.product.imageUrl ? 40 : 18;
         
-        doc.fillColor('black')
-          .text(`${item.product.name} - ${item.product.thickness}`, 60, yPosition + 6)
-          .text(item.quantity.toString(), 300, yPosition + 6)
-          .text(`$${item.unitPrice}`, 360, yPosition + 6)
-          .text(`$${item.totalPrice}`, 480, yPosition + 6);
+        // Add product image if available
+        if (item.product.imageUrl) {
+          try {
+            // Add a small product image (30x30)
+            doc.image(item.product.imageUrl, 55, y, { width: 30, height: 30 });
+          } catch (error) {
+            // If image fails to load, just continue without it
+            console.log('Failed to load product image:', error);
+          }
+        }
         
-        yPosition += 20;
+        const textY = item.product.imageUrl ? y + 5 : y + 3;
+        const textX = item.product.imageUrl ? 90 : 55;
+        
+        doc.fontSize(9)
+          .text(`${item.product.name} - ${item.product.thickness}`, textX, textY)
+          .text(item.quantity.toString(), 320, textY)
+          .text(`$${item.unitPrice}`, 370, textY)
+          .text(`$${item.totalPrice}`, 480, textY);
+        
+        y += rowHeight;
       });
 
-      // Totals - more compact
-      yPosition += 15;
-      const totalsX = 400;
-      
-      doc.fontSize(10)
-        .text(`Subtotal: $${quote.subtotal}`, totalsX, yPosition)
-        .text(`Tax (${(parseFloat(quote.taxRate) * 100).toFixed(2)}%): $${quote.taxAmount}`, totalsX, yPosition + 12)
-        .fontSize(11)
-        .text(`Total: $${quote.totalAmount}`, totalsX, yPosition + 24);
+      y += 20;
 
-      // Terms and conditions - more compact
-      yPosition += 50;
+      // Totals
+      const totalsX = 420;
       doc.fontSize(9)
-        .text('Terms & Conditions:', 50, yPosition)
-        .text('• Payment due within 30 days of acceptance  • Prices valid for period specified above', 50, yPosition + 12)
-        .text('• Installation/delivery charges may apply  • Subject to standard terms and conditions', 50, yPosition + 24);
+        .text(`Subtotal: $${quote.subtotal}`, totalsX, y)
+        .text(`Tax (${(parseFloat(quote.taxRate) * 100).toFixed(2)}%): $${quote.taxAmount}`, totalsX, y + 12);
+      
+      doc.fontSize(10).text(`Total: $${quote.totalAmount}`, totalsX, y + 26);
 
-      // Notes section if any
+      y += 50;
+
+      // Terms
+      doc.fontSize(8)
+        .text('Terms: Payment due within 30 days • Prices valid for period specified • Installation/delivery charges may apply', 50, y);
+
+      y += 25;
+
+      // Notes if present
       if (quote.notes && quote.notes.trim()) {
-        yPosition += 40;
-        doc.fontSize(9)
-          .text('Notes:', 50, yPosition)
-          .text(quote.notes, 50, yPosition + 12);
+        doc.fontSize(8).text(`Notes: ${quote.notes}`, 50, y);
+        y += 20;
       }
 
-      // Footer - compact
-      doc.fontSize(8)
-        .text('Thank you for choosing Texas Counter Fitters!', 50, doc.page.height - 30);
+      // Simple footer
+      doc.fontSize(8).text('Thank you for choosing Texas Counter Fitters!', 50, y);
 
       doc.end();
     } catch (error) {
