@@ -177,11 +177,7 @@ export default function PublicInventory() {
                           <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">
                             ID: {product.bundleId || 'N/A'}
                           </span>
-                          {product.supplier && (
-                            <span className="text-gray-600">
-                              • {product.supplier}
-                            </span>
-                          )}
+
                         </div>
                       </CardDescription>
                     </div>
