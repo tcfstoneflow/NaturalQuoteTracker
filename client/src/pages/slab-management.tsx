@@ -137,10 +137,7 @@ export default function SlabManagement() {
 
   const updateSlabStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) => 
-      apiRequest(`/api/slabs/${id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      }),
+      apiRequest('PATCH', `/api/slabs/${id}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       toast({ title: "Success", description: "Slab status updated!" });
