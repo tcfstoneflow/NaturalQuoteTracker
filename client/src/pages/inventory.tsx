@@ -396,6 +396,7 @@ export default function Inventory() {
                       />
                     </div>
                   </div>
+                  
                   <div>
                     <Label htmlFor="location">Storage Location</Label>
                     <Input
@@ -405,6 +406,7 @@ export default function Inventory() {
                       placeholder="e.g. Warehouse A, Section 3"
                     />
                   </div>
+                  
                   <div className="flex space-x-2 pt-4">
                     <Button 
                       type="button" 
