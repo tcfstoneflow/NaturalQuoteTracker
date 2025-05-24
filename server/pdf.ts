@@ -71,19 +71,23 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
         const imageSize = getOptimalImageSize(hasMultipleItems);
         const rowHeight = hasValidImage ? Math.max(imageSize.height + 10, 25) : 12;
         
-        // Smart image embedding with validation
+        // Smart image embedding with validation and debugging
         if (hasValidImage && imageUrl) {
           try {
+            console.log(`Embedding image for ${item.product.name}: ${imageUrl}`);
             // Embed product image with optimal sizing
             doc.image(imageUrl, 50, y, { 
               width: imageSize.width, 
               height: imageSize.height,
               fit: [imageSize.width, imageSize.height]
             });
+            console.log(`Successfully embedded image for ${item.product.name}`);
           } catch (error) {
             console.log('Smart image embedding failed for:', item.product.name, error);
             // Continue gracefully without image
           }
+        } else {
+          console.log(`No valid image for ${item.product.name}. ImageURL: ${imageUrl}, Valid: ${hasValidImage}`);
         }
         
         // Dynamic text positioning based on image presence and size
