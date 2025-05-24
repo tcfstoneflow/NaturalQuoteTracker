@@ -1,6 +1,34 @@
 import PDFDocument from 'pdfkit';
 import { QuoteWithDetails } from '@shared/schema';
 
+// Smart image processing utilities
+function isValidImageUrl(url: string): boolean {
+  if (!url || url.trim() === '') return false;
+  
+  // Check for data URLs (base64 images)
+  if (url.startsWith('data:image/')) return true;
+  
+  // Check for HTTP/HTTPS URLs
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Validate common image extensions
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    const urlLower = url.toLowerCase();
+    return imageExtensions.some(ext => urlLower.includes(ext)) || 
+           urlLower.includes('image') || 
+           urlLower.includes('photo');
+  }
+  
+  return false;
+}
+
+function getOptimalImageSize(hasMultipleItems: boolean): { width: number, height: number } {
+  // Adjust image size based on quote complexity
+  if (hasMultipleItems) {
+    return { width: 20, height: 20 }; // Smaller for multiple items
+  }
+  return { width: 30, height: 30 }; // Larger for fewer items
+}
+
 export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
@@ -35,12 +63,40 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
       doc.moveTo(50, 150).lineTo(450, 150).stroke();
 
       let y = 160;
+      const hasMultipleItems = quote.lineItems.length > 2;
+      
       quote.lineItems.forEach((item) => {
-        doc.text(`${item.product.name} - ${item.product.thickness}`, 50, y, { width: 190 });
-        doc.text(item.quantity, 250, y);
-        doc.text(`$${item.unitPrice}`, 300, y);
-        doc.text(`$${item.totalPrice}`, 380, y);
-        y += 12;
+        const imageUrl = item.product.imageUrl;
+        const hasValidImage = imageUrl && isValidImageUrl(imageUrl);
+        const imageSize = getOptimalImageSize(hasMultipleItems);
+        const rowHeight = hasValidImage ? Math.max(imageSize.height + 10, 25) : 12;
+        
+        // Smart image embedding with validation
+        if (hasValidImage && imageUrl) {
+          try {
+            // Embed product image with optimal sizing
+            doc.image(imageUrl, 50, y, { 
+              width: imageSize.width, 
+              height: imageSize.height,
+              fit: [imageSize.width, imageSize.height]
+            });
+          } catch (error) {
+            console.log('Smart image embedding failed for:', item.product.name, error);
+            // Continue gracefully without image
+          }
+        }
+        
+        // Dynamic text positioning based on image presence and size
+        const textX = hasValidImage ? 50 + imageSize.width + 5 : 50;
+        const textY = hasValidImage ? y + Math.floor(imageSize.height / 4) : y;
+        const textWidth = hasValidImage ? 190 - imageSize.width - 5 : 190;
+        
+        doc.text(`${item.product.name} - ${item.product.thickness}`, textX, textY, { width: textWidth });
+        doc.text(item.quantity, 250, textY);
+        doc.text(`$${item.unitPrice}`, 300, textY);
+        doc.text(`$${item.totalPrice}`, 380, textY);
+        
+        y += rowHeight;
       });
 
       y += 10;
