@@ -129,9 +129,13 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
   validUntil: z.string().or(z.date()).transform((val) => typeof val === 'string' ? new Date(val) : val),
 });
 
-export const insertQuoteLineItemSchema = createInsertSchema(quoteLineItems).omit({
-  id: true,
-  quoteId: true,
+// Create a simplified schema for quote line items that doesn't require quoteId
+export const insertQuoteLineItemSchema = z.object({
+  productId: z.number(),
+  quantity: z.string(),
+  unitPrice: z.string(),
+  totalPrice: z.string(),
+  notes: z.string().nullable().optional(),
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
