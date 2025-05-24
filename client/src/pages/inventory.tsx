@@ -225,6 +225,7 @@ export default function Inventory() {
                     <SelectItem value="granite">Granite</SelectItem>
                     <SelectItem value="quartz">Quartz</SelectItem>
                     <SelectItem value="travertine">Travertine</SelectItem>
+                    <SelectItem value="porcelain">Porcelain</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -264,6 +265,7 @@ export default function Inventory() {
                           <SelectItem value="granite">Granite</SelectItem>
                           <SelectItem value="quartz">Quartz</SelectItem>
                           <SelectItem value="travertine">Travertine</SelectItem>
+                          <SelectItem value="porcelain">Porcelain</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
