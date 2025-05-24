@@ -553,9 +553,21 @@ export class DatabaseStorage implements IStorage {
     return slab;
   }
 
+  private generateSlabBarcode(bundleId: string, slabNumber: string): string {
+    // Generate a unique barcode combining bundle ID and slab number
+    // Format: TCF-{bundleId}-{slabNumber}-{checksum}
+    const baseCode = `TCF-${bundleId}-${slabNumber}`;
+    const checksum = baseCode.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 100;
+    return `${baseCode}-${checksum.toString().padStart(2, '0')}`;
+  }
+
   async createSlab(slab: InsertSlab): Promise<Slab> {
+    // Auto-generate barcode if not provided
+    const barcode = slab.barcode || this.generateSlabBarcode(slab.bundleId, slab.slabNumber);
+    
     const [newSlab] = await db.insert(slabs).values({
       ...slab,
+      barcode,
       updatedAt: new Date(),
     }).returning();
     return newSlab;
