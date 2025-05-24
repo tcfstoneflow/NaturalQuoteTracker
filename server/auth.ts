@@ -60,6 +60,36 @@ export function requireRole(roles: string[]) {
   };
 }
 
+// Special middleware for inventory operations (allows inventory_specialist + admin)
+export function requireInventoryAccess() {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!['admin', 'inventory_specialist'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Insufficient inventory permissions' });
+    }
+
+    next();
+  };
+}
+
+// Middleware for pricing operations (admin only)
+export function requirePricingAccess() {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only administrators can modify pricing' });
+    }
+
+    next();
+  };
+}
+
 // Hash password helper
 export async function hashPassword(password: string): Promise<string> {
   const saltRounds = 12;

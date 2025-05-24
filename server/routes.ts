@@ -5,7 +5,7 @@ import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuote
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";
-import { login, register, logout, getCurrentUser, requireAuth, requireRole } from "./auth";
+import { login, register, logout, getCurrentUser, requireAuth, requireRole, requireInventoryAccess, requirePricingAccess } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -169,9 +169,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products", async (req, res) => {
+  app.post("/api/products", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
       const validatedData = insertProductSchema.parse(req.body);
+      
+      // Check if user is trying to set price and if they have permission
+      if (validatedData.price && req.user?.role !== 'admin') {
+        return res.status(403).json({ error: 'Only administrators can set pricing' });
+      }
+      
       const product = await storage.createProduct(validatedData);
       res.status(201).json(product);
     } catch (error) {
@@ -179,10 +185,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/products/:id", async (req, res) => {
+  app.put("/api/products/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertProductSchema.partial().parse(req.body);
+      
+      // Check if user is trying to update price and if they have permission
+      if (validatedData.price !== undefined && req.user?.role !== 'admin') {
+        return res.status(403).json({ error: 'Only administrators can modify pricing' });
+      }
+      
       const product = await storage.updateProduct(id, validatedData);
       res.json(product);
     } catch (error) {
