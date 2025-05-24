@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { Search, Bell, Plus } from "lucide-react";
+import { Search, Bell, Plus, LogOut, User } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
 
 interface TopBarProps {
@@ -13,6 +17,31 @@ interface TopBarProps {
 export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isQuoteBuilderOpen, setIsQuoteBuilderOpen] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest({
+        url: "/api/auth/logout",
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Logged out successfully",
+        description: "See you next time!",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: "Please try again",
+      });
+    },
+  });
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -60,6 +89,29 @@ export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
                 3
               </span>
             </Button>
+
+            {/* User Profile & Logout */}
+            <div className="flex items-center space-x-3 border-l border-neutral-200 pl-4">
+              <div className="flex items-center space-x-2">
+                <User size={16} className="text-secondary-custom" />
+                <span className="text-sm font-medium text-primary-custom">
+                  {user?.user?.firstName} {user?.user?.lastName}
+                </span>
+                <span className="text-xs bg-accent-blue text-white px-2 py-1 rounded-full">
+                  {user?.user?.role === 'admin' ? 'Admin' : 'Sales Rep'}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="text-secondary-custom hover:text-error-red"
+              >
+                <LogOut size={16} className="mr-1" />
+                {logoutMutation.isPending ? "Signing out..." : "Logout"}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
