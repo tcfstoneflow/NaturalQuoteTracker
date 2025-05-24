@@ -111,17 +111,20 @@ export async function login(req: Request, res: Response) {
 // Register function (admin only)
 export async function register(req: Request, res: Response) {
   try {
+    // First validate the incoming data with password field
     const userData = insertUserSchema.parse(req.body);
 
     // Hash password
     const passwordHash = await hashPassword(userData.password);
 
-    // Create user without the password field, add passwordHash
+    // Create user data for database (with passwordHash, without password)
     const { password, ...userDataWithoutPassword } = userData;
-    const newUser = await storage.createUser({
+    const userDataForDB = {
       ...userDataWithoutPassword,
       passwordHash,
-    });
+    };
+
+    const newUser = await storage.createUser(userDataForDB);
 
     res.status(201).json({
       user: {
