@@ -203,7 +203,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { quote: quoteData, lineItems } = req.body;
       
+      console.log("Quote data:", JSON.stringify(quoteData, null, 2));
+      console.log("Line items:", JSON.stringify(lineItems, null, 2));
+      
       const validatedQuote = insertQuoteSchema.parse(quoteData);
+      console.log("Validated quote:", JSON.stringify(validatedQuote, null, 2));
+      
       // Don't validate line items with schema since quoteId is added later
       const validatedLineItems = lineItems.map((item: any) => ({
         productId: parseInt(item.productId),
@@ -213,9 +218,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: item.notes || null
       }));
       
+      console.log("Validated line items:", JSON.stringify(validatedLineItems, null, 2));
+      
       const quote = await storage.createQuote(validatedQuote, validatedLineItems);
       res.status(201).json(quote);
     } catch (error) {
+      console.error("Quote creation error:", error);
       res.status(400).json({ error: error.message });
     }
   });
