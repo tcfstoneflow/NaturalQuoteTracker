@@ -144,7 +144,10 @@ export const insertProductSchema = createInsertSchema(products).omit({
   barcodes: true, // will be auto-generated based on stock quantity
   createdAt: true,
 }).extend({
-  price: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
+  price: z.union([z.string(), z.number()]).transform(val => {
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return num.toString(); // Convert to string for decimal field
+  }),
   stockQuantity: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
   slabLength: z.union([z.string(), z.number(), z.null()]).optional().transform(val => 
     val === null || val === undefined || val === '' ? null : (typeof val === 'string' ? parseFloat(val) : val)

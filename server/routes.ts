@@ -171,24 +171,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
-      // Transform the incoming data to match schema requirements
-      const transformedData = {
-        name: req.body.name || "",
-        supplier: req.body.supplier || "",
-        category: req.body.category || "",
-        grade: req.body.grade || "",
-        thickness: req.body.thickness || "",
-        price: parseFloat(req.body.price) || 0,
-        unit: req.body.unit || "sq ft",
-        stockQuantity: parseInt(req.body.stockQuantity) || 0,
-        slabLength: req.body.slabLength ? parseFloat(req.body.slabLength) : null,
-        slabWidth: req.body.slabWidth ? parseFloat(req.body.slabWidth) : null,
-        location: req.body.location || null,
-        imageUrl: req.body.imageUrl || null,
-        isActive: true
-      };
-
-      const validatedData = insertProductSchema.parse(transformedData);
+      // Simply pass the request body directly without pre-transformation
+      // Let the schema handle the validation and transformation
+      const validatedData = insertProductSchema.parse(req.body);
       
       // Check if user is trying to set price and if they have permission
       if (validatedData.price && req.user?.role !== 'admin') {
