@@ -132,10 +132,17 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
     if (field === 'productId') {
       const product = products?.find(p => p.id === parseInt(value));
       if (product) {
-        updated[index].unitPrice = product.price;
+        // Calculate unit price as: (slab length in inches × slab width in inches ÷ 144) × price per sqft
+        let unitPrice = parseFloat(product.price);
+        if (product.slabLength && product.slabWidth) {
+          const slabSqFt = (parseFloat(product.slabLength) * parseFloat(product.slabWidth)) / 144;
+          unitPrice = slabSqFt * parseFloat(product.price);
+        }
+        
+        updated[index].unitPrice = unitPrice.toFixed(2);
         updated[index].product = product;
         const quantity = parseFloat(updated[index].quantity) || 0;
-        updated[index].totalPrice = (quantity * parseFloat(product.price)).toFixed(2);
+        updated[index].totalPrice = (quantity * unitPrice).toFixed(2);
       }
     }
 
@@ -305,13 +312,14 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
                       />
                     </div>
                     <div>
-                      <Label>Unit Price *</Label>
+                      <Label>Price Per Slab *</Label>
                       <Input
                         type="number"
                         step="0.01"
                         placeholder="0.00"
                         value={item.unitPrice}
                         onChange={(e) => updateLineItem(index, 'unitPrice', e.target.value)}
+                        readOnly={item.product && item.product.slabLength && item.product.slabWidth}
                       />
                     </div>
                     <div className="flex flex-col">
