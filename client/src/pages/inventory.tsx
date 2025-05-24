@@ -173,6 +173,7 @@ export default function Inventory() {
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setFormData({
+      bundleId: product.bundleId,
       name: product.name,
       supplier: product.supplier,
       category: product.category,
@@ -193,6 +194,7 @@ export default function Inventory() {
     setIsOpen(false);
     setEditingProduct(null);
     setFormData({
+      bundleId: "",
       name: "",
       supplier: "",
       category: "",
@@ -387,6 +389,22 @@ export default function Inventory() {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bundleId">Bundle ID *</Label>
+                    <Input
+                      id="bundleId"
+                      value={formData.bundleId}
+                      onChange={(e) => setFormData({ ...formData, bundleId: e.target.value })}
+                      required
+                      placeholder="e.g. BDL-0001, GRANITE-001"
+                      disabled={!!editingProduct}
+                    />
+                    {editingProduct && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Bundle ID cannot be changed after creation
+                      </p>
+                    )}
+                  </div>
                   <div>
                     <Label htmlFor="name">Bundle Name *</Label>
                     <Input
