@@ -16,6 +16,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserLastLogin(id: number): Promise<void>;
 
   // Clients
   getClients(): Promise<Client[]>;
@@ -78,6 +79,13 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async updateUserLastLogin(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastLogin: new Date() })
+      .where(eq(users.id, id));
   }
 
   // Clients
