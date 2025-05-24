@@ -250,20 +250,24 @@ export default function SlabManagement() {
   const deliveredSlabs = productWithSlabs.slabs?.filter(slab => slab.status === 'delivered').length || 0;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" onClick={() => setLocation('/inventory')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Inventory
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">Slab Management</h1>
-          <p className="text-muted-foreground">Manage individual slabs for {productWithSlabs.name}</p>
+    <div className="h-screen flex flex-col">
+      <div className="p-6 flex-shrink-0">
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="ghost" onClick={() => setLocation('/inventory')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Inventory
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold">Slab Management</h1>
+            <p className="text-muted-foreground">Manage individual slabs for {productWithSlabs.name}</p>
+          </div>
         </div>
       </div>
-
-      {/* Bundle Information */}
-      <Card className="mb-6">
+      
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Bundle Information */}
+          <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
@@ -304,9 +308,9 @@ export default function SlabManagement() {
         </CardContent>
       </Card>
 
-      {/* Add Slab Button */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Individual Slabs</h2>
+          {/* Add Slab Button */}
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Individual Slabs</h2>
         <div className="flex gap-2">
           <Button 
             variant="outline"
@@ -468,7 +472,7 @@ export default function SlabManagement() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-500px)] overflow-y-auto pr-2">
           {productWithSlabs.slabs?.map((slab) => {
             const StatusIcon = statusIcons[slab.status as keyof typeof statusIcons];
             return (
@@ -674,6 +678,7 @@ export default function SlabManagement() {
           </Form>
         </DialogContent>
       </Dialog>
+        </div>
       </div>
     </div>
   );
