@@ -90,6 +90,8 @@ export default function UserManagement() {
   });
 
   const onSubmit = (data: UserForm) => {
+    console.log("Form data:", data);
+    console.log("Form errors:", form.formState.errors);
     createUserMutation.mutate(data);
   };
 
