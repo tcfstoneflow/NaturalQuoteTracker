@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { QuoteWithDetails } from '@shared/schema';
+import { constantContactService } from './constant-contact';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -15,9 +16,35 @@ export interface EmailQuoteOptions {
   quote: QuoteWithDetails;
   pdfBuffer: Buffer;
   additionalMessage?: string;
+  provider?: 'constantcontact' | 'smtp';
 }
 
-export async function sendQuoteEmail({ quote, pdfBuffer, additionalMessage }: EmailQuoteOptions): Promise<void> {
+export async function sendQuoteEmail({ quote, pdfBuffer, additionalMessage, provider = 'constantcontact' }: EmailQuoteOptions): Promise<void> {
+  // Try Constant Contact first if configured
+  if (provider === 'constantcontact') {
+    try {
+      await constantContactService.sendQuoteEmail(quote.client.email, {
+        quoteNumber: quote.quoteNumber,
+        clientName: quote.client.name,
+        totalAmount: quote.totalAmount,
+        additionalMessage
+      });
+      
+      // Also add client to marketing list for future campaigns
+      await constantContactService.addClientToMarketingList({
+        email: quote.client.email,
+        name: quote.client.name,
+        companyName: quote.client.company || undefined
+      });
+      
+      return;
+    } catch (error) {
+      console.error('Constant Contact failed, falling back to SMTP:', error);
+      // Fall through to SMTP as backup
+    }
+  }
+
+  // SMTP fallback or direct SMTP usage
   try {
     const mailOptions = {
       from: process.env.SMTP_USER || process.env.EMAIL_USER || 'quotes@stoneflow.com',

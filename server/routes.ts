@@ -349,6 +349,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Constant Contact Marketing Routes
+  app.get('/api/marketing/lists', async (req, res) => {
+    try {
+      const { constantContactService } = await import('./constant-contact');
+      const lists = await constantContactService.getLists();
+      res.json(lists);
+    } catch (error: any) {
+      console.error('Error fetching marketing lists:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/marketing/newsletter', async (req, res) => {
+    try {
+      const { subject, content, listIds } = req.body;
+      const { constantContactService } = await import('./constant-contact');
+      const campaign = await constantContactService.createNewsletterCampaign(subject, content, listIds);
+      res.json(campaign);
+    } catch (error: any) {
+      console.error('Error creating newsletter campaign:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/marketing/add-client', async (req, res) => {
+    try {
+      const { email, name, companyName, listName } = req.body;
+      const { constantContactService } = await import('./constant-contact');
+      const result = await constantContactService.addClientToMarketingList({
+        email,
+        name,
+        companyName,
+        listName
+      });
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error adding client to marketing list:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/marketing/test-connection', async (req, res) => {
+    try {
+      const { constantContactService } = await import('./constant-contact');
+      const isConnected = await constantContactService.testConnection();
+      res.json({ connected: isConnected });
+    } catch (error: any) {
+      console.error('Error testing Constant Contact connection:', error);
+      res.status(500).json({ error: error.message, connected: false });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
