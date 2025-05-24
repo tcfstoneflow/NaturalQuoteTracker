@@ -34,7 +34,7 @@ export const products = pgTable("products", {
   stockQuantity: integer("stock_quantity").notNull().default(0),
   slabLength: decimal("slab_length", { precision: 8, scale: 2 }), // length in feet
   slabWidth: decimal("slab_width", { precision: 8, scale: 2 }), // width in feet
-  description: text("description"),
+  location: text("location"), // storage location
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),

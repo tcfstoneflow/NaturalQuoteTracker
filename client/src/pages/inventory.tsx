@@ -58,7 +58,7 @@ export default function Inventory() {
     stockQuantity: "",
     slabLength: "",
     slabWidth: "",
-    description: "",
+    location: "",
     imageUrl: "",
   });
 
@@ -141,7 +141,7 @@ export default function Inventory() {
       stockQuantity: "",
       slabLength: "",
       slabWidth: "",
-      description: "",
+      location: "",
       imageUrl: "",
     });
     setIsCreateModalOpen(true);
@@ -159,7 +159,7 @@ export default function Inventory() {
       stockQuantity: product.stockQuantity?.toString() || "",
       slabLength: product.slabLength || "",
       slabWidth: product.slabWidth || "",
-      description: product.description || "",
+      location: product.location || "",
       imageUrl: product.imageUrl || "",
     });
     setIsCreateModalOpen(true);
@@ -194,12 +194,12 @@ export default function Inventory() {
     }
   };
 
-  const filteredProducts = products?.filter((product: any) => {
+  const filteredProducts = Array.isArray(products) ? products.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
-  });
+  }) : [];
 
   const getStockStatus = (stock: number) => {
     if (stock === 0) return { label: "Out of Stock", color: "bg-red-100 text-red-800" };
@@ -377,11 +377,12 @@ export default function Inventory() {
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="location">Storage Location</Label>
                     <Input
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="e.g. Warehouse A, Section 3"
                     />
                   </div>
                   <div className="flex space-x-2 pt-4">
