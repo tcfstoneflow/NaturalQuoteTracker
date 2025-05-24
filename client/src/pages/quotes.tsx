@@ -28,8 +28,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { quotesApi } from "@/lib/api";
-import { Eye, Edit, Send, Download, FileText, Calendar, DollarSign } from "lucide-react";
+import { Eye, Edit, Send, Download, FileText, Calendar, DollarSign, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
 
 export default function Quotes() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,6 +38,7 @@ export default function Quotes() {
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
 
   const queryClient = useQueryClient();
@@ -182,6 +184,13 @@ export default function Quotes() {
                 </Select>
               </div>
             </div>
+            <Button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-accent-orange hover:bg-accent-orange text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Quote
+            </Button>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -486,6 +495,12 @@ export default function Quotes() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Quote Builder Modal */}
+      <QuoteBuilderModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }
