@@ -111,16 +111,24 @@ export async function login(req: Request, res: Response) {
 // Register function (admin only)
 export async function register(req: Request, res: Response) {
   try {
-    // First validate the incoming data with password field
-    const userData = insertUserSchema.parse(req.body);
+    // Validate basic required fields without strict schema
+    const { username, email, firstName, lastName, password, role = 'sales_rep', isActive = true } = req.body;
+    
+    if (!username || !email || !firstName || !lastName || !password) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
 
     // Hash password
-    const passwordHash = await hashPassword(userData.password);
+    const passwordHash = await hashPassword(password);
 
-    // Create user data for database (with passwordHash, without password)
-    const { password, ...userDataWithoutPassword } = userData;
+    // Create user data for database
     const userDataForDB = {
-      ...userDataWithoutPassword,
+      username,
+      email,
+      firstName,
+      lastName,
+      role,
+      isActive,
       passwordHash,
     };
 
