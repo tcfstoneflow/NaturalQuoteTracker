@@ -4,81 +4,52 @@ import { QuoteWithDetails } from '@shared/schema';
 export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
-      // Create a single page document with fixed height
       const doc = new PDFDocument({ 
-        margin: 40, 
-        size: 'A4',
-        autoFirstPage: false
+        margin: 30,
+        size: [612, 792], // Letter size in points
+        layout: 'portrait'
       });
-      
-      // Add single page
-      doc.addPage();
       
       const buffers: Buffer[] = [];
       doc.on('data', buffers.push.bind(buffers));
-      doc.on('end', () => {
-        resolve(Buffer.concat(buffers));
-      });
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
 
-      // All content positioned absolutely to prevent page overflow
-      let currentY = 50;
+      // Keep all Y positions low to ensure single page
+      doc.fontSize(12).text('Texas Counter Fitters', 50, 50);
+      doc.fontSize(7).text('Natural Stone Distribution | (555) 123-4567', 50, 65);
 
-      // Header
-      doc.fontSize(14).text('Texas Counter Fitters', 50, currentY);
-      doc.fontSize(8).text('Natural Stone Distribution | (555) 123-4567 | quotes@texascounterfitters.com', 50, currentY + 18);
+      doc.fontSize(10).text('QUOTE', 450, 50);
+      doc.fontSize(7).text(`#${quote.quoteNumber}`, 450, 65);
+      doc.text(`${new Date(quote.createdAt).toLocaleDateString()}`, 450, 75);
 
-      // Quote number - right side
-      doc.fontSize(12).text('QUOTE', 420, currentY);
-      doc.fontSize(8).text(`#${quote.quoteNumber}`, 420, currentY + 18);
-      doc.text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, 420, currentY + 30);
+      // Client - very compact
+      doc.fontSize(8).text(`To: ${quote.client.name} | ${quote.client.email}`, 50, 100);
+      doc.text(`Project: ${quote.projectName}`, 50, 115);
 
-      currentY += 60;
+      // Table - start at 140
+      doc.fontSize(7);
+      doc.text('Item', 50, 140);
+      doc.text('Qty', 250, 140);
+      doc.text('Price', 300, 140);
+      doc.text('Total', 380, 140);
+      doc.moveTo(50, 150).lineTo(450, 150).stroke();
 
-      // Client info
-      doc.fontSize(9).text(`Bill To: ${quote.client.name}`, 50, currentY);
-      doc.fontSize(8).text(quote.client.email, 50, currentY + 12);
-      doc.fontSize(9).text(`Project: ${quote.projectName}`, 280, currentY);
-
-      currentY += 40;
-
-      // Items table header
-      doc.fontSize(8).text('Item', 50, currentY);
-      doc.text('Qty', 280, currentY);
-      doc.text('Price', 330, currentY);
-      doc.text('Total', 400, currentY);
-      
-      // Line under header
-      doc.moveTo(50, currentY + 12).lineTo(450, currentY + 12).stroke();
-      currentY += 20;
-
-      // Line items
+      let y = 160;
       quote.lineItems.forEach((item) => {
-        doc.fontSize(8)
-          .text(`${item.product.name} - ${item.product.thickness}`, 50, currentY, { width: 220 })
-          .text(item.quantity, 280, currentY)
-          .text(`$${item.unitPrice}`, 330, currentY)
-          .text(`$${item.totalPrice}`, 400, currentY);
-        currentY += 16;
+        doc.text(`${item.product.name} - ${item.product.thickness}`, 50, y, { width: 190 });
+        doc.text(item.quantity, 250, y);
+        doc.text(`$${item.unitPrice}`, 300, y);
+        doc.text(`$${item.totalPrice}`, 380, y);
+        y += 12;
       });
 
-      currentY += 20;
+      y += 10;
+      doc.text(`Subtotal: $${quote.subtotal}`, 300, y);
+      doc.text(`Tax: $${quote.taxAmount}`, 300, y + 10);
+      doc.fontSize(8).text(`Total: $${quote.totalAmount}`, 300, y + 22);
 
-      // Totals
-      doc.fontSize(8)
-        .text(`Subtotal: $${quote.subtotal}`, 350, currentY)
-        .text(`Tax: $${quote.taxAmount}`, 350, currentY + 12);
-      
-      doc.fontSize(10).text(`Total: $${quote.totalAmount}`, 350, currentY + 26);
-
-      currentY += 50;
-
-      // Terms
-      doc.fontSize(7).text('Terms: Payment due 30 days • Installation/delivery extra', 50, currentY);
-
-      currentY += 20;
-
-      // Simple footer
-      doc.fontSize(7).text('Thank you for your business!', 50, currentY);
+      y += 40;
+      doc.fontSize(6).text('Terms: Payment due 30 days. Thank you for your business!', 50, y);
 
       doc.end();
     } catch (error) {
