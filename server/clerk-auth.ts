@@ -9,9 +9,8 @@ const clerkClient = createClerkClient({
 // Helper to verify Clerk JWT token
 export async function verifyClerkToken(token: string) {
   try {
-    const decoded = await clerkClient.verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY!
-    });
+    // Use Clerk's verifySession for JWT verification
+    const decoded = await clerkClient.verifySession(token);
     return decoded;
   } catch (error) {
     console.error('Token verification failed:', error);

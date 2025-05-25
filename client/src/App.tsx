@@ -17,6 +17,7 @@ import PublicInventory from "@/pages/public-inventory";
 import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
+import ClerkAuthPage from "@/pages/clerk-auth-page";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
