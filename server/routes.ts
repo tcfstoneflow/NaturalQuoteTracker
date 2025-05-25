@@ -753,19 +753,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const userRole = req.user.role;
+      console.log('Sales dashboard - User ID:', userId, 'Type:', typeof userId);
       
-      let quotes;
-      if (userRole === 'admin') {
-        quotes = await storage.getRecentQuotes(10);
-      } else {
-        // For sales reps, get their recent quotes
-        const allQuotes = await storage.getQuotes();
-        quotes = allQuotes
-          .filter(quote => quote.createdBy && parseInt(quote.createdBy.toString()) === parseInt(userId.toString()))
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 10);
-      }
+      // Get all quotes and check what we have
+      const allQuotes = await storage.getQuotes();
+      console.log('Total quotes found:', allQuotes.length);
+      console.log('Quote createdBy values:', allQuotes.map(q => ({ id: q.id, createdBy: q.createdBy, type: typeof q.createdBy })));
+      
+      // Filter quotes for this user (convert both to numbers for comparison)
+      const userQuotes = allQuotes.filter(quote => {
+        const quoteCreatedBy = Number(quote.createdBy);
+        const currentUserId = Number(userId);
+        console.log(`Comparing quote ${quote.id}: createdBy=${quoteCreatedBy} vs userId=${currentUserId} -> ${quoteCreatedBy === currentUserId}`);
+        return quoteCreatedBy === currentUserId;
+      });
+      
+      console.log('Filtered quotes for user:', userQuotes.length);
+      
+      const quotes = userQuotes
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10);
       
       res.json(quotes);
     } catch (error: any) {
