@@ -52,6 +52,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", logout);
   app.get("/api/auth/user", requireAuth, getCurrentUser);
 
+  // Clerk authentication routes
+  app.post('/api/clerk/sync-user', async (req, res) => {
+    try {
+      const { clerkUserId, email, firstName, lastName, username } = req.body;
+      
+      if (!clerkUserId || !email) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      // Check if user already exists in our database by email
+      let user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Create new user with default role for Clerk users
+        const { hashPassword } = await import('./auth');
+        const hashedPassword = await hashPassword('clerk-auth-' + Date.now()); // Dummy password for Clerk users
+        
+        user = await storage.createUser({
+          username: username || email.split('@')[0],
+          email,
+          password: hashedPassword,
+          firstName: firstName || '',
+          lastName: lastName || '',
+          role: 'sales_rep', // Default role for new Clerk users
+        });
+      }
+      
+      res.json(user);
+    } catch (error: any) {
+      console.error('Clerk sync user error:', error);
+      res.status(500).json({ error: 'Failed to sync user' });
+    }
+  });
+
   // User management routes (admin only)
   app.get("/api/users", requireAuth, requireRole(['admin']), async (req, res) => {
     try {

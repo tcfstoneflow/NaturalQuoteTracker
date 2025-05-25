@@ -1,54 +1,45 @@
-import { useUser, useAuth as useClerkAuthCore } from '@clerk/clerk-react';
-import { useQuery } from '@tanstack/react-query';
-
-interface ClerkUser {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  username: string | null;
-  email: string;
-  role?: string;
-}
+import { useUser, useAuth as useClerkAuthBase } from '@clerk/clerk-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export function useClerkAuth() {
-  const { user: clerkUser, isLoaded: userLoaded } = useUser();
-  const { isSignedIn, getToken } = useClerkAuthCore();
+  const { isSignedIn, isLoaded, user } = useUser();
+  const { signOut } = useClerkAuthBase();
+  const queryClient = useQueryClient();
 
-  // Get additional user data from our backend
-  const { data: backendUser, isLoading: backendLoading } = useQuery({
-    queryKey: ['/api/clerk/user', clerkUser?.id],
+  // Query to sync Clerk user with our backend
+  const { data: backendUser, isLoading: isBackendLoading } = useQuery({
+    queryKey: ['/api/clerk/user'],
     queryFn: async () => {
-      if (!clerkUser?.id) return null;
+      if (!isSignedIn || !user) return null;
       
-      const token = await getToken();
-      const response = await fetch('/api/clerk/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await apiRequest('POST', '/api/clerk/sync-user', {
+        clerkUserId: user.id,
+        email: user.emailAddresses[0]?.emailAddress,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username || user.emailAddresses[0]?.emailAddress,
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-      
       return response.json();
     },
-    enabled: !!clerkUser?.id && isSignedIn,
+    enabled: isSignedIn && !!user,
   });
 
-  const user: ClerkUser | null = clerkUser ? {
-    id: clerkUser.id,
-    firstName: clerkUser.firstName,
-    lastName: clerkUser.lastName,
-    username: clerkUser.username,
-    email: clerkUser.primaryEmailAddress?.emailAddress || '',
-    role: backendUser?.role || 'sales_rep',
-  } : null;
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await signOut();
+      queryClient.clear();
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(['/api/clerk/user'], null);
+    },
+  });
 
   return {
-    user,
-    isLoading: !userLoaded || backendLoading,
-    isAuthenticated: isSignedIn && !!user,
-    getToken,
+    user: backendUser,
+    isAuthenticated: isSignedIn && !!backendUser,
+    isLoading: !isLoaded || isBackendLoading,
+    logout: logoutMutation.mutate,
+    isLoggingOut: logoutMutation.isPending,
   };
 }
