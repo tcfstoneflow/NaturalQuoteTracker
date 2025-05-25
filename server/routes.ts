@@ -750,14 +750,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
+  app.get('/api/sales-dashboard/recent-quotes', async (req: any, res) => {
     try {
-      console.log('=== ROUTE ACCESSED ===');
-      console.log('Session data:', req.session);
-      console.log('User data:', req.user);
-      const userId = req.user?.id;
+      // Check session-based authentication
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
+      const userId = req.session.userId;
       console.log('=== SALES DASHBOARD DEBUG ===');
-      console.log('User ID:', userId);
+      console.log('User ID from session:', userId);
       
       // Get all quotes and filter them for this user
       const allQuotes = await storage.getQuotes();
