@@ -753,12 +753,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      console.log('=== SALES DASHBOARD DEBUG ===');
+      console.log('User ID:', userId);
       
       // Get all quotes and filter them for this user
       const allQuotes = await storage.getQuotes();
-      const userQuotes = allQuotes.filter(quote => {
-        return quote.createdBy && Number(quote.createdBy) === Number(userId);
+      console.log('Total quotes in system:', allQuotes.length);
+      
+      // Log all quotes with their createdBy values
+      allQuotes.forEach(quote => {
+        console.log(`Quote ${quote.id} (${quote.quoteNumber}): createdBy = ${quote.createdBy} (type: ${typeof quote.createdBy})`);
       });
+      
+      const userQuotes = allQuotes.filter(quote => {
+        const match = quote.createdBy && Number(quote.createdBy) === Number(userId);
+        console.log(`Quote ${quote.id}: ${quote.createdBy} === ${userId} ? ${match}`);
+        return match;
+      });
+      
+      console.log('Filtered quotes for user:', userQuotes.length);
       
       // Add total calculation to each quote
       const quotesWithTotals = userQuotes.map(quote => {
@@ -772,6 +785,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotes = quotesWithTotals
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 10);
+      
+      console.log('Final quotes to return:', quotes.length);
+      console.log('=== END DEBUG ===');
       
       res.json(quotes);
     } catch (error: any) {
