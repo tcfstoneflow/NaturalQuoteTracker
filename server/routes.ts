@@ -604,14 +604,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form
   app.post("/api/contact/showroom-visit", async (req, res) => {
     try {
+      console.log("Showroom visit request received:", req.body);
       const { name, email, phone, preferredDate, message } = req.body;
       
       // Basic validation
       if (!name || !email || !phone || !preferredDate) {
+        console.log("Validation failed - missing fields");
         return res.status(400).json({ error: "Missing required fields" });
       }
 
       // Create activity record for tracking
+      console.log("Creating activity record...");
       await storage.createActivity({
         type: "showroom_visit_request",
         description: `Showroom visit request from ${name} (${email}) for ${preferredDate}`,
@@ -620,15 +623,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relatedType: null
       });
 
-      // In a real application, you might want to:
-      // 1. Send an email notification to staff
-      // 2. Store the request in a dedicated table
-      // 3. Integrate with a calendar system
-      
-      res.json({ 
+      console.log("Activity created successfully, sending response...");
+      const response = { 
         success: true, 
         message: "Your showroom visit request has been submitted successfully!" 
-      });
+      };
+      console.log("Sending JSON response:", response);
+      res.json(response);
     } catch (error: any) {
       console.error("Showroom visit request error:", error);
       res.status(500).json({ error: "Failed to submit request" });
