@@ -29,7 +29,7 @@ export default function SalesDashboard() {
   });
 
   const { data: myQuotes } = useQuery({
-    queryKey: ["/api/sales-dashboard/recent-quotes"],
+    queryKey: ["/api/sales-dashboard/my-quotes", user?.id],
     queryFn: salesDashboardApi.getRecentQuotes,
   });
 
