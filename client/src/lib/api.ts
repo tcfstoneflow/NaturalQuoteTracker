@@ -51,16 +51,8 @@ export const aiApi = {
 
 // Sales Dashboard API
 export const salesDashboardApi = {
-  getStats: () => fetch('/api/sales-dashboard/stats').then(res => res.json()),
-  getRecentQuotes: async () => {
-    const response = await fetch('/api/sales-dashboard/recent-quotes');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    console.log('API Response - Recent Quotes:', data);
-    return data;
-  },
-  getRecentActivities: () => fetch('/api/sales-dashboard/recent-activities').then(res => res.json()),
-  getPendingShowroomVisits: () => fetch('/api/sales-dashboard/pending-showroom-visits').then(res => res.json()),
+  getStats: () => apiRequest('GET', '/api/sales-dashboard/stats'),
+  getRecentQuotes: () => apiRequest('GET', '/api/sales-dashboard/recent-quotes'),
+  getRecentActivities: () => apiRequest('GET', '/api/sales-dashboard/recent-activities'),
+  getPendingShowroomVisits: () => apiRequest('GET', '/api/sales-dashboard/pending-showroom-visits'),
 };
