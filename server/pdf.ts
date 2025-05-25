@@ -48,6 +48,7 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
 
       doc.fontSize(10).text('QUOTE', 450, 50);
       doc.fontSize(7).text(`#${quote.quoteNumber}`, 450, 65);
+      doc.fontSize(7).text(`Created by: User #${quote.createdBy}`, 450, 75);
       doc.text(`${new Date(quote.createdAt).toLocaleDateString()}`, 450, 75);
 
       // Client - very compact

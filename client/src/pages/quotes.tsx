@@ -450,6 +450,10 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                           </Select>
                         </div>
                       </div>
+                      <div>
+                        <Label className="text-sm font-medium text-secondary-custom">Created By</Label>
+                        <CreatedByInfo createdBy={selectedQuote.createdBy} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
