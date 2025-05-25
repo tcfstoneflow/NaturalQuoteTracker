@@ -761,13 +761,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // For sales reps, get their recent quotes
         const allQuotes = await storage.getQuotes();
-        console.log('User ID:', userId, 'Type:', typeof userId);
-        console.log('All quotes for filtering:', allQuotes.map(q => ({ id: q.id, createdBy: q.createdBy, typeOfCreatedBy: typeof q.createdBy })));
         quotes = allQuotes
-          .filter(quote => Number(quote.createdBy) === Number(userId))
+          .filter(quote => quote.createdBy && parseInt(quote.createdBy.toString()) === parseInt(userId.toString()))
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 10);
-        console.log('Filtered quotes:', quotes);
       }
       
       res.json(quotes);
