@@ -752,26 +752,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
-      console.log(`FIXED ROUTE: Getting quotes for user ID ${userId}`);
+      const userId = req.user?.id;
+      const userRole = req.user?.role || 'sales';
       
-      // Get ALL quotes and filter strictly by current user ONLY
-      const allQuotes = await storage.getQuotes();
-      console.log(`FIXED ROUTE: Found ${allQuotes.length} total quotes`);
+      console.log(`SALES DASHBOARD: User ID ${userId}, Role: ${userRole}`);
       
-      // STRICT filtering - only quotes created by this exact user
-      const userQuotes = allQuotes.filter(quote => {
-        const match = Number(quote.createdBy) === Number(userId);
-        console.log(`FIXED ROUTE: Quote ${quote.quoteNumber}: createdBy=${quote.createdBy}, userId=${userId}, match=${match}`);
-        return match;
-      });
-      
-      console.log(`FIXED ROUTE: Filtered to ${userQuotes.length} quotes for user ${userId}`);
-      
-      if (userQuotes.length === 0) {
-        console.log(`FIXED ROUTE: No quotes found for user ${userId}, returning empty array`);
-        return res.json([]);
+      if (!userId) {
+        console.log('SALES DASHBOARD: No user ID found, returning unauthorized');
+        return res.status(401).json({ error: 'User not authenticated' });
       }
+      
+      // Get ALL quotes first
+      const allQuotes = await storage.getQuotes();
+      console.log(`SALES DASHBOARD: Found ${allQuotes.length} total quotes in database`);
+      
+      // For admin users, show all quotes. For sales reps, show only their quotes
+      let userQuotes;
+      if (userRole === 'admin') {
+        console.log('SALES DASHBOARD: Admin user - showing all quotes');
+        userQuotes = allQuotes;
+      } else {
+        console.log('SALES DASHBOARD: Sales rep - filtering by createdBy');
+        userQuotes = allQuotes.filter(quote => {
+          const match = Number(quote.createdBy) === Number(userId);
+          console.log(`SALES DASHBOARD: Quote ${quote.quoteNumber}: createdBy=${quote.createdBy}, userId=${userId}, match=${match}`);
+          return match;
+        });
+      }
+      
+      console.log(`SALES DASHBOARD: After filtering: ${userQuotes.length} quotes for user ${userId}`);
       
       const sortedQuotes = userQuotes
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -787,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      console.log(`FIXED ROUTE: Returning ${quotesWithTotals.length} quotes`);
+      console.log(`SALES DASHBOARD: Returning ${quotesWithTotals.length} quotes`);
       res.json(quotesWithTotals);
     } catch (error: any) {
       console.error('Sales dashboard recent quotes error:', error);
