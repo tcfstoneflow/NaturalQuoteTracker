@@ -753,20 +753,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      console.log(`Sales Dashboard: Getting quotes for user ID ${userId}`);
+      console.log(`FIXED ROUTE: Getting quotes for user ID ${userId}`);
       
-      // Get ALL quotes and filter ONLY by current user
+      // Get ALL quotes and filter strictly by current user ONLY
       const allQuotes = await storage.getQuotes();
-      console.log(`Sales Dashboard: Found ${allQuotes.length} total quotes`);
+      console.log(`FIXED ROUTE: Found ${allQuotes.length} total quotes`);
       
-      // Filter quotes created by this specific user
+      // STRICT filtering - only quotes created by this exact user
       const userQuotes = allQuotes.filter(quote => {
-        const isUserQuote = quote.createdBy === userId;
-        console.log(`Quote ${quote.quoteNumber}: createdBy=${quote.createdBy}, userId=${userId}, match=${isUserQuote}`);
-        return isUserQuote;
+        const match = Number(quote.createdBy) === Number(userId);
+        console.log(`FIXED ROUTE: Quote ${quote.quoteNumber}: createdBy=${quote.createdBy}, userId=${userId}, match=${match}`);
+        return match;
       });
       
-      console.log(`Sales Dashboard: Found ${userQuotes.length} quotes for user ${userId}`);
+      console.log(`FIXED ROUTE: Filtered to ${userQuotes.length} quotes for user ${userId}`);
+      
+      if (userQuotes.length === 0) {
+        console.log(`FIXED ROUTE: No quotes found for user ${userId}, returning empty array`);
+        return res.json([]);
+      }
       
       const sortedQuotes = userQuotes
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -782,7 +787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      console.log(`Sales Dashboard: Returning ${quotesWithTotals.length} quotes`);
+      console.log(`FIXED ROUTE: Returning ${quotesWithTotals.length} quotes`);
       res.json(quotesWithTotals);
     } catch (error: any) {
       console.error('Sales dashboard recent quotes error:', error);
