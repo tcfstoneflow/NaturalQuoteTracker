@@ -56,16 +56,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Debug middleware for contact form
-app.use('/api/contact/showroom-visit', (req, res, next) => {
-  console.log('=== DEBUG MIDDLEWARE FOR CONTACT FORM ===');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  console.log('=== END DEBUG INFO ===');
-  next();
-});
+
 
 (async () => {
   const server = await registerRoutes(app);

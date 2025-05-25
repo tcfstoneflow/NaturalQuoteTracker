@@ -627,17 +627,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit routes (accessible without authentication for customer submissions)
   app.post("/api/contact/showroom-visit", async (req, res) => {
     try {
+      console.log("Received showroom visit request:", req.body);
       const { name, email, phone, preferredDate, message } = req.body;
       
+      // Validate required fields
+      if (!name || !email || !phone || !preferredDate) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Missing required fields: name, email, phone, and preferredDate are required" 
+        });
+      }
+
       const newVisit = await storage.createShowroomVisit({
         name,
         email,
         phone,
         preferredDate,
-        message,
+        message: message || null,
         status: "pending"
       });
 
+      console.log("Created showroom visit:", newVisit);
       res.json({ 
         success: true, 
         message: "Your showroom visit request has been submitted successfully!",
@@ -645,7 +655,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error creating showroom visit:", error);
-      res.status(500).json({ message: "Failed to submit request" });
+      console.error("Error details:", error.message);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to submit request",
+        error: error.message 
+      });
     }
   });
 
