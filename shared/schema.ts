@@ -13,6 +13,27 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("sales_rep"), // "admin", "sales_rep", "inventory_specialist"
   isActive: boolean("is_active").default(true).notNull(),
   lastLogin: timestamp("last_login"),
+  // Enhanced security fields
+  failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
+  accountLockedUntil: timestamp("account_locked_until"),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
+  mfaEnabled: boolean("mfa_enabled").default(false).notNull(),
+  mfaSecret: text("mfa_secret"),
+  phoneNumber: text("phone_number"),
+  lastPasswordChange: timestamp("last_password_change").defaultNow(),
+  sessionTimeout: integer("session_timeout").default(3600), // in seconds
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// MFA verification codes table
+export const mfaCodes = pgTable("mfa_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  code: text("code").notNull(),
+  type: text("type").notNull(), // "sms", "email", "totp"
+  used: boolean("used").default(false).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -156,6 +177,13 @@ export const slabsRelations = relations(slabs, ({ one }) => ({
   }),
 }));
 
+export const mfaCodesRelations = relations(mfaCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [mfaCodes.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -267,6 +295,9 @@ export type InsertSlab = z.infer<typeof insertSlabSchema>;
 
 export type ShowroomVisit = typeof showroomVisits.$inferSelect;
 export type InsertShowroomVisit = z.infer<typeof insertShowroomVisitSchema>;
+
+export type MfaCode = typeof mfaCodes.$inferSelect;
+export type InsertMfaCode = typeof mfaCodes.$inferInsert;
 
 // Extended types for API responses
 export type QuoteWithDetails = Quote & {
