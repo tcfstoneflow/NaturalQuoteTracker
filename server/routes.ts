@@ -613,23 +613,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Create activity record for tracking
-      console.log("Creating activity record...");
-      await storage.createActivity({
-        type: "showroom_visit_request",
-        description: `Showroom visit request from ${name} (${email}) for ${preferredDate}`,
-        entityType: "contact_request",
-        entityId: null,
-        metadata: { name, email, phone, preferredDate, message }
+      console.log("Validation passed, preparing response...");
+      
+      // For now, just log the request instead of saving to database
+      console.log("Showroom Visit Request:", {
+        name,
+        email,
+        phone,
+        preferredDate,
+        message: message || "No additional message"
       });
 
-      console.log("Activity created successfully, sending response...");
       const response = { 
         success: true, 
         message: "Your showroom visit request has been submitted successfully!" 
       };
-      console.log("Sending JSON response:", response);
-      res.json(response);
+      
+      console.log("Sending JSON response:", JSON.stringify(response));
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(response);
     } catch (error: any) {
       console.error("Showroom visit request error:", error);
       res.status(500).json({ error: "Failed to submit request" });
