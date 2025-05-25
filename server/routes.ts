@@ -8,6 +8,29 @@ import { sendQuoteEmail } from "./email";
 import { login, register, logout, getCurrentUser, requireAuth, requireRole, requireInventoryAccess, requirePricingAccess } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Showroom visit contact form - place at top to avoid conflicts
+  app.post("/api/contact/showroom-visit", (req, res) => {
+    console.log("=== SHOWROOM VISIT ENDPOINT HIT ===");
+    console.log("Request body:", req.body);
+    
+    const { name, email, phone, preferredDate, message } = req.body;
+    
+    if (!name || !email || !phone || !preferredDate) {
+      console.log("Validation failed - missing required fields");
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    console.log("All validation passed - sending success response");
+    
+    const responseData = { 
+      success: true, 
+      message: "Your showroom visit request has been submitted successfully!" 
+    };
+    
+    console.log("Sending response:", responseData);
+    res.json(responseData);
+  });
+
   // Authentication routes
   app.post("/api/auth/login", login);
   app.post("/api/auth/register", requireAuth, requireRole(['admin']), register);
@@ -601,42 +624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Showroom visit contact form
-  app.post("/api/contact/showroom-visit", (req, res) => {
-    console.log("=== SHOWROOM VISIT ENDPOINT HIT ===");
-    console.log("Request body:", req.body);
-    console.log("Request headers:", req.headers);
-    
-    const { name, email, phone, preferredDate, message } = req.body;
-    
-    // Basic validation
-    if (!name || !email || !phone || !preferredDate) {
-      console.log("Validation failed - missing required fields");
-      return res.status(400).json({ error: "Missing required fields" });
-    }
 
-    console.log("All validation passed");
-    
-    // Log the request details
-    console.log("Showroom Visit Request Details:", {
-      name,
-      email,
-      phone,
-      preferredDate,
-      message: message || "No additional message",
-      timestamp: new Date().toISOString()
-    });
-
-    // Send response
-    const responseData = { 
-      success: true, 
-      message: "Your showroom visit request has been submitted successfully!" 
-    };
-    
-    console.log("Sending response:", responseData);
-    res.json(responseData);
-    console.log("Response sent successfully");
-  });
 
   // Generate barcodes for existing slabs
   app.post('/api/slabs/generate-barcodes', requireAuth, requireInventoryAccess(), async (req: any, res) => {
