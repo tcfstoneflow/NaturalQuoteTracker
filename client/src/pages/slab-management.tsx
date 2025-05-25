@@ -667,8 +667,8 @@ export default function SlabManagement() {
                   />
 
                   <div className="flex gap-2 pt-4">
-                    <Button type="submit" disabled={editSlabMutation.isPending}>
-                      {editSlabMutation.isPending ? "Updating..." : "Update Slab"}
+                    <Button type="submit" disabled={updateSlabMutation.isPending}>
+                      {updateSlabMutation.isPending ? "Updating..." : "Update Slab"}
                     </Button>
                     <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                       Cancel
@@ -678,7 +678,6 @@ export default function SlabManagement() {
               </Form>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
     </div>
   );
