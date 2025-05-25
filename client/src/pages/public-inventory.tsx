@@ -27,7 +27,8 @@ export default function PublicInventory() {
           const productsWithSlabData = await Promise.all(
             products.map(async (product: any) => {
               try {
-                const slabsResponse = await apiRequest(`/api/slabs?bundleId=${product.bundleId}`);
+                const slabsResponse = await fetch(`/api/slabs?bundleId=${product.bundleId}`)
+                  .then(res => res.json());
                 return {
                   ...product,
                   slabs: slabsResponse || []
@@ -160,7 +161,11 @@ export default function PublicInventory() {
 
             <div className="flex items-center text-sm text-gray-600">
               <Package className="h-4 w-4 mr-1" />
-              {sortedProducts.length} bundles available
+              {sortedProducts.reduce((total, product) => {
+                return total + (product.slabs && Array.isArray(product.slabs) ? 
+                  product.slabs.filter((slab: any) => slab.status === 'available').length : 
+                  product.stockQuantity);
+              }, 0)} slabs available
             </div>
           </div>
         </div>
@@ -195,8 +200,15 @@ export default function PublicInventory() {
                   
                   {/* Stock Badge */}
                   <div className="absolute top-3 right-3">
-                    <Badge variant={product.stockQuantity > 5 ? "default" : "secondary"}>
-                      {product.stockQuantity} bundles
+                    <Badge variant={
+                      (product.slabs ? 
+                        product.slabs.filter((slab: any) => slab.status === 'available').length : 
+                        product.stockQuantity) > 5 ? "default" : "secondary"
+                    }>
+                      {product.slabs ? 
+                        product.slabs.filter((slab: any) => slab.status === 'available').length : 
+                        product.stockQuantity
+                      } slabs
                     </Badge>
                   </div>
                 </div>
@@ -308,8 +320,13 @@ export default function PublicInventory() {
                                   <span>{product.thickness}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-gray-600">Available Bundles:</span>
-                                  <span className="font-semibold">{product.stockQuantity}</span>
+                                  <span className="text-gray-600">Available Slabs:</span>
+                                  <span className="font-semibold">
+                                    {product.slabs ? 
+                                      product.slabs.filter((slab: any) => slab.status === 'available').length : 
+                                      product.stockQuantity
+                                    }
+                                  </span>
                                 </div>
                               </div>
                             </div>
