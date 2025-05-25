@@ -54,16 +54,19 @@ export default function PublicInventory() {
   // Contact form submission
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      // Simple success simulation for now - in production this would go to a real endpoint
-      console.log("Showroom visit request:", data);
+      const response = await fetch("/api/contact/showroom-visit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
       
-      // Simulate a small delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!response.ok) {
+        throw new Error(`Failed to submit request: ${response.statusText}`);
+      }
       
-      return { 
-        success: true, 
-        message: "Your showroom visit request has been submitted successfully!" 
-      };
+      return await response.json();
     },
     onSuccess: () => {
       toast({

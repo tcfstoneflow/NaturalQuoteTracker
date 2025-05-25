@@ -624,7 +624,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Showroom visit routes (accessible without authentication for customer submissions)
+  app.post("/api/contact/showroom-visit", async (req, res) => {
+    try {
+      const { name, email, phone, preferredDate, message } = req.body;
+      
+      const newVisit = await storage.createShowroomVisit({
+        name,
+        email,
+        phone,
+        preferredDate,
+        message,
+        status: "pending"
+      });
 
+      res.json({ 
+        success: true, 
+        message: "Your showroom visit request has been submitted successfully!",
+        id: newVisit.id
+      });
+    } catch (error: any) {
+      console.error("Error creating showroom visit:", error);
+      res.status(500).json({ message: "Failed to submit request" });
+    }
+  });
+
+  app.get("/api/showroom-visits", requireAuth, async (req, res) => {
+    try {
+      const visits = await storage.getShowroomVisits();
+      res.json(visits);
+    } catch (error: any) {
+      console.error("Error fetching showroom visits:", error);
+      res.status(500).json({ message: "Failed to fetch visits" });
+    }
+  });
+
+  app.get("/api/showroom-visits/pending", requireAuth, async (req, res) => {
+    try {
+      const pendingVisits = await storage.getPendingShowroomVisits();
+      res.json(pendingVisits);
+    } catch (error: any) {
+      console.error("Error fetching pending visits:", error);
+      res.status(500).json({ message: "Failed to fetch pending visits" });
+    }
+  });
+
+  app.patch("/api/showroom-visits/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedVisit = await storage.updateShowroomVisit(id, updates);
+      res.json(updatedVisit);
+    } catch (error: any) {
+      console.error("Error updating showroom visit:", error);
+      res.status(500).json({ message: "Failed to update visit" });
+    }
+  });
 
   // Generate barcodes for existing slabs
   app.post('/api/slabs/generate-barcodes', requireAuth, requireInventoryAccess(), async (req: any, res) => {
