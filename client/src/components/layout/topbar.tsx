@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { Search, Bell, Plus, LogOut, User } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
 
 interface TopBarProps {
@@ -19,6 +25,19 @@ export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
   const [isQuoteBuilderOpen, setIsQuoteBuilderOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Get notifications - pending showroom visits and other alerts
+  const { data: pendingVisits } = useQuery({
+    queryKey: ["/api/showroom-visits/pending"],
+    enabled: !!user?.user?.role && (user.user.role === 'admin' || user.user.role === 'sales_rep'),
+  });
+
+  const { data: lowStockProducts } = useQuery({
+    queryKey: ["/api/products/low-stock"],
+    enabled: !!user?.user?.role,
+  });
+
+  const notificationCount = (pendingVisits?.length || 0) + (lowStockProducts?.length || 0);
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -80,12 +99,54 @@ export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
             </Button>
             
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell size={18} />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-error-red text-white text-xs rounded-full flex items-center justify-center">
-                3
-              </span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell size={18} />
+                  {notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-error-red text-white text-xs rounded-full flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <div className="p-3 border-b">
+                  <h4 className="font-semibold text-sm">Notifications</h4>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {pendingVisits && pendingVisits.length > 0 && (
+                    <>
+                      {pendingVisits.map((visit: any) => (
+                        <DropdownMenuItem key={visit.id} className="flex-col items-start p-3">
+                          <div className="font-medium text-sm">New Showroom Visit Request</div>
+                          <div className="text-xs text-gray-600">
+                            {visit.name} ({visit.email}) wants to visit on {new Date(visit.requestedDate).toLocaleDateString()}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {lowStockProducts && lowStockProducts.length > 0 && (
+                    <>
+                      {lowStockProducts.map((product: any) => (
+                        <DropdownMenuItem key={product.id} className="flex-col items-start p-3">
+                          <div className="font-medium text-sm">Low Stock Alert</div>
+                          <div className="text-xs text-gray-600">
+                            {product.name} - Only {product.stockQuantity} slabs remaining
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {notificationCount === 0 && (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No new notifications
+                    </div>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User Profile & Logout */}
             <div className="flex items-center space-x-3 border-l border-neutral-200 pl-4">
