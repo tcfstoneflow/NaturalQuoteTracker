@@ -752,56 +752,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
     console.log('ROUTE HIT - Sales Dashboard Recent Quotes');
-    console.log('Request user:', req.user);
-    try {
-      if (!req.user?.id) {
-        console.log('No user ID found');
-        return res.json([]);
+    
+    // Simple test - just return some test data to see if this works
+    const testQuotes = [
+      {
+        id: 999,
+        quoteNumber: "TEST-001",
+        client: { name: "Test Client" },
+        total: "1000.00",
+        status: "pending",
+        createdAt: new Date()
       }
-      
-      const userId = req.user.id;
-      console.log('=== SALES DASHBOARD DEBUG ===');
-      console.log('User ID:', userId);
-      
-      // Get all quotes and filter them for this user
-      const allQuotes = await storage.getQuotes();
-      console.log('Total quotes in system:', allQuotes.length);
-      
-      // Log all quotes with their createdBy values
-      allQuotes.forEach(quote => {
-        console.log(`Quote ${quote.id} (${quote.quoteNumber}): createdBy = ${quote.createdBy} (type: ${typeof quote.createdBy})`);
-      });
-      
-      const userQuotes = allQuotes.filter(quote => {
-        const match = quote.createdBy && Number(quote.createdBy) === Number(userId);
-        console.log(`Quote ${quote.id}: ${quote.createdBy} === ${userId} ? ${match}`);
-        return match;
-      });
-      
-      console.log('Filtered quotes for user:', userQuotes.length);
-      
-      // Add total calculation to each quote
-      const quotesWithTotals = userQuotes.map(quote => {
-        const total = quote.lineItems.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0);
-        return {
-          ...quote,
-          total: total.toFixed(2)
-        };
-      });
-      
-      const quotes = quotesWithTotals
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10);
-      
-      console.log('Final quotes to return:', quotes.length);
-      console.log('Quotes array:', JSON.stringify(quotes, null, 2));
-      console.log('=== END DEBUG ===');
-      
-      res.json(quotes);
-    } catch (error: any) {
-      console.error('Error getting recent quotes:', error);
-      res.status(500).json({ error: 'Failed to get recent quotes' });
-    }
+    ];
+    
+    console.log('Returning test quotes:', testQuotes);
+    res.json(testQuotes);
   });
 
   app.get('/api/sales-dashboard/recent-activities', requireAuth, async (req: any, res) => {
