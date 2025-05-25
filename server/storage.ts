@@ -17,10 +17,26 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLastLogin(id: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
   toggleUserStatus(id: number, isActive: boolean): Promise<User>;
+  
+  // Enhanced security methods
+  updateFailedAttempts(id: number, attempts: number): Promise<void>;
+  resetFailedLoginAttempts(id: number): Promise<void>;
+  lockAccount(id: number, lockUntil: Date): Promise<void>;
+  setPasswordResetToken(id: number, token: string, expires: Date): Promise<void>;
+  getUserByPasswordResetToken(token: string): Promise<User | undefined>;
+  clearPasswordResetToken(id: number): Promise<void>;
+  updatePassword(id: number, passwordHash: string): Promise<void>;
+  
+  // MFA methods
+  createMFACode(mfaCode: InsertMfaCode): Promise<void>;
+  verifyAndUseMFACode(userId: number, code: string, type: string): Promise<boolean>;
+  enableMFA(userId: number, secret: string): Promise<void>;
+  disableMFA(userId: number): Promise<void>;
 
   // Clients
   getClients(): Promise<Client[]>;
@@ -94,6 +110,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
   async createUser(insertUser: any): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -120,6 +141,122 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  // Enhanced security methods
+  async updateFailedAttempts(id: number, attempts: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ failedLoginAttempts: attempts })
+      .where(eq(users.id, id));
+  }
+
+  async resetFailedLoginAttempts(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        failedLoginAttempts: 0,
+        accountLockedUntil: null 
+      })
+      .where(eq(users.id, id));
+  }
+
+  async lockAccount(id: number, lockUntil: Date): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        accountLockedUntil: lockUntil,
+        failedLoginAttempts: 0 
+      })
+      .where(eq(users.id, id));
+  }
+
+  async setPasswordResetToken(id: number, token: string, expires: Date): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        passwordResetToken: token,
+        passwordResetExpires: expires 
+      })
+      .where(eq(users.id, id));
+  }
+
+  async getUserByPasswordResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.passwordResetToken, token));
+    return user || undefined;
+  }
+
+  async clearPasswordResetToken(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        passwordResetToken: null,
+        passwordResetExpires: null 
+      })
+      .where(eq(users.id, id));
+  }
+
+  async updatePassword(id: number, passwordHash: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        passwordHash,
+        lastPasswordChange: new Date() 
+      })
+      .where(eq(users.id, id));
+  }
+
+  // MFA methods
+  async createMFACode(mfaCode: InsertMfaCode): Promise<void> {
+    await db.insert(mfaCodes).values(mfaCode);
+  }
+
+  async verifyAndUseMFACode(userId: number, code: string, type: string): Promise<boolean> {
+    const [mfaCode] = await db
+      .select()
+      .from(mfaCodes)
+      .where(
+        and(
+          eq(mfaCodes.userId, userId),
+          eq(mfaCodes.code, code),
+          eq(mfaCodes.type, type),
+          eq(mfaCodes.used, false),
+          gte(mfaCodes.expiresAt, new Date())
+        )
+      );
+
+    if (!mfaCode) return false;
+
+    // Mark code as used
+    await db
+      .update(mfaCodes)
+      .set({ used: true })
+      .where(eq(mfaCodes.id, mfaCode.id));
+
+    return true;
+  }
+
+  async enableMFA(userId: number, secret: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        mfaEnabled: true,
+        mfaSecret: secret 
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async disableMFA(userId: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        mfaEnabled: false,
+        mfaSecret: null 
+      })
+      .where(eq(users.id, userId));
   }
 
   // Clients
