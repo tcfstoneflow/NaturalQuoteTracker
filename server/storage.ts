@@ -72,6 +72,14 @@ export interface IStorage {
   deleteSlab(id: number): Promise<boolean>;
   getProductWithSlabs(id: number): Promise<ProductWithSlabs | undefined>;
   updateSlabStatus(id: number, status: string, date?: Date): Promise<Slab>;
+
+  // Showroom Visits
+  getShowroomVisits(): Promise<ShowroomVisit[]>;
+  getShowroomVisit(id: number): Promise<ShowroomVisit | undefined>;
+  createShowroomVisit(visit: InsertShowroomVisit): Promise<ShowroomVisit>;
+  updateShowroomVisit(id: number, visit: Partial<InsertShowroomVisit>): Promise<ShowroomVisit>;
+  deleteShowroomVisit(id: number): Promise<boolean>;
+  getPendingShowroomVisits(): Promise<ShowroomVisit[]>;
 }
 
 export class DatabaseStorage implements IStorage {

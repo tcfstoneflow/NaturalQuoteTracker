@@ -97,12 +97,27 @@ export const slabs = pgTable("slabs", {
 
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
-  type: text("type").notNull(), // "quote_created", "quote_sent", "quote_approved", "quote_rejected", "client_added", "product_updated"
+  type: text("type").notNull(), // "quote_created", "quote_sent", "quote_approved", "quote_rejected", "client_added", "product_updated", "showroom_visit_request"
   description: text("description").notNull(),
-  entityType: text("entity_type"), // "quote", "client", "product"
+  entityType: text("entity_type"), // "quote", "client", "product", "contact_request"
   entityId: integer("entity_id"),
-  metadata: jsonb("metadata"),
+  metadata: jsonb("metadata"), // For showroom requests: {name, email, phone, preferredDate, message, status}
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// New table for showroom visit requests
+export const showroomVisits = pgTable("showroom_visits", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  preferredDate: text("preferred_date").notNull(),
+  message: text("message"),
+  status: text("status").default("pending").notNull(), // "pending", "scheduled", "completed", "cancelled"
+  assignedToUserId: integer("assigned_to_user_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Relations
@@ -217,6 +232,12 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   createdAt: true,
 });
 
+export const insertShowroomVisitSchema = createInsertSchema(showroomVisits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -243,6 +264,9 @@ export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
 export type Slab = typeof slabs.$inferSelect;
 export type InsertSlab = z.infer<typeof insertSlabSchema>;
+
+export type ShowroomVisit = typeof showroomVisits.$inferSelect;
+export type InsertShowroomVisit = z.infer<typeof insertShowroomVisitSchema>;
 
 // Extended types for API responses
 export type QuoteWithDetails = Quote & {
