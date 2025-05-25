@@ -1,5 +1,5 @@
 import { SignIn, SignUp, useUser } from '@clerk/clerk-react';
-import { Navigate } from 'wouter';
+import { Redirect } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -8,7 +8,7 @@ export default function ClerkAuthPage() {
 
   // If user is already signed in, redirect to dashboard
   if (isLoaded && isSignedIn) {
-    return <Navigate to="/clerk-dashboard" />;
+    return <Redirect to="/" />;
   }
 
   if (!isLoaded) {

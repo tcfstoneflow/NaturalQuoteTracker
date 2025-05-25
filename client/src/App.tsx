@@ -35,6 +35,7 @@ function Router() {
     <Switch>
       {/* Public routes - accessible without authentication */}
       <Route path="/public-inventory" component={PublicInventory} />
+      <Route path="/clerk-auth" component={ClerkAuthPage} />
       
       {/* Admin/Staff routes - require authentication */}
       {isAuthenticated ? (
