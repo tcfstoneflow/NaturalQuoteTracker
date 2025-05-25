@@ -760,7 +760,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return quote.createdBy && Number(quote.createdBy) === Number(userId);
       });
       
-      const quotes = userQuotes
+      // Add total calculation to each quote
+      const quotesWithTotals = userQuotes.map(quote => {
+        const total = quote.lineItems.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unitPrice)), 0);
+        return {
+          ...quote,
+          total: total.toFixed(2)
+        };
+      });
+      
+      const quotes = quotesWithTotals
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 10);
       

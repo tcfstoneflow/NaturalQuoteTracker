@@ -127,26 +127,28 @@ export default function SalesDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {myQuotes?.slice(0, 5).map((quote: any) => (
-                    <div key={quote.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-sm">{quote.quoteNumber}</div>
-                        <div className="text-xs text-gray-600">{quote.client?.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {format(new Date(quote.createdAt), "MMM d, yyyy")}
+                  {myQuotes && myQuotes.length > 0 ? (
+                    myQuotes.slice(0, 5).map((quote: any) => (
+                      <div key={quote.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="font-medium text-sm">{quote.quoteNumber}</div>
+                          <div className="text-xs text-gray-600">{quote.client?.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {format(new Date(quote.createdAt), "MMM d, yyyy")}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium text-sm">${quote.total || '0.00'}</div>
+                          <Badge 
+                            variant={quote.status === 'sent' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {quote.status}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-medium text-sm">${quote.total}</div>
-                        <Badge 
-                          variant={quote.status === 'sent' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {quote.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  )) || (
+                    ))
+                  ) : (
                     <div className="text-center py-4 text-gray-500">
                       No quotes yet. Create your first quote!
                     </div>
