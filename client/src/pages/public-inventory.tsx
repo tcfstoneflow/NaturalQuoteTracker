@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Package, Ruler, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, Filter, Package, Ruler, MapPin, Eye } from "lucide-react";
 import { useState } from "react";
 
 export default function PublicInventory() {
@@ -124,7 +125,7 @@ export default function PublicInventory() {
 
             <div className="flex items-center text-sm text-gray-600">
               <Package className="h-4 w-4 mr-1" />
-              {sortedProducts.length} slabs available
+              {sortedProducts.length} bundles available
             </div>
           </div>
         </div>
@@ -160,7 +161,7 @@ export default function PublicInventory() {
                   {/* Stock Badge */}
                   <div className="absolute top-3 right-3">
                     <Badge variant={product.stockQuantity > 5 ? "default" : "secondary"}>
-                      {product.stockQuantity} slabs
+                      {product.stockQuantity} bundles
                     </Badge>
                   </div>
                 </div>
@@ -217,9 +218,108 @@ export default function PublicInventory() {
                     <Button className="flex-1" size="sm">
                       Request Quote
                     </Button>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>{product.name}</DialogTitle>
+                          <DialogDescription>
+                            Complete details for this stone bundle
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Image */}
+                          <div className="space-y-4">
+                            {product.imageUrl ? (
+                              <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center">
+                                <Package className="h-16 w-16 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Details */}
+                          <div className="space-y-4">
+                            <div>
+                              <h3 className="font-semibold text-gray-900 mb-2">Bundle Information</h3>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Bundle ID:</span>
+                                  <span className="font-mono">{product.bundleId || 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Category:</span>
+                                  <span className="capitalize">{product.category}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Grade:</span>
+                                  <span>{product.grade} Grade</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Thickness:</span>
+                                  <span>{product.thickness}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Available Bundles:</span>
+                                  <span className="font-semibold">{product.stockQuantity}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {product.slabLength && product.slabWidth && (
+                              <div>
+                                <h3 className="font-semibold text-gray-900 mb-2">Slab Dimensions</h3>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Length:</span>
+                                    <span>{product.slabLength}"</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Width:</span>
+                                    <span>{product.slabWidth}"</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Area per Slab:</span>
+                                    <span className="font-semibold">
+                                      {calculateSlabArea(product.slabLength, product.slabWidth)} sq ft
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {product.location && (
+                              <div>
+                                <h3 className="font-semibold text-gray-900 mb-2">Warehouse Location</h3>
+                                <div className="flex items-center text-sm text-gray-600">
+                                  <MapPin className="h-4 w-4 mr-2" />
+                                  {product.location}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="pt-4 border-t">
+                              <Button className="w-full">
+                                Request Quote for This Bundle
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardContent>
               </Card>
