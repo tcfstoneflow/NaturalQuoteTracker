@@ -113,6 +113,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Showroom visit management routes (for sales reps)
+  app.get("/api/showroom-visits", requireAuth, async (req, res) => {
+    try {
+      const visits = await storage.getShowroomVisits();
+      res.json(visits);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch showroom visits" });
+    }
+  });
+
+  app.get("/api/showroom-visits/pending", requireAuth, async (req, res) => {
+    try {
+      const pendingVisits = await storage.getPendingShowroomVisits();
+      res.json(pendingVisits);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch pending visits" });
+    }
+  });
+
+  app.patch("/api/showroom-visits/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedVisit = await storage.updateShowroomVisit(id, updates);
+      res.json(updatedVisit);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update visit" });
+    }
+  });
+
   // Clients
   app.get("/api/clients", async (req, res) => {
     try {
