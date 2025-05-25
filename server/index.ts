@@ -42,48 +42,7 @@ app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
   }
 });
 
-// Sales Dashboard Recent Quotes - FIXED to show only user's quotes
-app.get('/api/sales-dashboard/recent-quotes', async (req, res) => {
-  try {
-    const { storage } = await import('./storage');
-    const { requireAuth } = await import('./auth');
-    
-    // Apply authentication middleware
-    await new Promise((resolve, reject) => {
-      requireAuth(req as any, res, (err: any) => {
-        if (err) reject(err);
-        else resolve(null);
-      });
-    });
-    
-    const userId = (req as any).user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-    
-    // Get ALL quotes and filter by current user ONLY
-    const allQuotes = await storage.getQuotes();
-    const userQuotes = allQuotes
-      .filter(quote => quote.createdBy === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
-    
-    // Calculate totals for each quote
-    const quotesWithTotals = userQuotes.map(quote => {
-      const total = quote.lineItems.reduce((sum, item) => 
-        sum + (Number(item.quantity) * Number(item.unitPrice)), 0);
-      return {
-        ...quote,
-        total: total.toFixed(2)
-      };
-    });
-    
-    res.json(quotesWithTotals);
-  } catch (error) {
-    console.error('Sales dashboard recent quotes error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+
 
 // Early registration for showroom visits management routes
 app.get('/api/showroom-visits', express.json(), async (req, res) => {

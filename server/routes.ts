@@ -750,7 +750,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Removed duplicate route - using early registration in index.ts
+  app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get ALL quotes and filter ONLY by current user
+      const allQuotes = await storage.getQuotes();
+      const userQuotes = allQuotes
+        .filter(quote => quote.createdBy === userId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5);
+      
+      // Calculate totals for each quote
+      const quotesWithTotals = userQuotes.map(quote => {
+        const total = quote.lineItems.reduce((sum, item) => 
+          sum + (Number(item.quantity) * Number(item.unitPrice)), 0);
+        return {
+          ...quote,
+          total: total.toFixed(2)
+        };
+      });
+      
+      res.json(quotesWithTotals);
+    } catch (error: any) {
+      console.error('Sales dashboard recent quotes error:', error);
+      res.status(500).json({ error: 'Failed to get recent quotes' });
+    }
+  });
 
   app.get('/api/sales-dashboard/recent-activities', requireAuth, async (req: any, res) => {
     try {
