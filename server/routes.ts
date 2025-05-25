@@ -618,9 +618,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivity({
         type: "showroom_visit_request",
         description: `Showroom visit request from ${name} (${email}) for ${preferredDate}`,
-        userId: null, // Public request
-        relatedId: null,
-        relatedType: null
+        entityType: "contact_request",
+        entityId: null,
+        metadata: { name, email, phone, preferredDate, message }
       });
 
       console.log("Activity created successfully, sending response...");
