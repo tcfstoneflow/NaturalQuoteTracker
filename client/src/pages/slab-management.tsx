@@ -78,10 +78,7 @@ export default function SlabManagement() {
   });
 
   const createSlabMutation = useMutation({
-    mutationFn: (data: InsertSlab) => apiRequest(`/api/slabs`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: InsertSlab) => apiRequest('POST', `/api/slabs`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       setIsAddDialogOpen(false);
@@ -102,10 +99,7 @@ export default function SlabManagement() {
 
   const updateSlabMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertSlab> }) => 
-      apiRequest(`/api/slabs/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      }),
+      apiRequest('PATCH', `/api/slabs/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       setIsEditDialogOpen(false);
@@ -125,9 +119,7 @@ export default function SlabManagement() {
   });
 
   const deleteSlabMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/slabs/${id}`, {
-      method: 'DELETE',
-    }),
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/slabs/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       toast({
