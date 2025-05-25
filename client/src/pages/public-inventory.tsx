@@ -201,11 +201,11 @@ export default function PublicInventory() {
                   {/* Stock Badge */}
                   <div className="absolute top-3 right-3">
                     <Badge variant={
-                      (product.slabs ? 
+                      (product.slabs && Array.isArray(product.slabs) ? 
                         product.slabs.filter((slab: any) => slab.status === 'available').length : 
                         product.stockQuantity) > 5 ? "default" : "secondary"
                     }>
-                      {product.slabs ? 
+                      {product.slabs && Array.isArray(product.slabs) ? 
                         product.slabs.filter((slab: any) => slab.status === 'available').length : 
                         product.stockQuantity
                       } slabs
@@ -322,7 +322,7 @@ export default function PublicInventory() {
                                 <div className="flex justify-between">
                                   <span className="text-gray-600">Available Slabs:</span>
                                   <span className="font-semibold">
-                                    {product.slabs ? 
+                                    {product.slabs && Array.isArray(product.slabs) ? 
                                       product.slabs.filter((slab: any) => slab.status === 'available').length : 
                                       product.stockQuantity
                                     }
@@ -353,7 +353,7 @@ export default function PublicInventory() {
                               </div>
                             )}
 
-                            {product.slabs && product.slabs.length > 0 && (
+                            {product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
                               <div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Warehouse Locations</h3>
                                 <div className="space-y-1">
