@@ -787,6 +787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .slice(0, 10);
       
       console.log('Final quotes to return:', quotes.length);
+      console.log('Quotes array:', JSON.stringify(quotes, null, 2));
       console.log('=== END DEBUG ===');
       
       res.json(quotes);

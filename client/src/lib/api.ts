@@ -51,8 +51,20 @@ export const aiApi = {
 
 // Sales Dashboard API
 export const salesDashboardApi = {
-  getStats: () => apiRequest('GET', '/api/sales-dashboard/stats'),
-  getRecentQuotes: () => apiRequest('GET', '/api/sales-dashboard/recent-quotes'),
-  getRecentActivities: () => apiRequest('GET', '/api/sales-dashboard/recent-activities'),
-  getPendingShowroomVisits: () => apiRequest('GET', '/api/sales-dashboard/pending-showroom-visits'),
+  getStats: async () => {
+    const response = await apiRequest('GET', '/api/sales-dashboard/stats');
+    return response.json();
+  },
+  getRecentQuotes: async () => {
+    const response = await apiRequest('GET', '/api/sales-dashboard/recent-quotes');
+    return response.json();
+  },
+  getRecentActivities: async () => {
+    const response = await apiRequest('GET', '/api/sales-dashboard/recent-activities');
+    return response.json();
+  },
+  getPendingShowroomVisits: async () => {
+    const response = await apiRequest('GET', '/api/sales-dashboard/pending-showroom-visits');
+    return response.json();
+  },
 };

@@ -37,6 +37,9 @@ export default function SalesDashboard() {
   console.log('Sales Dashboard - myQuotes data:', myQuotes);
   console.log('Sales Dashboard - myQuotes type:', typeof myQuotes);
   console.log('Sales Dashboard - myQuotes length:', myQuotes?.length);
+  
+  // Ensure we have an array
+  const quotesArray = Array.isArray(myQuotes) ? myQuotes : [];
 
   const { data: myActivities } = useQuery({
     queryKey: ["/api/sales-dashboard/recent-activities"],
@@ -132,8 +135,8 @@ export default function SalesDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {myQuotes && myQuotes.length > 0 ? (
-                    myQuotes.slice(0, 5).map((quote: any) => (
+                  {quotesArray.length > 0 ? (
+                    quotesArray.slice(0, 5).map((quote: any) => (
                       <div key={quote.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <div className="font-medium text-sm">{quote.quoteNumber}</div>
