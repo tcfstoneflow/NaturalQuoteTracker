@@ -753,22 +753,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      console.log('Sales dashboard - User ID:', userId, 'Type:', typeof userId);
       
-      // Get all quotes and check what we have
+      // Get all quotes and filter them for this user
       const allQuotes = await storage.getQuotes();
-      console.log('Total quotes found:', allQuotes.length);
-      console.log('Quote createdBy values:', allQuotes.map(q => ({ id: q.id, createdBy: q.createdBy, type: typeof q.createdBy })));
-      
-      // Filter quotes for this user (convert both to numbers for comparison)
       const userQuotes = allQuotes.filter(quote => {
-        const quoteCreatedBy = Number(quote.createdBy);
-        const currentUserId = Number(userId);
-        console.log(`Comparing quote ${quote.id}: createdBy=${quoteCreatedBy} vs userId=${currentUserId} -> ${quoteCreatedBy === currentUserId}`);
-        return quoteCreatedBy === currentUserId;
+        return quote.createdBy && Number(quote.createdBy) === Number(userId);
       });
-      
-      console.log('Filtered quotes for user:', userQuotes.length);
       
       const quotes = userQuotes
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
