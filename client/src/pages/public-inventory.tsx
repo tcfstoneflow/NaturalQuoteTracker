@@ -63,10 +63,17 @@ export default function PublicInventory() {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
       
-      return response.json();
+      const responseText = await response.text();
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.error("Invalid JSON response:", responseText);
+        throw new Error("Server returned invalid response");
+      }
     },
     onSuccess: () => {
       toast({
