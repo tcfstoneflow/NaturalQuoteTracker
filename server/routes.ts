@@ -750,10 +750,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/recent-quotes', async (req: any, res) => {
-    console.log('ROUTE HIT - Sales Dashboard Recent Quotes - NO AUTH');
+  app.get('/api/sales-dashboard/test-quotes', async (req: any, res) => {
+    console.log('TEST ROUTE HIT - This should appear in logs!');
     
-    // Simple test - just return some test data to see if this works
     const testQuotes = [
       {
         id: 999,
@@ -765,7 +764,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     ];
     
-    console.log('Returning test quotes:', testQuotes);
+    console.log('Returning test data:', testQuotes);
+    res.json(testQuotes);
+  });
+
+  app.get('/api/sales-dashboard/recent-quotes', async (req: any, res) => {
+    console.log('MAIN ROUTE HIT - Sales Dashboard Recent Quotes');
+    
+    const testQuotes = [
+      {
+        id: 888,
+        quoteNumber: "MAIN-001",
+        client: { name: "Main Client" },
+        total: "2000.00",
+        status: "pending",
+        createdAt: new Date()
+      }
+    ];
+    
+    console.log('Returning main quotes:', testQuotes);
     res.json(testQuotes);
   });
 

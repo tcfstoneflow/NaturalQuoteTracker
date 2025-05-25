@@ -42,6 +42,19 @@ app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
   }
 });
 
+// URGENT: Early test route to debug sales dashboard issue
+app.get('/api/sales-dashboard/recent-quotes', (req, res) => {
+  console.log('EARLY ROUTE HIT - Sales Dashboard Test');
+  res.json([{
+    id: 777,
+    quoteNumber: "EARLY-TEST",
+    client: { name: "Early Test Client" },
+    total: "3000.00",
+    status: "pending",
+    createdAt: new Date()
+  }]);
+});
+
 // Early registration for showroom visits management routes
 app.get('/api/showroom-visits', express.json(), async (req, res) => {
   try {
