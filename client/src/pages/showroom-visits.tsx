@@ -196,7 +196,7 @@ export default function ShowroomVisits() {
                   <span className="text-gray-600 font-medium">Notes: {visit.notes}</span>
                 </div>
               )}
-              <Dialog>
+              <Dialog open={selectedVisit?.id === visit.id} onOpenChange={(open) => !open && setSelectedVisit(null)}>
                 <DialogTrigger asChild>
                   <Button 
                     variant="outline" 
