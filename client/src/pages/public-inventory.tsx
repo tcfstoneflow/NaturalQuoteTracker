@@ -1,23 +1,84 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, Filter, Package, Ruler, MapPin, Eye } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Search, Filter, Package, Ruler, MapPin, Eye, Calendar, Phone, Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
+
+// Contact form schema
+const contactSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(10, "Please enter a valid phone number"),
+  preferredDate: z.string().min(1, "Please select a preferred date"),
+  message: z.string().optional(),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
 
 export default function PublicInventory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
   const [productsWithSlabs, setProductsWithSlabs] = useState<any[]>([]);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const contactForm = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      preferredDate: "",
+      message: "",
+    },
+  });
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
   });
+
+  // Contact form submission
+  const contactMutation = useMutation({
+    mutationFn: async (data: ContactFormData) => {
+      return apiRequest("/api/contact/showroom-visit", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Submitted!",
+        description: "We'll contact you soon to schedule your showroom visit.",
+      });
+      contactForm.reset();
+      setContactDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onContactSubmit = (data: ContactFormData) => {
+    contactMutation.mutate(data);
+  };
 
   // Fetch slab details for each product
   useEffect(() => {
@@ -400,13 +461,114 @@ export default function PublicInventory() {
             Our stone experts are here to help you choose the ideal material for your project. 
             Contact us for personalized recommendations and pricing.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="px-8">
-              Contact Sales Team
-            </Button>
-            <Button variant="outline" size="lg" className="px-8">
-              Schedule Showroom Visit
-            </Button>
+          <div className="flex justify-center">
+            <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="px-8">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Schedule Showroom Visit
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Schedule Your Showroom Visit</DialogTitle>
+                  <DialogDescription>
+                    Let us know when you'd like to visit our showroom to see our stone collection in person.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...contactForm}>
+                  <form onSubmit={contactForm.handleSubmit(onContactSubmit)} className="space-y-4">
+                    <FormField
+                      control={contactForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={contactForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="john@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={contactForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={contactForm.control}
+                      name="preferredDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Preferred Visit Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={contactForm.control}
+                      name="message"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Additional Message (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Tell us about your project or any specific stones you're interested in..."
+                              className="resize-none"
+                              rows={3}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex gap-3 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => setContactDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        className="flex-1"
+                        disabled={contactMutation.isPending}
+                      >
+                        {contactMutation.isPending ? "Submitting..." : "Schedule Visit"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>

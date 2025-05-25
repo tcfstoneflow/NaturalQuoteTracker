@@ -601,6 +601,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Showroom visit contact form
+  app.post("/api/contact/showroom-visit", async (req, res) => {
+    try {
+      const { name, email, phone, preferredDate, message } = req.body;
+      
+      // Basic validation
+      if (!name || !email || !phone || !preferredDate) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Create activity record for tracking
+      await storage.createActivity({
+        type: "showroom_visit_request",
+        description: `Showroom visit request from ${name} (${email}) for ${preferredDate}`,
+        userId: null, // Public request
+        relatedId: null,
+        relatedType: null
+      });
+
+      // In a real application, you might want to:
+      // 1. Send an email notification to staff
+      // 2. Store the request in a dedicated table
+      // 3. Integrate with a calendar system
+      
+      res.json({ 
+        success: true, 
+        message: "Your showroom visit request has been submitted successfully!" 
+      });
+    } catch (error: any) {
+      console.error("Showroom visit request error:", error);
+      res.status(500).json({ error: "Failed to submit request" });
+    }
+  });
+
   // Generate barcodes for existing slabs
   app.post('/api/slabs/generate-barcodes', requireAuth, requireInventoryAccess(), async (req: any, res) => {
     try {
