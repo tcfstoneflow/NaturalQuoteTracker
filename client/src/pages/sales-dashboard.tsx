@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { salesDashboardApi } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,34 +24,29 @@ export default function SalesDashboard() {
   
   // Get sales rep's personalized data
   const { data: salesStats } = useQuery({
-    queryKey: ["/api/sales/stats", user?.user?.id],
-    enabled: !!user?.user?.id,
+    queryKey: ["/api/sales-dashboard/stats"],
+    queryFn: salesDashboardApi.getStats,
   });
 
   const { data: myQuotes } = useQuery({
-    queryKey: ["/api/sales/my-quotes", user?.user?.id],
-    enabled: !!user?.user?.id,
+    queryKey: ["/api/sales-dashboard/recent-quotes"],
+    queryFn: salesDashboardApi.getRecentQuotes,
   });
 
-  const { data: myClients } = useQuery({
-    queryKey: ["/api/sales/my-clients", user?.user?.id],
-    enabled: !!user?.user?.id,
+  const { data: myActivities } = useQuery({
+    queryKey: ["/api/sales-dashboard/recent-activities"],
+    queryFn: salesDashboardApi.getRecentActivities,
   });
 
-  const { data: myTasks } = useQuery({
-    queryKey: ["/api/sales/my-tasks", user?.user?.id],
-    enabled: !!user?.user?.id,
-  });
-
-  const { data: upcomingFollowUps } = useQuery({
-    queryKey: ["/api/sales/follow-ups", user?.user?.id],
-    enabled: !!user?.user?.id,
+  const { data: pendingVisits } = useQuery({
+    queryKey: ["/api/sales-dashboard/pending-showroom-visits"],
+    queryFn: salesDashboardApi.getPendingShowroomVisits,
   });
 
   return (
     <div className="flex flex-col h-full">
       <TopBar 
-        title={`Welcome back, ${user?.user?.firstName}!`}
+        title={`Welcome back, ${user?.firstName || 'Sales Rep'}!`}
         subtitle="Your personalized sales dashboard"
       />
       
@@ -170,13 +166,13 @@ export default function SalesDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {upcomingFollowUps?.slice(0, 5).map((followUp: any) => (
-                    <div key={followUp.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  {pendingVisits?.slice(0, 5).map((visit: any) => (
+                    <div key={visit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{followUp.clientName}</div>
-                        <div className="text-xs text-gray-600">{followUp.type}</div>
+                        <div className="font-medium text-sm">{visit.clientName}</div>
+                        <div className="text-xs text-gray-600">{visit.requestType}</div>
                         <div className="text-xs text-gray-500">
-                          Due: {format(new Date(followUp.dueDate), "h:mm a")}
+                          Requested: {format(new Date(visit.createdAt), "MMM d")}
                         </div>
                       </div>
                       <div className="flex gap-2">

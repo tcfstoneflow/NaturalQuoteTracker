@@ -48,3 +48,11 @@ export const aiApi = {
   executeSQL: (query: string) => 
     apiRequest('POST', '/api/sql/execute', { query }).then(res => res.json()),
 };
+
+// Sales Dashboard API
+export const salesDashboardApi = {
+  getStats: () => fetch('/api/sales-dashboard/stats').then(res => res.json()),
+  getRecentQuotes: () => fetch('/api/sales-dashboard/recent-quotes').then(res => res.json()),
+  getRecentActivities: () => fetch('/api/sales-dashboard/recent-activities').then(res => res.json()),
+  getPendingShowroomVisits: () => fetch('/api/sales-dashboard/pending-showroom-visits').then(res => res.json()),
+};
