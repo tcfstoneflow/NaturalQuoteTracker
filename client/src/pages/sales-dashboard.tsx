@@ -46,7 +46,7 @@ export default function SalesDashboard() {
   return (
     <div className="flex flex-col h-full">
       <TopBar 
-        title={`Welcome back, ${user?.firstName || 'Sales Rep'}!`}
+        title={`Welcome back, ${user?.firstName || user?.username || 'Sales Rep'}!`}
         subtitle="Your personalized sales dashboard"
       />
       
@@ -205,32 +205,24 @@ export default function SalesDashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {myClients?.slice(0, 6).map((client: any) => (
-                  <div key={client.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                {myQuotes?.slice(0, 6).map((quote: any) => (
+                  <div key={quote.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium">{client.name}</div>
-                      {client.isVip && (
-                        <Badge variant="default" className="bg-accent-orange text-white">
-                          VIP
-                        </Badge>
-                      )}
+                      <div className="font-medium">{quote.client.name}</div>
+                      <Badge variant="default" className="bg-blue-500 text-white">
+                        {quote.status}
+                      </Badge>
                     </div>
-                    <div className="text-sm text-gray-600 mb-2">{client.email}</div>
-                    <div className="text-sm text-gray-600 mb-3">{client.phone}</div>
+                    <div className="text-sm text-gray-600 mb-2">{quote.quoteNumber}</div>
+                    <div className="text-sm text-gray-600 mb-3">${quote.subtotal}</div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">Total Value:</span>
-                      <span className="font-medium">${client.totalValue || 0}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">Last Contact:</span>
-                      <span className="font-medium">
-                        {client.lastContact ? format(new Date(client.lastContact), "MMM d") : "Never"}
-                      </span>
+                      <span className="text-gray-500">Created:</span>
+                      <span className="font-medium">{format(new Date(quote.createdAt), "MMM d")}</span>
                     </div>
                   </div>
                 )) || (
                   <div className="col-span-full text-center py-8 text-gray-500">
-                    No clients assigned yet
+                    No recent quotes found
                   </div>
                 )}
               </div>
