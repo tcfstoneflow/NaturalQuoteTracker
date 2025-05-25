@@ -330,14 +330,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/quotes", async (req, res) => {
+  app.post("/api/quotes", requireAuth, async (req: any, res) => {
     try {
       const { quote: quoteData, lineItems } = req.body;
+      const userId = req.user.id;
       
       console.log("Quote data:", JSON.stringify(quoteData, null, 2));
       console.log("Line items:", JSON.stringify(lineItems, null, 2));
       
-      const validatedQuote = insertQuoteSchema.parse(quoteData);
+      // Add the current user as the creator
+      const quoteDataWithCreator = { ...quoteData, createdBy: userId };
+      const validatedQuote = insertQuoteSchema.parse(quoteDataWithCreator);
       console.log("Validated quote:", JSON.stringify(validatedQuote, null, 2));
       
       // Don't validate line items with schema since quoteId is added later
