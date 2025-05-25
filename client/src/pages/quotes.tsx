@@ -76,6 +76,33 @@ export default function Quotes() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+// Component to display who created the quote
+const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
+  const { data: users } = useQuery({
+    queryKey: ['/api/users'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/users');
+      return response.json();
+    },
+  });
+
+  if (!createdBy) {
+    return <span className="text-gray-400 text-sm">Unknown</span>;
+  }
+
+  const creator = users?.find((u: any) => u.id === createdBy);
+  if (!creator) {
+    return <span className="text-gray-400 text-sm">User #{createdBy}</span>;
+  }
+
+  return (
+    <div className="text-sm">
+      <div className="font-medium text-primary-custom">{creator.username}</div>
+      <div className="text-gray-500">{creator.role}</div>
+    </div>
+  );
+};
+
   const { data: quotes, isLoading } = useQuery({
     queryKey: ['/api/quotes'],
     queryFn: quotesApi.getAll,
