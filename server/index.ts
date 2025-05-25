@@ -42,6 +42,30 @@ app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
   }
 });
 
+// Early registration for showroom visits management routes
+app.get('/api/showroom-visits', express.json(), async (req, res) => {
+  try {
+    const { storage } = await import('./storage');
+    const visits = await storage.getShowroomVisits();
+    res.json(visits);
+  } catch (error: any) {
+    res.status(500).json({ message: "Failed to fetch showroom visits" });
+  }
+});
+
+app.patch('/api/showroom-visits/:id', express.json(), async (req, res) => {
+  try {
+    const { storage } = await import('./storage');
+    const id = parseInt(req.params.id);
+    const updates = req.body;
+    
+    const updatedVisit = await storage.updateShowroomVisit(id, updates);
+    res.json(updatedVisit);
+  } catch (error: any) {
+    res.status(500).json({ message: "Failed to update visit" });
+  }
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
