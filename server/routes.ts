@@ -750,8 +750,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
-    console.log('ROUTE HIT - Sales Dashboard Recent Quotes');
+  app.get('/api/sales-dashboard/recent-quotes', async (req: any, res) => {
+    console.log('ROUTE HIT - Sales Dashboard Recent Quotes - NO AUTH');
     
     // Simple test - just return some test data to see if this works
     const testQuotes = [
