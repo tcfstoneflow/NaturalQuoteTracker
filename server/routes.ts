@@ -750,12 +750,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/my-quotes', requireAuth, async (req: any, res) => {
+  app.get('/api/sales-dashboard/my-quotes', async (req: any, res) => {
+    console.log('SALES DASHBOARD FINAL: Route hit, checking authentication...');
+    
+    // Manual authentication check with detailed logging
+    if (!req.session || !req.session.userId) {
+      console.log('SALES DASHBOARD FINAL: No session or userId found');
+      console.log('SALES DASHBOARD FINAL: Session:', req.session);
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
     try {
-      const userId = req.user.id;
-      const userRole = req.user.role || 'sales';
+      const userId = req.session.userId;
+      console.log(`SALES DASHBOARD FINAL: Session userId: ${userId}`);
       
-      console.log(`SALES DASHBOARD FINAL: User ID ${userId}, Role: ${userRole}`);
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user || !user.isActive) {
+        console.log('SALES DASHBOARD FINAL: User not found or inactive');
+        return res.status(401).json({ error: 'Invalid session' });
+      }
+
+      const userRole = user.role || 'sales';
+      console.log(`SALES DASHBOARD FINAL: User ${user.username}, Role: ${userRole}`);
       
       // Get ALL quotes first
       const allQuotes = await storage.getQuotes();
