@@ -56,7 +56,7 @@ export const salesDashboardApi = {
     return response.json();
   },
   getRecentQuotes: async () => {
-    const response = await apiRequest('GET', '/api/sales-dashboard/recent-quotes');
+    const response = await apiRequest('GET', '/api/sales-dashboard/my-quotes');
     return response.json();
   },
   getRecentActivities: async () => {

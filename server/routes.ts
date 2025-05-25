@@ -750,7 +750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
+  app.get('/api/sales-dashboard/my-quotes', requireAuth, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const userRole = req.user?.role || 'sales';
