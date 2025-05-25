@@ -750,17 +750,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/my-quotes', requireAuth, async (req: any, res) => {
+  app.get('/api/sales-dashboard/my-quotes', async (req: any, res) => {
     try {
-      const userId = req.user?.id;
-      const userRole = req.user?.role || 'sales';
-      
-      console.log(`SALES DASHBOARD: User ID ${userId}, Role: ${userRole}`);
-      
-      if (!userId) {
-        console.log('SALES DASHBOARD: No user ID found, returning unauthorized');
-        return res.status(401).json({ error: 'User not authenticated' });
+      // Check if user is authenticated via session
+      if (!req.session?.userId) {
+        console.log('SALES DASHBOARD: No session found, returning empty array');
+        return res.json([]);
       }
+
+      const userId = req.session.userId;
+      console.log(`SALES DASHBOARD: Session User ID ${userId}`);
+      
+      // Get user details to determine role
+      const user = await storage.getUser(userId);
+      if (!user) {
+        console.log('SALES DASHBOARD: User not found, returning empty array');
+        return res.json([]);
+      }
+
+      const userRole = user.role || 'sales';
+      console.log(`SALES DASHBOARD: User ${user.username}, Role: ${userRole}`);
       
       // Get ALL quotes first
       const allQuotes = await storage.getQuotes();
