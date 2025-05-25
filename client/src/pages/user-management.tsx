@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Edit, Trash2, UserCheck, UserX } from "lucide-react";
+import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -20,6 +20,10 @@ type UserForm = z.infer<typeof insertUserSchema>;
 
 export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
   const { data: users, isLoading } = useQuery({
@@ -278,6 +282,10 @@ export default function UserManagement() {
                           ? 'Inventory Specialist' 
                           : 'Sales Rep'}
                       </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-secondary-custom">Username:</span>
+                      <span className="font-mono text-sm font-medium">{user.username}</span>
                     </div>
                     {user.lastLogin && (
                       <div className="flex items-center justify-between">
