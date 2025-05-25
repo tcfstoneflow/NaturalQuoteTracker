@@ -1,5 +1,6 @@
 import PDFDocument from 'pdfkit';
 import { QuoteWithDetails } from '@shared/schema';
+import { storage } from './storage';
 
 // Smart image processing utilities
 function isValidImageUrl(url: string): boolean {
@@ -29,9 +30,20 @@ function getOptimalImageSize(hasMultipleItems: boolean): { width: number, height
   return { width: 30, height: 30 }; // Larger for fewer items
 }
 
-export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
+export async function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
+  return new Promise(async (resolve, reject) => {
     try {
+      // Get creator information
+      let creatorName = 'Unknown';
+      if (quote.createdBy) {
+        try {
+          const creator = await storage.getUser(quote.createdBy);
+          creatorName = creator ? (creator.firstName || creator.username) : `User #${quote.createdBy}`;
+        } catch (error) {
+          creatorName = `User #${quote.createdBy}`;
+        }
+      }
+
       const doc = new PDFDocument({ 
         margin: 30,
         size: [612, 792], // Letter size in points
@@ -48,8 +60,8 @@ export function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
 
       doc.fontSize(10).text('QUOTE', 450, 50);
       doc.fontSize(7).text(`#${quote.quoteNumber}`, 450, 65);
-      doc.fontSize(7).text(`Created by: User #${quote.createdBy}`, 450, 75);
-      doc.text(`${new Date(quote.createdAt).toLocaleDateString()}`, 450, 75);
+      doc.fontSize(7).text(`Created by: ${creatorName}`, 450, 75);
+      doc.text(`${new Date(quote.createdAt).toLocaleDateString()}`, 450, 85);
 
       // Client - very compact
       doc.fontSize(8).text(`To: ${quote.client.name} | ${quote.client.email}`, 50, 100);
