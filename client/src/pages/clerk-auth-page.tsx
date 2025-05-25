@@ -1,14 +1,61 @@
 import { SignIn, SignUp, useUser } from '@clerk/clerk-react';
 import { Redirect } from 'wouter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useClerkAuth } from '@/hooks/useClerkAuth';
+import { useState, useEffect } from 'react';
 
 export default function ClerkAuthPage() {
-  const { isSignedIn, isLoaded } = useUser();
-  const { isAuthenticated, isLoading } = useClerkAuth();
+  const [clerkReady, setClerkReady] = useState(false);
+  const [clerkError, setClerkError] = useState(false);
+
+  useEffect(() => {
+    // Check if Clerk is properly initialized
+    const checkClerk = () => {
+      if (typeof window !== 'undefined' && window.Clerk && window.Clerk.loaded) {
+        setClerkReady(true);
+      } else if (typeof window !== 'undefined' && !import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
+        setClerkError(true);
+      }
+    };
+
+    checkClerk();
+    
+    // Listen for Clerk to load
+    const interval = setInterval(() => {
+      if (typeof window !== 'undefined' && window.Clerk && window.Clerk.loaded) {
+        setClerkReady(true);
+        clearInterval(interval);
+      }
+    }, 100);
+
+    // Timeout after 10 seconds
+    const timeout = setTimeout(() => {
+      if (!clerkReady) {
+        setClerkError(true);
+      }
+      clearInterval(interval);
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [clerkReady]);
+
+  let userHooks = { isSignedIn: false, isLoaded: false };
+  
+  try {
+    if (clerkReady) {
+      userHooks = useUser();
+    }
+  } catch (error) {
+    console.warn('Clerk useUser hook failed:', error);
+    setClerkError(true);
+  }
+
+  const { isSignedIn, isLoaded } = userHooks;
 
   // Show loading state while Clerk loads
-  if (!isLoaded) {
+  if (!clerkReady && !clerkError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -27,8 +74,30 @@ export default function ClerkAuthPage() {
     );
   }
 
-  // If user is signed in and synced, redirect to dashboard
-  if (isSignedIn && isAuthenticated) {
+  // If Clerk failed to load, show error state
+  if (clerkError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Setup</h2>
+            <p className="text-gray-600 mb-6">
+              Clerk authentication is being configured. In the meantime, you can continue using your existing login system.
+            </p>
+            <a 
+              href="/" 
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Continue with Existing Login
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is signed in, redirect to dashboard
+  if (isSignedIn) {
     return <Redirect to="/" />;
   }
 
