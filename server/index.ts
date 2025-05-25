@@ -11,6 +11,37 @@ declare module "express-session" {
 }
 
 const app = express();
+
+// Early API route registration before Vite middleware
+app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
+  try {
+    const { storage } = await import('./storage');
+    const { name, email, phone, preferredDate, message } = req.body;
+    
+    if (!name || !email || !phone || !preferredDate) {
+      return res.status(400).json({ success: false, error: "Missing required fields" });
+    }
+
+    const newVisit = await storage.createShowroomVisit({
+      name,
+      email,
+      phone,
+      preferredDate,
+      message: message || null,
+      status: "pending"
+    });
+    
+    res.json({ 
+      success: true, 
+      message: "Your showroom visit request has been submitted successfully!",
+      id: newVisit.id
+    });
+  } catch (error: any) {
+    console.error("Showroom visit error:", error);
+    res.status(500).json({ success: false, error: "Failed to submit request" });
+  }
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

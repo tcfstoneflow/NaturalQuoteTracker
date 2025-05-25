@@ -9,38 +9,41 @@ import { login, register, logout, getCurrentUser, requireAuth, requireRole, requ
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form - place at top to avoid conflicts
-  app.post("/api/contact/showroom-visit", async (req, res) => {
-    try {
-      res.setHeader('Content-Type', 'application/json');
-      
-      const { name, email, phone, preferredDate, message } = req.body;
-      
-      if (!name || !email || !phone || !preferredDate) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
+  app.post("/api/contact/showroom-visit", (req, res, next) => {
+    // Force JSON response and prevent HTML fallback
+    res.setHeader('Content-Type', 'application/json');
+    
+    (async () => {
+      try {
+        const { name, email, phone, preferredDate, message } = req.body;
+        
+        if (!name || !email || !phone || !preferredDate) {
+          return res.status(400).json({ error: "Missing required fields" });
+        }
 
-      // Store in database
-      const newVisit = await storage.createShowroomVisit({
-        name,
-        email,
-        phone,
-        preferredDate,
-        message: message || null,
-        status: "pending"
-      });
-      
-      return res.status(200).json({ 
-        success: true, 
-        message: "Your showroom visit request has been submitted successfully!",
-        id: newVisit.id
-      });
-    } catch (error: any) {
-      console.error("Showroom visit creation error:", error);
-      return res.status(500).json({ 
-        success: false, 
-        error: "Failed to submit request" 
-      });
-    }
+        // Store in database
+        const newVisit = await storage.createShowroomVisit({
+          name,
+          email,
+          phone,
+          preferredDate,
+          message: message || null,
+          status: "pending"
+        });
+        
+        res.status(200).json({ 
+          success: true, 
+          message: "Your showroom visit request has been submitted successfully!",
+          id: newVisit.id
+        });
+      } catch (error: any) {
+        console.error("Showroom visit creation error:", error);
+        res.status(500).json({ 
+          success: false, 
+          error: "Failed to submit request" 
+        });
+      }
+    })();
   });
 
   // Authentication routes
