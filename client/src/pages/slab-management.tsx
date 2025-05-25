@@ -51,56 +51,14 @@ export default function SlabManagement() {
     enabled: !!productId,
   });
 
-  // Auto-create slabs mutation
-  const autoCreateSlabsMutation = useMutation({
-    mutationFn: (productId: string) => 
-      apiRequest('POST', `/api/products/${productId}/auto-create-slabs`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
-      queryClient.refetchQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
-      toast({
-        title: "Slabs Created",
-        description: "Individual slabs have been automatically created based on stock quantity.",
-      });
-    },
-    onError: (error: any) => {
-      const message = error?.response?.data?.error || "Failed to create slabs automatically.";
-      toast({
-        title: message.includes("already exist") ? "Slabs Already Created" : "Error",
-        description: message.includes("already exist") ? "Slabs have already been created for this bundle." : message,
-        variant: message.includes("already exist") ? "default" : "destructive",
-      });
-    },
-  });
-
-  const generateBarcodesMutation = useMutation({
-    mutationFn: () => apiRequest('POST', '/api/slabs/generate-barcodes'),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
-      queryClient.refetchQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
-      toast({
-        title: "Barcodes Generated",
-        description: response.message || "Barcodes have been generated for all slabs.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to generate barcodes.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const addSlabForm = useForm<InsertSlab>({
     resolver: zodResolver(insertSlabSchema),
     defaultValues: {
       bundleId: productWithSlabs?.bundleId || '',
       slabNumber: '',
-      status: 'available',
       length: null,
       width: null,
-      barcode: '',
+      status: 'Available',
       location: '',
       notes: '',
     },
@@ -111,10 +69,9 @@ export default function SlabManagement() {
     defaultValues: {
       bundleId: '',
       slabNumber: '',
-      status: 'available',
       length: null,
       width: null,
-      barcode: '',
+      status: 'Available',
       location: '',
       notes: '',
     },
@@ -129,10 +86,17 @@ export default function SlabManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       setIsAddDialogOpen(false);
       addSlabForm.reset();
-      toast({ title: "Success", description: "Slab added successfully!" });
+      toast({
+        title: "Success",
+        description: "Slab added successfully",
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add slab",
+        variant: "destructive",
+      });
     },
   });
 
@@ -146,20 +110,17 @@ export default function SlabManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
       setIsEditDialogOpen(false);
       setEditingSlab(null);
-      editSlabForm.reset();
-      toast({ title: "Success", description: "Slab updated successfully!" });
+      toast({
+        title: "Success",
+        description: "Slab updated successfully",
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const updateSlabStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) => 
-      apiRequest('PATCH', `/api/slabs/${id}/status`, { status }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
-      toast({ title: "Success", description: "Slab status updated!" });
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update slab",
+        variant: "destructive",
+      });
     },
   });
 
@@ -169,10 +130,17 @@ export default function SlabManagement() {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'with-slabs'] });
-      toast({ title: "Success", description: "Slab deleted successfully!" });
+      toast({
+        title: "Success",
+        description: "Slab deleted successfully",
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete slab",
+        variant: "destructive",
+      });
     },
   });
 
@@ -197,405 +165,116 @@ export default function SlabManagement() {
     editSlabForm.reset({
       bundleId: slab.bundleId,
       slabNumber: slab.slabNumber,
-      status: slab.status,
       length: slab.length,
       width: slab.width,
-      barcode: slab.barcode || '',
+      status: slab.status || 'Available',
       location: slab.location || '',
       notes: slab.notes || '',
     });
     setIsEditDialogOpen(true);
   };
 
-  const handleStatusChange = (slabId: number, newStatus: string) => {
-    updateSlabStatusMutation.mutate({ id: slabId, status: newStatus });
-  };
-
-  const handleDeleteSlab = (slabId: number) => {
+  const handleDeleteSlab = (id: number) => {
     if (confirm('Are you sure you want to delete this slab?')) {
-      deleteSlabMutation.mutate(slabId);
+      deleteSlabMutation.mutate(id);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" onClick={() => setLocation('/inventory')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Inventory
-          </Button>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
+          <p className="text-lg font-medium">Loading slab management...</p>
         </div>
-        <div className="text-center py-12">Loading slab information...</div>
       </div>
     );
   }
 
-  if (!productWithSlabs) {
+  if (error || !productWithSlabs) {
     return (
-      <div className="p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" onClick={() => setLocation('/inventory')}>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <XCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
+          <p className="text-lg font-medium">Failed to load product data</p>
+          <Button onClick={() => setLocation('/inventory')} className="mt-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Inventory
           </Button>
         </div>
-        <div className="text-center py-12">Bundle not found</div>
       </div>
     );
   }
 
-  const availableSlabs = productWithSlabs.slabs?.filter(slab => slab.status === 'available').length || 0;
-  const soldSlabs = productWithSlabs.slabs?.filter(slab => slab.status === 'sold').length || 0;
-  const deliveredSlabs = productWithSlabs.slabs?.filter(slab => slab.status === 'delivered').length || 0;
+  const slabs = productWithSlabs.slabs || [];
+  const availableSlabs = slabs.filter(slab => slab.status?.toLowerCase() === 'available').length;
+  const soldSlabs = slabs.filter(slab => slab.status?.toLowerCase() === 'sold').length;
+  const deliveredSlabs = slabs.filter(slab => slab.status?.toLowerCase() === 'delivered').length;
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="p-6 flex-shrink-0">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" onClick={() => setLocation('/inventory')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Inventory
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold">Slab Management</h1>
-            <p className="text-muted-foreground">Manage individual slabs for {productWithSlabs.name}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Bundle Information */}
-          <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Bundle Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => setLocation('/inventory')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Inventory
+            </Button>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Bundle ID</p>
-              <p className="text-lg font-semibold">{productWithSlabs.bundleId}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Bundle Name</p>
-              <p className="text-lg font-semibold">{productWithSlabs.name}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Supplier</p>
-              <p className="text-lg font-semibold">{productWithSlabs.supplier}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Slabs</p>
-              <p className="text-lg font-semibold">{productWithSlabs.slabs?.length || 0}</p>
+              <h1 className="text-3xl font-bold">{productWithSlabs.name}</h1>
+              <p className="text-muted-foreground">
+                Bundle ID: {productWithSlabs.bundleId} | {productWithSlabs.supplier}
+              </p>
             </div>
           </div>
           
-          <div className="flex gap-4 mt-4">
-            <Badge className={statusColors.available}>
-              Available: {availableSlabs}
-            </Badge>
-            <Badge className={statusColors.sold}>
-              Sold: {soldSlabs}
-            </Badge>
-            <Badge className={statusColors.delivered}>
-              Delivered: {deliveredSlabs}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-          {/* Add Slab Button */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Individual Slabs</h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => generateBarcodesMutation.mutate()}
-                disabled={generateBarcodesMutation.isPending}
-              >
-                {generateBarcodesMutation.isPending ? "Generating..." : "Generate Barcodes"}
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Slab
               </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => addSlabForm.reset({ bundleId: productWithSlabs.bundleId })}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Slab
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Add New Slab</DialogTitle>
-                    <DialogDescription>
-                      Add a new slab to bundle {productWithSlabs.bundleId}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...addSlabForm}>
-                    <form onSubmit={addSlabForm.handleSubmit(handleAddSlab)} className="space-y-4">
-                <FormField
-                  control={addSlabForm.control}
-                  name="slabNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slab Number *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., S001, 1, A-1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={addSlabForm.control}
-                    name="length"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Length (inches)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="120.5"
-                            {...field}
-                            value={field.value || ''}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={addSlabForm.control}
-                    name="width"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Width (inches)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="72.0"
-                            {...field}
-                            value={field.value || ''}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={addSlabForm.control}
-                  name="barcode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Barcode</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Scan or enter barcode" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={addSlabForm.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Storage Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Warehouse A, Row 3, Slot 5" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={addSlabForm.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Any additional notes about this slab" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" disabled={createSlabMutation.isPending}>
-                    {createSlabMutation.isPending ? "Adding..." : "Add Slab"}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Slabs Grid */}
-      {(!productWithSlabs.slabs || productWithSlabs.slabs.length === 0) ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No slabs yet</h3>
-            <p className="text-muted-foreground mb-4">
-              This bundle has {productWithSlabs.stockQuantity} slabs. You can automatically create individual slab records or add them manually.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button 
-                onClick={() => autoCreateSlabsMutation.mutate(productId!)}
-                disabled={autoCreateSlabsMutation.isPending}
-              >
-                {autoCreateSlabsMutation.isPending ? "Creating..." : `Auto-Create ${productWithSlabs.stockQuantity} Slabs`}
-              </Button>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Manually
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-500px)] overflow-y-auto pr-2">
-          {productWithSlabs.slabs?.map((slab) => {
-            const StatusIcon = statusIcons[slab.status as keyof typeof statusIcons];
-            return (
-              <Card key={slab.id} className="relative">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{slab.slabNumber}</CardTitle>
-                    <Badge className={statusColors[slab.status as keyof typeof statusColors]}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {slab.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {(slab.length || slab.width) && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Dimensions</p>
-                      <p className="text-sm">
-                        {slab.length ? `${slab.length}"` : '?'} × {slab.width ? `${slab.width}"` : '?'}
-                        {slab.length && slab.width && (
-                          <span className="text-muted-foreground ml-2">
-                            ({((Number(slab.length) * Number(slab.width)) / 144).toFixed(1)} sq ft)
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {slab.barcode && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Barcode</p>
-                      <p className="text-sm font-mono">{slab.barcode}</p>
-                    </div>
-                  )}
-                  
-                  {slab.location && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Location</p>
-                      <p className="text-sm">{slab.location}</p>
-                    </div>
-                  )}
-                  
-                  {slab.notes && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Notes</p>
-                      <p className="text-sm">{slab.notes}</p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 pt-3">
-                    <Select
-                      value={slab.status}
-                      onValueChange={(value) => handleStatusChange(slab.id, value)}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="available">Available</SelectItem>
-                        <SelectItem value="sold">Sold</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(slab)}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteSlab(slab.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-        {/* Edit Slab Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Edit Slab</DialogTitle>
+                <DialogTitle>Add New Slab</DialogTitle>
                 <DialogDescription>
-                  Update slab information
+                  Add a new slab to this bundle
                 </DialogDescription>
               </DialogHeader>
-              <Form {...editSlabForm}>
-                <form onSubmit={editSlabForm.handleSubmit(handleEditSlab)} className="space-y-4">
+              <Form {...addSlabForm}>
+                <form onSubmit={addSlabForm.handleSubmit(handleAddSlab)} className="space-y-4">
                   <FormField
-                    control={editSlabForm.control}
+                    control={addSlabForm.control}
                     name="slabNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Slab Number *</FormLabel>
+                        <FormLabel>Slab Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., S001, 1, A-1" {...field} />
+                          <Input {...field} placeholder="e.g., S001" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={editSlabForm.control}
+                      control={addSlabForm.control}
                       name="length"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Length (inches)</FormLabel>
                           <FormControl>
                             <Input 
+                              {...field} 
                               type="number" 
-                              step="0.01"
-                              {...field}
-                              value={field.value || ''}
+                              value={field.value || ''} 
                               onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
                             />
                           </FormControl>
@@ -603,18 +282,18 @@ export default function SlabManagement() {
                         </FormItem>
                       )}
                     />
+
                     <FormField
-                      control={editSlabForm.control}
+                      control={addSlabForm.control}
                       name="width"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Width (inches)</FormLabel>
                           <FormControl>
                             <Input 
+                              {...field} 
                               type="number" 
-                              step="0.01"
-                              {...field}
-                              value={field.value || ''}
+                              value={field.value || ''} 
                               onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
                             />
                           </FormControl>
@@ -625,27 +304,13 @@ export default function SlabManagement() {
                   </div>
 
                   <FormField
-                    control={editSlabForm.control}
-                    name="barcode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Barcode</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={field.value || ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={editSlabForm.control}
+                    control={addSlabForm.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Storage Location</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value || ''} />
+                          <Input {...field} placeholder="e.g., Warehouse A, Row 3" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -653,13 +318,13 @@ export default function SlabManagement() {
                   />
 
                   <FormField
-                    control={editSlabForm.control}
+                    control={addSlabForm.control}
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Notes</FormLabel>
                         <FormControl>
-                          <Textarea {...field} value={field.value || ''} />
+                          <Textarea {...field} placeholder="Any additional notes..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -667,10 +332,10 @@ export default function SlabManagement() {
                   />
 
                   <div className="flex gap-2 pt-4">
-                    <Button type="submit" disabled={updateSlabMutation.isPending}>
-                      {updateSlabMutation.isPending ? "Updating..." : "Update Slab"}
+                    <Button type="submit" disabled={createSlabMutation.isPending}>
+                      {createSlabMutation.isPending ? "Adding..." : "Add Slab"}
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
                   </div>
@@ -678,6 +343,266 @@ export default function SlabManagement() {
               </Form>
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Slabs</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{slabs.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Available</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{availableSlabs}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Sold</CardTitle>
+              <XCircle className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">{soldSlabs}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+              <Truck className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{deliveredSlabs}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Slabs Grid */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold">Individual Slabs</h2>
+          
+          {slabs.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Package className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium text-muted-foreground mb-2">No slabs found</h3>
+                <p className="text-sm text-muted-foreground mb-4">Add slabs to this bundle to start tracking them</p>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Slab
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto">
+              {slabs.map((slab) => {
+                const StatusIcon = statusIcons[slab.status?.toLowerCase() as keyof typeof statusIcons] || Package;
+                const statusColor = statusColors[slab.status?.toLowerCase() as keyof typeof statusColors] || statusColors.available;
+                
+                return (
+                  <Card key={slab.id} className="relative">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{slab.slabNumber}</CardTitle>
+                        <Badge className={statusColor}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {slab.status || 'Available'}
+                        </Badge>
+                      </div>
+                      {slab.barcode && (
+                        <CardDescription className="text-xs font-mono">
+                          {slab.barcode}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {(slab.length && slab.width) && (
+                        <p className="text-sm">
+                          <strong>Dimensions:</strong> {slab.length}" × {slab.width}"
+                          <br />
+                          <span className="text-muted-foreground">
+                            ({((slab.length * slab.width) / 144).toFixed(2)} sq ft)
+                          </span>
+                        </p>
+                      )}
+                      
+                      {slab.location && (
+                        <p className="text-sm">
+                          <strong>Location:</strong> {slab.location}
+                        </p>
+                      )}
+                      
+                      {slab.notes && (
+                        <p className="text-sm text-muted-foreground">
+                          {slab.notes}
+                        </p>
+                      )}
+                      
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(slab)}
+                          className="flex-1"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteSlab(slab.id)}
+                          className="flex-1 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Edit Slab Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Slab</DialogTitle>
+              <DialogDescription>
+                Update slab information
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...editSlabForm}>
+              <form onSubmit={editSlabForm.handleSubmit(handleEditSlab)} className="space-y-4">
+                <FormField
+                  control={editSlabForm.control}
+                  name="slabNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Slab Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editSlabForm.control}
+                    name="length"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Length (inches)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="number" 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editSlabForm.control}
+                    name="width"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Width (inches)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="number" 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={editSlabForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Available">Available</SelectItem>
+                          <SelectItem value="Sold">Sold</SelectItem>
+                          <SelectItem value="Delivered">Delivered</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editSlabForm.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Storage Location</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editSlabForm.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} value={field.value || ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" disabled={updateSlabMutation.isPending}>
+                    {updateSlabMutation.isPending ? "Updating..." : "Update Slab"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
