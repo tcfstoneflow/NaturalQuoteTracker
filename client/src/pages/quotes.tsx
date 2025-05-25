@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/topbar";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,36 @@ import { quotesApi } from "@/lib/api";
 import { Eye, Edit, Send, Download, FileText, Calendar, DollarSign, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
+
+// Component to show who created the quote
+const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
+  const { data: users } = useQuery({
+    queryKey: ['/api/users'],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  if (!createdBy || !users) {
+    return <span className="text-gray-400 text-sm">—</span>;
+  }
+
+  const creator = users.find((u: any) => u.id === createdBy);
+  if (!creator) {
+    return <span className="text-gray-400 text-sm">Unknown</span>;
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+        <span className="text-xs font-medium text-blue-600">
+          {creator.firstName?.[0] || creator.username?.[0] || '?'}
+        </span>
+      </div>
+      <span className="text-sm text-gray-700">
+        {creator.firstName || creator.username}
+      </span>
+    </div>
+  );
+};
 
 export default function Quotes() {
   const [searchQuery, setSearchQuery] = useState("");
