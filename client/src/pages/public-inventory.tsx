@@ -52,7 +52,7 @@ export default function PublicInventory() {
     }
   }, [products]);
 
-  const filteredProducts = products?.filter((product: any) => {
+  const filteredProducts = (productsWithSlabs.length > 0 ? productsWithSlabs : products || [])?.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.grade.toLowerCase().includes(searchTerm.toLowerCase());
