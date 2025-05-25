@@ -18,6 +18,7 @@ import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
 import ClerkAuthPage from "@/pages/clerk-auth-page";
+import ClerkDiagnostic from "@/pages/clerk-diagnostic";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
       {/* Public routes - accessible without authentication */}
       <Route path="/public-inventory" component={PublicInventory} />
       <Route path="/clerk-auth" component={ClerkAuthPage} />
+      <Route path="/clerk-diagnostic" component={ClerkDiagnostic} />
       
       {/* Admin/Staff routes - require authentication */}
       {isAuthenticated ? (
