@@ -33,6 +33,11 @@ export default function SalesDashboard() {
     queryFn: salesDashboardApi.getRecentQuotes,
   });
 
+  // Debug logging
+  console.log('Sales Dashboard - myQuotes data:', myQuotes);
+  console.log('Sales Dashboard - myQuotes type:', typeof myQuotes);
+  console.log('Sales Dashboard - myQuotes length:', myQuotes?.length);
+
   const { data: myActivities } = useQuery({
     queryKey: ["/api/sales-dashboard/recent-activities"],
     queryFn: salesDashboardApi.getRecentActivities,
