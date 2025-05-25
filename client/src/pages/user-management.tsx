@@ -67,11 +67,7 @@ export default function UserManagement() {
 
   const toggleUserMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: number; isActive: boolean }) => {
-      return await apiRequest({
-        url: `/api/users/${userId}/toggle`,
-        method: "PATCH",
-        body: { isActive },
-      });
+      return await apiRequest("PATCH", `/api/users/${userId}/toggle`, { isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
