@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/topbar";
+import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -234,6 +235,7 @@ export default function Quotes() {
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Valid Until</TableHead>
+                    {user?.role === 'admin' && <TableHead>Created By</TableHead>}
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -284,6 +286,11 @@ export default function Quotes() {
                             {new Date(quote.validUntil).toLocaleDateString()}
                           </div>
                         </TableCell>
+                        {user?.role === 'admin' && (
+                          <TableCell>
+                            <CreatedByInfo createdBy={quote.createdBy} />
+                          </TableCell>
+                        )}
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button
