@@ -670,6 +670,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sales Dashboard API endpoints
+  app.get('/api/sales-dashboard/stats', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      // Get current date and calculate date ranges
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      
+      // Get all quotes for this sales rep (or all if admin)
+      let allQuotes;
+      if (userRole === 'admin') {
+        allQuotes = await storage.getQuotes();
+      } else {
+        // For sales reps, filter quotes they created
+        const quotes = await storage.getQuotes();
+        allQuotes = quotes.filter(quote => quote.createdBy === userId);
+      }
+      
+      // Calculate monthly revenue
+      const thisMonthQuotes = allQuotes.filter(quote => 
+        new Date(quote.createdAt) >= startOfMonth && quote.status === 'accepted'
+      );
+      const lastMonthQuotes = allQuotes.filter(quote => 
+        new Date(quote.createdAt) >= startOfLastMonth && 
+        new Date(quote.createdAt) <= endOfLastMonth && 
+        quote.status === 'accepted'
+      );
+      
+      const thisMonthRevenue = thisMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.total), 0);
+      const lastMonthRevenue = lastMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.total), 0);
+      const monthlyGrowth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+      
+      // Count active and pending quotes
+      const activeQuotes = allQuotes.filter(quote => quote.status === 'draft' || quote.status === 'sent').length;
+      const pendingQuotes = allQuotes.filter(quote => quote.status === 'sent').length;
+      
+      // Get clients (for sales rep, get their clients)
+      let clients;
+      if (userRole === 'admin') {
+        clients = await storage.getClients();
+      } else {
+        // For sales reps, get clients they've worked with
+        const clientIds = [...new Set(allQuotes.map(quote => quote.clientId))];
+        const allClients = await storage.getClients();
+        clients = allClients.filter(client => clientIds.includes(client.id));
+      }
+      
+      const totalClients = clients.length;
+      const newClientsThisMonth = clients.filter(client => 
+        new Date(client.createdAt) >= startOfMonth
+      ).length;
+      
+      // Calculate follow-ups due (quotes sent over 7 days ago with no response)
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const followUpsDue = allQuotes.filter(quote => 
+        quote.status === 'sent' && new Date(quote.updatedAt) < weekAgo
+      ).length;
+      
+      res.json({
+        monthlyRevenue: thisMonthRevenue,
+        monthlyGrowth: monthlyGrowth,
+        activeQuotes,
+        pendingQuotes,
+        totalClients,
+        newClientsThisMonth,
+        followUpsDue
+      });
+    } catch (error: any) {
+      console.error('Error getting sales dashboard stats:', error);
+      res.status(500).json({ error: 'Failed to get sales dashboard stats' });
+    }
+  });
+
+  app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      let quotes;
+      if (userRole === 'admin') {
+        quotes = await storage.getRecentQuotes(10);
+      } else {
+        // For sales reps, get their recent quotes
+        const allQuotes = await storage.getQuotes();
+        quotes = allQuotes
+          .filter(quote => quote.createdBy === userId)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 10);
+      }
+      
+      res.json(quotes);
+    } catch (error: any) {
+      console.error('Error getting recent quotes:', error);
+      res.status(500).json({ error: 'Failed to get recent quotes' });
+    }
+  });
+
+  app.get('/api/sales-dashboard/recent-activities', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      let activities;
+      if (userRole === 'admin') {
+        activities = await storage.getRecentActivities(10);
+      } else {
+        // For sales reps, get activities related to their work
+        const allActivities = await storage.getRecentActivities(50);
+        activities = allActivities
+          .filter(activity => 
+            activity.description.includes(req.user.username) ||
+            activity.entityType === 'quote' ||
+            activity.entityType === 'client'
+          )
+          .slice(0, 10);
+      }
+      
+      res.json(activities);
+    } catch (error: any) {
+      console.error('Error getting recent activities:', error);
+      res.status(500).json({ error: 'Failed to get recent activities' });
+    }
+  });
+
+  app.get('/api/sales-dashboard/pending-showroom-visits', requireAuth, async (req: any, res) => {
+    try {
+      const pendingVisits = await storage.getPendingShowroomVisits();
+      res.json(pendingVisits);
+    } catch (error: any) {
+      console.error('Error getting pending showroom visits:', error);
+      res.status(500).json({ error: 'Failed to get pending showroom visits' });
+    }
+  });
+
 
 
   // Generate barcodes for existing slabs

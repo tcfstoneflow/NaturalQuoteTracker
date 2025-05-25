@@ -16,6 +16,7 @@ import Login from "@/pages/login";
 import PublicInventory from "@/pages/public-inventory";
 import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
+import SalesDashboard from "@/pages/sales-dashboard";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -43,6 +44,7 @@ function Router() {
               <main className="flex-1 overflow-hidden">
                 <Switch>
                   <Route path="/" component={Dashboard} />
+                  <Route path="/sales-dashboard" component={SalesDashboard} />
                   <Route path="/clients" component={Clients} />
                   <Route path="/inventory" component={Inventory} />
                   <Route path="/quotes" component={Quotes} />

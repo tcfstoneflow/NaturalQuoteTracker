@@ -11,12 +11,14 @@ import {
   User,
   UserCog,
   ExternalLink,
-  Calendar
+  Calendar,
+  Target
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
+  { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "Quotes", href: "/quotes", icon: FileText },
@@ -47,9 +49,9 @@ export default function Sidebar() {
         ['/', '/inventory', '/reports', '/sql-query'].includes(item.href)
       );
     } else if (isSalesRep) {
-      // Sales reps can see dashboard, clients, quotes, showroom visits, and reports
+      // Sales reps can see dashboard, sales dashboard, clients, quotes, showroom visits, and reports
       return navigation.filter(item => 
-        ['/', '/clients', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
+        ['/', '/sales-dashboard', '/clients', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
       );
     }
     return navigation;
