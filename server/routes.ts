@@ -154,6 +154,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/products/with-slabs", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      const productsWithSlabs = await Promise.all(
+        products.map(async (product) => {
+          const productWithSlabs = await storage.getProductWithSlabs(product.id);
+          return productWithSlabs;
+        })
+      );
+      res.json(productsWithSlabs.filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

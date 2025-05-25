@@ -6,16 +6,51 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Search, Filter, Package, Ruler, MapPin, Eye } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function PublicInventory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
+  const [productsWithSlabs, setProductsWithSlabs] = useState<any[]>([]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
   });
+
+  // Fetch slab details for each product
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const fetchSlabDetails = async () => {
+        try {
+          const productsWithSlabData = await Promise.all(
+            products.map(async (product: any) => {
+              try {
+                const slabsResponse = await apiRequest(`/api/slabs?bundleId=${product.bundleId}`);
+                return {
+                  ...product,
+                  slabs: slabsResponse || []
+                };
+              } catch (error) {
+                console.error(`Error fetching slabs for product ${product.id}:`, error);
+                return {
+                  ...product,
+                  slabs: []
+                };
+              }
+            })
+          );
+          setProductsWithSlabs(productsWithSlabData);
+        } catch (error) {
+          console.error('Error fetching slab details:', error);
+          setProductsWithSlabs(products);
+        }
+      };
+
+      fetchSlabDetails();
+    }
+  }, [products]);
 
   const filteredProducts = products?.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -301,12 +336,24 @@ export default function PublicInventory() {
                               </div>
                             )}
 
-                            {product.location && (
+                            {product.slabs && product.slabs.length > 0 && (
                               <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Warehouse Location</h3>
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <MapPin className="h-4 w-4 mr-2" />
-                                  {product.location}
+                                <h3 className="font-semibold text-gray-900 mb-2">Warehouse Locations</h3>
+                                <div className="space-y-1">
+                                  {product.slabs
+                                    .filter((slab: any) => slab.status === 'available')
+                                    .reduce((locations: string[], slab: any) => {
+                                      if (slab.location && !locations.includes(slab.location)) {
+                                        locations.push(slab.location);
+                                      }
+                                      return locations;
+                                    }, [])
+                                    .map((location: string) => (
+                                      <div key={location} className="flex items-center text-sm text-gray-600">
+                                        <MapPin className="h-4 w-4 mr-2" />
+                                        {location}
+                                      </div>
+                                    ))}
                                 </div>
                               </div>
                             )}
