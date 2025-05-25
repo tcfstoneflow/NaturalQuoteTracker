@@ -1,5 +1,5 @@
 import { 
-  users, clients, products, quotes, quoteLineItems, activities, slabs,
+  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -7,6 +7,7 @@ import {
   type QuoteLineItem, type InsertQuoteLineItem,
   type Activity, type InsertActivity,
   type Slab, type InsertSlab, type ProductWithSlabs,
+  type ShowroomVisit, type InsertShowroomVisit,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -616,6 +617,57 @@ export class DatabaseStorage implements IStorage {
       .where(eq(slabs.id, id))
       .returning();
     return updatedSlab;
+  }
+
+  // Showroom Visits methods
+  async getShowroomVisits(): Promise<ShowroomVisit[]> {
+    return await db.select().from(showroomVisits).orderBy(desc(showroomVisits.createdAt));
+  }
+
+  async getShowroomVisit(id: number): Promise<ShowroomVisit | undefined> {
+    const [visit] = await db.select().from(showroomVisits).where(eq(showroomVisits.id, id));
+    return visit;
+  }
+
+  async createShowroomVisit(visit: InsertShowroomVisit): Promise<ShowroomVisit> {
+    const [newVisit] = await db.insert(showroomVisits).values(visit).returning();
+    
+    // Create activity log for the showroom visit request
+    await this.createActivity({
+      type: "showroom_visit_request",
+      description: `New showroom visit request from ${visit.name} (${visit.email})`,
+      entityType: "contact_request",
+      entityId: newVisit.id,
+      metadata: {
+        name: visit.name,
+        email: visit.email,
+        phone: visit.phone,
+        preferredDate: visit.preferredDate,
+        message: visit.message || null,
+        status: "pending"
+      }
+    });
+
+    return newVisit;
+  }
+
+  async updateShowroomVisit(id: number, visit: Partial<InsertShowroomVisit>): Promise<ShowroomVisit> {
+    const [updatedVisit] = await db.update(showroomVisits)
+      .set({ ...visit, updatedAt: new Date() })
+      .where(eq(showroomVisits.id, id))
+      .returning();
+    return updatedVisit;
+  }
+
+  async deleteShowroomVisit(id: number): Promise<boolean> {
+    const result = await db.delete(showroomVisits).where(eq(showroomVisits.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getPendingShowroomVisits(): Promise<ShowroomVisit[]> {
+    return await db.select().from(showroomVisits)
+      .where(eq(showroomVisits.status, "pending"))
+      .orderBy(desc(showroomVisits.createdAt));
   }
 }
 
