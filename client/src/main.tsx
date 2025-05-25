@@ -14,27 +14,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!PUBLISHABLE_KEY) {
-  console.warn("Clerk publishable key not found - Clerk authentication will be disabled");
-}
+// Temporarily disable Clerk to avoid initialization errors
+// const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 createRoot(document.getElementById("root")!).render(
-  PUBLISHABLE_KEY ? (
-    <ClerkProvider 
-      publishableKey={PUBLISHABLE_KEY}
-      navigate={(to) => window.location.href = to}
-    >
-      <QueryClientProvider client={queryClient}>
-        <App />
-        <Toaster />
-      </QueryClientProvider>
-    </ClerkProvider>
-  ) : (
-    <QueryClientProvider client={queryClient}>
-      <App />
-      <Toaster />
-    </QueryClientProvider>
-  )
+  <QueryClientProvider client={queryClient}>
+    <App />
+    <Toaster />
+  </QueryClientProvider>
 );
