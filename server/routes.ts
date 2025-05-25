@@ -9,26 +9,38 @@ import { login, register, logout, getCurrentUser, requireAuth, requireRole, requ
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form - place at top to avoid conflicts
-  app.post("/api/contact/showroom-visit", (req, res) => {
-    console.log("=== SHOWROOM VISIT ENDPOINT HIT ===");
-    console.log("Request body:", req.body);
-    
-    const { name, email, phone, preferredDate, message } = req.body;
-    
-    if (!name || !email || !phone || !preferredDate) {
-      console.log("Validation failed - missing required fields");
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+  app.post("/api/contact/showroom-visit", async (req, res) => {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      
+      const { name, email, phone, preferredDate, message } = req.body;
+      
+      if (!name || !email || !phone || !preferredDate) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
 
-    console.log("All validation passed - sending success response");
-    
-    const responseData = { 
-      success: true, 
-      message: "Your showroom visit request has been submitted successfully!" 
-    };
-    
-    console.log("Sending response:", responseData);
-    res.json(responseData);
+      // Store in database
+      const newVisit = await storage.createShowroomVisit({
+        name,
+        email,
+        phone,
+        preferredDate,
+        message: message || null,
+        status: "pending"
+      });
+      
+      return res.status(200).json({ 
+        success: true, 
+        message: "Your showroom visit request has been submitted successfully!",
+        id: newVisit.id
+      });
+    } catch (error: any) {
+      console.error("Showroom visit creation error:", error);
+      return res.status(500).json({ 
+        success: false, 
+        error: "Failed to submit request" 
+      });
+    }
   });
 
   // Authentication routes
@@ -624,79 +636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Showroom visit routes (accessible without authentication for customer submissions)
-  app.post("/api/contact/showroom-visit", async (req, res) => {
-    try {
-      console.log("Received showroom visit request:", req.body);
-      const { name, email, phone, preferredDate, message } = req.body;
-      
-      // Validate required fields
-      if (!name || !email || !phone || !preferredDate) {
-        return res.status(400).json({ 
-          success: false,
-          message: "Missing required fields: name, email, phone, and preferredDate are required" 
-        });
-      }
 
-      const newVisit = await storage.createShowroomVisit({
-        name,
-        email,
-        phone,
-        preferredDate,
-        message: message || null,
-        status: "pending"
-      });
-
-      console.log("Created showroom visit:", newVisit);
-      res.json({ 
-        success: true, 
-        message: "Your showroom visit request has been submitted successfully!",
-        id: newVisit.id
-      });
-    } catch (error: any) {
-      console.error("Error creating showroom visit:", error);
-      console.error("Error details:", error.message);
-      console.error("Error stack:", error.stack);
-      res.status(500).json({ 
-        success: false,
-        message: "Failed to submit request",
-        error: error.message 
-      });
-    }
-  });
-
-  app.get("/api/showroom-visits", requireAuth, async (req, res) => {
-    try {
-      const visits = await storage.getShowroomVisits();
-      res.json(visits);
-    } catch (error: any) {
-      console.error("Error fetching showroom visits:", error);
-      res.status(500).json({ message: "Failed to fetch visits" });
-    }
-  });
-
-  app.get("/api/showroom-visits/pending", requireAuth, async (req, res) => {
-    try {
-      const pendingVisits = await storage.getPendingShowroomVisits();
-      res.json(pendingVisits);
-    } catch (error: any) {
-      console.error("Error fetching pending visits:", error);
-      res.status(500).json({ message: "Failed to fetch pending visits" });
-    }
-  });
-
-  app.patch("/api/showroom-visits/:id", requireAuth, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updates = req.body;
-      
-      const updatedVisit = await storage.updateShowroomVisit(id, updates);
-      res.json(updatedVisit);
-    } catch (error: any) {
-      console.error("Error updating showroom visit:", error);
-      res.status(500).json({ message: "Failed to update visit" });
-    }
-  });
 
   // Generate barcodes for existing slabs
   app.post('/api/slabs/generate-barcodes', requireAuth, requireInventoryAccess(), async (req: any, res) => {
