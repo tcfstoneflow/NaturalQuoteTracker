@@ -752,7 +752,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/sales-dashboard/recent-quotes', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      console.log('=== ROUTE ACCESSED ===');
+      console.log('Session data:', req.session);
+      console.log('User data:', req.user);
+      const userId = req.user?.id;
       console.log('=== SALES DASHBOARD DEBUG ===');
       console.log('User ID:', userId);
       
