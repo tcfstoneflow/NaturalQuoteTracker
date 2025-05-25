@@ -750,41 +750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/test-quotes', async (req: any, res) => {
-    console.log('TEST ROUTE HIT - This should appear in logs!');
-    
-    const testQuotes = [
-      {
-        id: 999,
-        quoteNumber: "TEST-001",
-        client: { name: "Test Client" },
-        total: "1000.00",
-        status: "pending",
-        createdAt: new Date()
-      }
-    ];
-    
-    console.log('Returning test data:', testQuotes);
-    res.json(testQuotes);
-  });
-
-  app.get('/api/sales-dashboard/recent-quotes', async (req: any, res) => {
-    console.log('MAIN ROUTE HIT - Sales Dashboard Recent Quotes');
-    
-    const testQuotes = [
-      {
-        id: 888,
-        quoteNumber: "MAIN-001",
-        client: { name: "Main Client" },
-        total: "2000.00",
-        status: "pending",
-        createdAt: new Date()
-      }
-    ];
-    
-    console.log('Returning main quotes:', testQuotes);
-    res.json(testQuotes);
-  });
+  // Removed duplicate route - using early registration in index.ts
 
   app.get('/api/sales-dashboard/recent-activities', requireAuth, async (req: any, res) => {
     try {
