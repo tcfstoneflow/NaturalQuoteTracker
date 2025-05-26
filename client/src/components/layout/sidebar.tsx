@@ -42,7 +42,8 @@ export default function Sidebar() {
   // Filter navigation based on user role
   const getVisibleNavigation = () => {
     if (isAdmin) {
-      return navigation; // Admins see everything
+      // Admins see everything except sales dashboard (they have main dashboard)
+      return navigation.filter(item => item.href !== '/sales-dashboard');
     } else if (isInventorySpecialist) {
       // Inventory specialists can see dashboard, inventory, and reports
       return navigation.filter(item => 
