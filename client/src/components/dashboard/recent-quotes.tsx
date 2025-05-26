@@ -5,13 +5,27 @@ import { Badge } from "@/components/ui/badge";
 import { dashboardApi } from "@/lib/api";
 import { Eye, Edit, Send } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function RecentQuotes() {
+  const [, setLocation] = useLocation();
+  
   const { data: quotes, isLoading } = useQuery({
     queryKey: ['/api/dashboard/recent-quotes'],
     queryFn: dashboardApi.getRecentQuotes,
   });
+
+  const handleViewQuote = (quoteId: number) => {
+    setLocation(`/quotes?view=${quoteId}`);
+  };
+
+  const handleEditQuote = (quoteId: number) => {
+    setLocation(`/quotes?edit=${quoteId}`);
+  };
+
+  const handleSendQuote = (quoteId: number) => {
+    setLocation(`/quotes?send=${quoteId}`);
+  };
 
   if (isLoading) {
     return (
@@ -103,13 +117,28 @@ export default function RecentQuotes() {
                   </td>
                   <td className="py-4 px-2">
                     <div className="flex space-x-2">
-                      <Button variant="ghost" size="icon" title="View">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        title="View"
+                        onClick={() => handleViewQuote(quote.id)}
+                      >
                         <Eye size={16} />
                       </Button>
-                      <Button variant="ghost" size="icon" title="Edit">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        title="Edit"
+                        onClick={() => handleEditQuote(quote.id)}
+                      >
                         <Edit size={16} />
                       </Button>
-                      <Button variant="ghost" size="icon" title="Send">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        title="Send"
+                        onClick={() => handleSendQuote(quote.id)}
+                      >
                         <Send size={16} />
                       </Button>
                     </div>
