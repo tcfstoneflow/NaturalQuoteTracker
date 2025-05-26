@@ -12,6 +12,10 @@ declare module "express-session" {
 
 const app = express();
 
+// Increase body size limit for file uploads and large requests
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 // Early API route registration before Vite middleware
 app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
   try {
