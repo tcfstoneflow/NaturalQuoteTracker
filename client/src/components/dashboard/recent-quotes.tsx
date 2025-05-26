@@ -55,6 +55,7 @@ export default function RecentQuotes() {
               <tr className="border-b border-neutral-200">
                 <th className="text-left py-3 px-2 text-sm font-medium text-secondary-custom">Quote #</th>
                 <th className="text-left py-3 px-2 text-sm font-medium text-secondary-custom">Client</th>
+                <th className="text-left py-3 px-2 text-sm font-medium text-secondary-custom">Created By</th>
                 <th className="text-left py-3 px-2 text-sm font-medium text-secondary-custom">Amount</th>
                 <th className="text-left py-3 px-2 text-sm font-medium text-secondary-custom">Status</th>
                 <th className="text-left py-3 px-2 text-sm font-medium text-secondary-custom">Date</th>
@@ -71,6 +72,18 @@ export default function RecentQuotes() {
                     <div>
                       <p className="font-medium text-primary-custom">{quote.client.company || quote.client.name}</p>
                       <p className="text-sm text-secondary-custom">{quote.client.name}</p>
+                    </div>
+                  </td>
+                  <td className="py-4 px-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-xs font-medium text-blue-600">
+                          {quote.creator?.firstName?.[0] || quote.creator?.username?.[0] || '?'}
+                        </span>
+                      </div>
+                      <span className="text-sm text-gray-700">
+                        {quote.creator?.firstName || quote.creator?.username || 'Unknown'}
+                      </span>
                     </div>
                   </td>
                   <td className="py-4 px-2">

@@ -526,6 +526,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(quotes)
       .leftJoin(clients, eq(quotes.clientId, clients.id))
+      .leftJoin(users, eq(quotes.createdBy, users.id))
       .orderBy(desc(quotes.createdAt))
       .limit(limit);
 
@@ -540,6 +541,13 @@ export class DatabaseStorage implements IStorage {
         return {
           ...result.quotes,
           client: result.clients!,
+          creator: result.users ? {
+            id: result.users.id,
+            username: result.users.username,
+            firstName: result.users.firstName,
+            lastName: result.users.lastName,
+            role: result.users.role
+          } : null,
           lineItems: lineItems.map(item => ({
             ...item.quote_line_items,
             product: item.products!
