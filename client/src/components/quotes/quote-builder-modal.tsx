@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 interface QuoteBuilderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editQuote?: any;
 }
 
 interface LineItem {
@@ -35,7 +36,7 @@ interface LineItem {
   product?: any;
 }
 
-export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModalProps) {
+export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteBuilderModalProps) {
   const [clientId, setClientId] = useState("");
   const [projectName, setProjectName] = useState("");
   const [validUntil, setValidUntil] = useState("");
@@ -57,14 +58,37 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
     queryFn: productsApi.getAll,
   });
 
-  // Set default valid until date (30 days from now)
+  // Set default valid until date (30 days from now) or populate with edit data
   useEffect(() => {
     if (isOpen) {
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 30);
-      setValidUntil(defaultDate.toISOString().split('T')[0]);
+      if (editQuote) {
+        // Populate form with existing quote data
+        setClientId(editQuote.clientId?.toString() || "");
+        setProjectName(editQuote.projectName || "");
+        setValidUntil(editQuote.validUntil ? editQuote.validUntil.split('T')[0] : "");
+        setNotes(editQuote.notes || "");
+        
+        // Populate line items
+        const existingLineItems = editQuote.lineItems?.map((item: any) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          product: item.product
+        })) || [];
+        setLineItems(existingLineItems);
+      } else {
+        // Reset form for new quote
+        setClientId("");
+        setProjectName("");
+        setNotes("");
+        setLineItems([]);
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 30);
+        setValidUntil(defaultDate.toISOString().split('T')[0]);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, editQuote]);
 
   const createQuoteMutation = useMutation({
     mutationFn: quotesApi.create,
@@ -74,6 +98,26 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
       toast({
         title: "Quote Created",
         description: "Quote has been saved as draft",
+      });
+      handleClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateQuoteMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => quotesApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/recent-quotes'] });
+      toast({
+        title: "Quote Updated",
+        description: "Quote has been successfully updated",
       });
       handleClose();
     },
@@ -194,10 +238,24 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
     }));
 
     try {
-      const quote = await createQuoteMutation.mutateAsync({ 
-        quote: quoteData, 
-        lineItems: quoteLineItems 
-      });
+      let quote;
+      
+      if (editQuote) {
+        // Update existing quote
+        quote = await updateQuoteMutation.mutateAsync({
+          id: editQuote.id,
+          data: {
+            quote: quoteData,
+            lineItems: quoteLineItems
+          }
+        });
+      } else {
+        // Create new quote
+        quote = await createQuoteMutation.mutateAsync({ 
+          quote: quoteData, 
+          lineItems: quoteLineItems 
+        });
+      }
 
       if (sendEmail && quote) {
         await sendQuoteMutation.mutateAsync({ 
@@ -226,7 +284,9 @@ export default function QuoteBuilderModal({ isOpen, onClose }: QuoteBuilderModal
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-primary">Create New Quote</DialogTitle>
+          <DialogTitle className="text-primary">
+            {editQuote ? "Edit Quote" : "Create New Quote"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
