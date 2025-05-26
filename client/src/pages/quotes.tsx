@@ -77,6 +77,34 @@ export default function Quotes() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Check if user has permission for a specific action based on role templates
+  const hasPermission = (module: string, action: string) => {
+    if (!user || !user.role) return false;
+    if (user.role === 'admin') return true; // Admins have all permissions
+    
+    // Role-based permissions (matching User Management templates)
+    const roleTemplates = {
+      sales_rep: {
+        inventory: ["view"],
+        quotes: ["view", "create", "edit", "send_email"],
+        clients: ["view", "create", "edit"],
+        reports: ["view"]
+      },
+      inventory_specialist: {
+        inventory: ["view", "create", "edit", "delete", "manage_stock"],
+        quotes: ["view"],
+        clients: ["view"],
+        reports: ["view"]
+      }
+    };
+    
+    const rolePermissions = roleTemplates[user.role as keyof typeof roleTemplates];
+    if (!rolePermissions) return false;
+    
+    const modulePermissions = rolePermissions[module as keyof typeof rolePermissions];
+    return modulePermissions?.includes(action) || false;
+  };
+
 // Component to display who created the quote
 const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
   const { data: users } = useQuery({
@@ -391,20 +419,22 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                             >
                               <Send size={16} />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to delete quote ${quote.quoteNumber}?`)) {
-                                  deleteMutation.mutate(quote.id);
-                                }
-                              }}
-                              title="Delete Quote"
-                              disabled={deleteMutation.isPending}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
+                            {hasPermission('quotes', 'delete') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  if (window.confirm(`Are you sure you want to delete quote ${quote.quoteNumber}?`)) {
+                                    deleteMutation.mutate(quote.id);
+                                  }
+                                }}
+                                title="Delete Quote"
+                                disabled={deleteMutation.isPending}
+                                className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
