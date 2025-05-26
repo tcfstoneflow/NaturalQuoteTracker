@@ -207,10 +207,10 @@ export const insertClientSchema = createInsertSchema(clients).omit({
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
-  bundleId: true, // will be auto-generated
   barcodes: true, // will be auto-generated based on stock quantity
   createdAt: true,
 }).extend({
+  bundleId: z.string().min(1, "Bundle ID is required"), // Allow manual bundle ID entry
   price: z.union([z.string(), z.number()]).transform(val => {
     const num = typeof val === 'string' ? parseFloat(val) : val;
     return num.toString(); // Convert to string for decimal field
