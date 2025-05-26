@@ -22,6 +22,7 @@ export interface IStorage {
   updateUserLastLogin(id: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
   toggleUserStatus(id: number, isActive: boolean): Promise<User>;
+  deleteUser(id: number): Promise<boolean>;
   
   // Enhanced security methods
   updateFailedAttempts(id: number, attempts: number): Promise<void>;
@@ -141,6 +142,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(users)
+        .where(eq(users.id, id))
+        .returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
   }
 
   // Enhanced security methods

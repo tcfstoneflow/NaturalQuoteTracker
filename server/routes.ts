@@ -76,6 +76,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/users/:id", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Prevent deleting the current user
+      if (req.user && req.user.id === userId) {
+        return res.status(400).json({ error: 'Cannot delete your own account' });
+      }
+      
+      const success = await storage.deleteUser(userId);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Delete user error:', error);
+      res.status(500).json({ error: 'Failed to delete user' });
+    }
+  });
+
   // Dashboard
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
