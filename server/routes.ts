@@ -277,8 +277,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
+      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+      
       // Validate the data first
       const validatedData = insertProductSchema.parse(req.body);
+      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
       
       // Check if user is trying to set price and if they have permission
       if (validatedData.price && req.user?.role !== 'admin') {
@@ -302,6 +305,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         image_url: validatedData.imageUrl,
         is_active: validatedData.isActive
       };
+      
+      console.log("DB data to insert:", JSON.stringify(dbData, null, 2));
       
       const product = await storage.createProduct(dbData);
       res.status(201).json(product);
