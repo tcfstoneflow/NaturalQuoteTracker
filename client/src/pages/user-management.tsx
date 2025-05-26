@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Calendar, Activity, Users, Shield, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Calendar, Activity, Users, Shield, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -25,6 +25,7 @@ export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -157,6 +158,28 @@ export default function UserManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to update password",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      return await apiRequest("DELETE", `/api/users/${userId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "User deleted",
+        description: "User has been permanently removed from the system",
+      });
+      setDeleteDialogOpen(false);
+      setSelectedUser(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user",
         variant: "destructive",
       });
     },
@@ -511,6 +534,29 @@ export default function UserManagement() {
                         </>
                       )}
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setPasswordDialogOpen(true);
+                      }}
+                    >
+                      <Key size={14} className="mr-1" />
+                      Password
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setDeleteDialogOpen(true);
+                      }}
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <Trash2 size={14} className="mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -594,6 +640,17 @@ export default function UserManagement() {
                               }}
                             >
                               <Key className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -710,6 +767,118 @@ export default function UserManagement() {
                   </form>
                 </Form>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Password Reset Dialog */}
+          <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Reset Password</DialogTitle>
+                <DialogDescription>
+                  Set a new password for {selectedUser?.firstName} {selectedUser?.lastName}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setPasswordDialogOpen(false);
+                      setNewPassword("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (selectedUser && newPassword.trim()) {
+                        passwordMutation.mutate({
+                          userId: selectedUser.id,
+                          newPassword: newPassword.trim()
+                        });
+                      }
+                    }}
+                    disabled={!newPassword.trim() || passwordMutation.isPending}
+                  >
+                    {passwordMutation.isPending ? "Updating..." : "Update Password"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete User Confirmation Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  Delete User
+                </DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. Are you sure you want to permanently delete this user?
+                </DialogDescription>
+              </DialogHeader>
+              
+              {selectedUser && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-sm space-y-1">
+                    <div><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</div>
+                    <div><strong>Username:</strong> {selectedUser.username}</div>
+                    <div><strong>Email:</strong> {selectedUser.email}</div>
+                    <div><strong>Role:</strong> {
+                      selectedUser.role === 'admin' 
+                        ? 'Administrator' 
+                        : selectedUser.role === 'inventory_specialist' 
+                        ? 'Inventory Specialist' 
+                        : 'Sales Representative'
+                    }</div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setSelectedUser(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (selectedUser) {
+                      deleteUserMutation.mutate(selectedUser.id);
+                    }
+                  }}
+                  disabled={deleteUserMutation.isPending}
+                >
+                  {deleteUserMutation.isPending ? "Deleting..." : "Delete User"}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
