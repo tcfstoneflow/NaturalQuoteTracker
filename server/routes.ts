@@ -50,7 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", login);
   app.post("/api/auth/register", requireAuth, requireRole(['admin']), register);
   app.post("/api/auth/logout", logout);
-  app.get("/api/auth/user", requireAuth, getCurrentUser);
+  app.get("/api/user", getCurrentUser);
 
   // Clerk authentication routes
   app.post('/api/clerk/sync-user', async (req, res) => {
