@@ -89,7 +89,10 @@ export default function Inventory() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to create bundle");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create bundle");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -97,8 +100,13 @@ export default function Inventory() {
       toast({ title: "Bundle created successfully" });
       handleCloseModal();
     },
-    onError: () => {
-      toast({ title: "Failed to create bundle", variant: "destructive" });
+    onError: (error: any) => {
+      console.error("Bundle creation error:", error);
+      toast({ 
+        title: "Failed to create bundle", 
+        description: error.message || "Please check all required fields",
+        variant: "destructive" 
+      });
     },
   });
 
