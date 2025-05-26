@@ -277,43 +277,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
-      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
-      
-      // Validate the data first
-      const validatedData = insertProductSchema.parse(req.body);
-      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
+      const data = req.body;
       
       // Check if user is trying to set price and if they have permission
-      if (validatedData.price && req.user?.role !== 'admin') {
+      if (data.price && req.user?.role !== 'admin') {
         return res.status(403).json({ error: 'Only administrators can set pricing' });
       }
       
-      // Convert camelCase to snake_case for database
-      const dbData = {
-        bundle_id: validatedData.bundleId,
-        name: validatedData.name,
-        supplier: validatedData.supplier,
-        category: validatedData.category,
-        grade: validatedData.grade,
-        thickness: validatedData.thickness,
-        price: validatedData.price,
-        unit: validatedData.unit,
-        stock_quantity: validatedData.stockQuantity,
-        slab_length: validatedData.slabLength,
-        slab_width: validatedData.slabWidth,
-        location: validatedData.location,
-        image_url: validatedData.imageUrl,
-        is_active: validatedData.isActive
+      // Create product data object with proper field mapping
+      const productData = {
+        bundleId: data.bundleId || `BDL-${Date.now()}`,
+        name: data.name,
+        supplier: data.supplier,
+        category: data.category,
+        grade: data.grade,
+        thickness: data.thickness,
+        price: data.price?.toString() || "0",
+        unit: data.unit || "sq ft",
+        stockQuantity: parseInt(data.stockQuantity) || 0,
+        slabLength: data.slabLength ? parseFloat(data.slabLength) : null,
+        slabWidth: data.slabWidth ? parseFloat(data.slabWidth) : null,
+        location: data.location || null,
+        imageUrl: data.imageUrl || null,
+        isActive: true
       };
       
-      console.log("DB data to insert:", JSON.stringify(dbData, null, 2));
-      
-      const product = await storage.createProduct(dbData);
+      const product = await storage.createProduct(productData);
       res.status(201).json(product);
-    } catch (error) {
-      console.log("Product creation error:", JSON.stringify(error, null, 2));
-      console.log("Request body:", JSON.stringify(req.body, null, 2));
-      res.status(400).json({ error: error.message, validationErrors: error.issues || error });
+    } catch (error: any) {
+      console.error("Product creation error:", error.message);
+      res.status(400).json({ error: error.message });
     }
   });
 
