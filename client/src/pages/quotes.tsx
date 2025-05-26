@@ -80,6 +80,10 @@ export default function Quotes() {
   // Check if user has permission for a specific action based on role templates
   const hasPermission = (module: string, action: string) => {
     if (!user || !user.role) return false;
+    
+    // Debug log to check user role
+    console.log('Checking permission:', { userRole: user.role, module, action });
+    
     if (user.role === 'admin') return true; // Admins have all permissions
     
     // Role-based permissions (matching User Management templates)
