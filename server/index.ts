@@ -17,7 +17,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Early API route registration before Vite middleware
-app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
+app.post('/api/contact/showroom-visit', async (req, res) => {
   try {
     const { storage } = await import('./storage');
     const { name, email, phone, preferredDate, message } = req.body;
@@ -49,7 +49,7 @@ app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
 
 
 // Early registration for showroom visits management routes
-app.get('/api/showroom-visits', express.json(), async (req, res) => {
+app.get('/api/showroom-visits', async (req, res) => {
   try {
     const { storage } = await import('./storage');
     const visits = await storage.getShowroomVisits();
