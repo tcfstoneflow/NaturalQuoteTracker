@@ -171,6 +171,8 @@ export default function Inventory() {
       imageUrl: formData.imageUrl.trim() || null,
     };
 
+    console.log("Frontend submitting data:", JSON.stringify(submitData, null, 2));
+
     if (editingProduct) {
       updateMutation.mutate(submitData);
     } else {
