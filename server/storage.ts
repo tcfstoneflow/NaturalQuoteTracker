@@ -333,7 +333,7 @@ export class DatabaseStorage implements IStorage {
     return product || undefined;
   }
 
-  async createProduct(product: InsertProduct): Promise<Product> {
+  async createProduct(product: any): Promise<Product> {
     // Bundle ID is now provided manually in the product data
     const [newProduct] = await db
       .insert(products)
