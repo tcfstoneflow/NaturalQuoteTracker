@@ -156,7 +156,7 @@ export default function Inventory() {
     }
     
     const submitData = {
-      bundleId: formData.bundleId.trim(),
+      bundle_id: formData.bundleId.trim(),
       name: formData.name.trim(),
       supplier: formData.supplier.trim(),
       category: formData.category,
@@ -164,11 +164,11 @@ export default function Inventory() {
       thickness: formData.thickness.trim(),
       price: parseFloat(formData.price) || 0,
       unit: formData.unit || "sq ft",
-      stockQuantity: parseInt(formData.stockQuantity) || 0,
-      slabLength: formData.slabLength ? parseFloat(formData.slabLength) : null,
-      slabWidth: formData.slabWidth ? parseFloat(formData.slabWidth) : null,
+      stock_quantity: parseInt(formData.stockQuantity) || 0,
+      slab_length: formData.slabLength ? parseFloat(formData.slabLength) : null,
+      slab_width: formData.slabWidth ? parseFloat(formData.slabWidth) : null,
       location: formData.location.trim() || null,
-      imageUrl: formData.imageUrl.trim() || null,
+      image_url: formData.imageUrl.trim() || null,
     };
 
     if (editingProduct) {
