@@ -118,6 +118,50 @@ export default function UserManagement() {
     },
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<UserForm>) => {
+      return await apiRequest("PUT", `/api/users/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const passwordMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
+      return await apiRequest("POST", `/api/users/${userId}/password`, { password: newPassword });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Password updated successfully",
+      });
+      setPasswordDialogOpen(false);
+      setNewPassword("");
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update password",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: UserForm) => {
     createUserMutation.mutate(data);
   };
@@ -534,7 +578,7 @@ export default function UserManagement() {
                               size="sm"
                               variant="outline"
                               onClick={() => toggleUserMutation.mutate({ 
-                                id: user.id, 
+                                userId: user.id, 
                                 isActive: !user.isActive 
                               })}
                               disabled={toggleUserMutation.isPending}
