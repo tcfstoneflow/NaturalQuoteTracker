@@ -369,6 +369,14 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => handleEditQuote(quote)}
+                              title="Edit Quote"
+                            >
+                              <Edit size={16} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => handleDownloadPDF(quote.id, quote.quoteNumber)}
                               title="Download PDF"
                             >
