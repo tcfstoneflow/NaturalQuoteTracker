@@ -24,6 +24,17 @@ createRoot(document.getElementById("root")!).render(
   <ClerkProvider 
     publishableKey={PUBLISHABLE_KEY}
     navigate={(to) => window.location.href = to}
+    appearance={{
+      baseTheme: undefined,
+      variables: {
+        colorPrimary: "#2563eb",
+      }
+    }}
+    allowedRedirectOrigins={[
+      window.location.origin,
+      `https://${window.location.hostname}`,
+      `http://${window.location.hostname}`,
+    ]}
   >
     <QueryClientProvider client={queryClient}>
       <App />

@@ -73,20 +73,39 @@ export default function ClerkDiagnostic() {
         )}
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-800 mb-4">Required Configuration Steps</h3>
-          <ol className="list-decimal list-inside space-y-2 text-blue-700">
-            <li>Go to your Clerk Dashboard</li>
-            <li>Navigate to "Configure" → "Domains" or "Settings" → "Domains"</li>
-            <li>Add this domain to your authorized domains list:</li>
-          </ol>
-          <div className="mt-3 p-3 bg-blue-100 rounded border">
-            <code className="text-sm font-mono text-blue-900 select-all">
-              {diagnostics.currentDomain}
-            </code>
+          <h3 className="text-lg font-semibold text-blue-800 mb-4">Troubleshooting Steps</h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold text-blue-800 mb-2">1. Domain Configuration</h4>
+              <p className="text-blue-700 mb-2">Add this domain to your Clerk dashboard:</p>
+              <div className="p-3 bg-blue-100 rounded border">
+                <code className="text-sm font-mono text-blue-900 select-all">
+                  {diagnostics.currentDomain}
+                </code>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-blue-800 mb-2">2. Additional Clerk Settings to Check</h4>
+              <ul className="list-disc list-inside space-y-1 text-blue-700 text-sm">
+                <li>In Clerk Dashboard → Settings → "Developer Settings"</li>
+                <li>Ensure "Production Instance" is enabled if this is production</li>
+                <li>Check "Allowed redirect origins" includes your domain</li>
+                <li>Verify "Home URL" matches your domain</li>
+                <li>Make sure "Sign-in URL" and "Sign-up URL" are correct</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-blue-800 mb-2">3. Common Issues</h4>
+              <ul className="list-disc list-inside space-y-1 text-blue-700 text-sm">
+                <li>Wait 5-10 minutes after adding domain for changes to propagate</li>
+                <li>Clear browser cache and hard refresh</li>
+                <li>Check if you're using development vs production keys</li>
+                <li>Ensure API keys match the correct Clerk instance</li>
+              </ul>
+            </div>
           </div>
-          <p className="mt-3 text-blue-600 text-sm">
-            Copy the domain above and paste it into your Clerk dashboard's authorized domains section.
-          </p>
         </div>
 
         <div className="mt-6 text-center">
