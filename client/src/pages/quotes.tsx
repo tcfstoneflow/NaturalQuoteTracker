@@ -70,6 +70,7 @@ export default function Quotes() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
 
   const queryClient = useQueryClient();
@@ -176,6 +177,12 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
   const handleSendQuote = (quote: any) => {
     setSelectedQuote(quote);
     setIsSendModalOpen(true);
+  };
+
+  const handleEditQuote = (quote: any) => {
+    setSelectedQuote(quote);
+    setIsViewModalOpen(false);
+    setIsEditModalOpen(true);
   };
 
   const handleDownloadPDF = async (quoteId: number, quoteNumber: string) => {
@@ -552,6 +559,33 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleEditQuote(selectedQuote)}
+                  className="flex items-center space-x-2"
+                >
+                  <Edit size={16} />
+                  <span>Edit Quote</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleDownloadPDF(selectedQuote.id, selectedQuote.quoteNumber)}
+                  className="flex items-center space-x-2"
+                >
+                  <Download size={16} />
+                  <span>Download PDF</span>
+                </Button>
+                <Button 
+                  onClick={() => handleSendQuote(selectedQuote)}
+                  className="flex items-center space-x-2 bg-accent-orange hover:bg-accent-orange text-white"
+                >
+                  <Send size={16} />
+                  <span>Send Quote</span>
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
@@ -598,10 +632,17 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Quote Builder Modal */}
+      {/* Quote Builder Modal for Creating */}
       <QuoteBuilderModal 
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+      />
+
+      {/* Quote Builder Modal for Editing */}
+      <QuoteBuilderModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        editQuote={selectedQuote}
       />
     </div>
   );
