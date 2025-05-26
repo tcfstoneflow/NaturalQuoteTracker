@@ -584,7 +584,7 @@ export default function UserManagement() {
                     )}
                   </div>
                   
-                  <div className="flex space-x-2 pt-2">
+                  <div className="grid grid-cols-2 gap-1 pt-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -593,15 +593,16 @@ export default function UserManagement() {
                         isActive: !user.isActive 
                       })}
                       disabled={toggleUserMutation.isPending}
+                      className="text-xs h-8"
                     >
                       {user.isActive ? (
                         <>
-                          <UserX size={14} className="mr-1" />
+                          <UserX size={12} className="mr-1" />
                           Deactivate
                         </>
                       ) : (
                         <>
-                          <UserCheck size={14} className="mr-1" />
+                          <UserCheck size={12} className="mr-1" />
                           Activate
                         </>
                       )}
@@ -613,8 +614,9 @@ export default function UserManagement() {
                         setSelectedUser(user);
                         setPasswordDialogOpen(true);
                       }}
+                      className="text-xs h-8"
                     >
-                      <Key size={14} className="mr-1" />
+                      <Key size={12} className="mr-1" />
                       Password
                     </Button>
                     <Button
@@ -624,9 +626,9 @@ export default function UserManagement() {
                         setSelectedUser(user);
                         setPermissionsDialogOpen(true);
                       }}
-                      className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                      className="text-blue-600 hover:bg-blue-50 hover:text-blue-700 text-xs h-8"
                     >
-                      <Settings size={14} className="mr-1" />
+                      <Settings size={12} className="mr-1" />
                       Permissions
                     </Button>
                     <Button
@@ -636,9 +638,9 @@ export default function UserManagement() {
                         setSelectedUser(user);
                         setDeleteDialogOpen(true);
                       }}
-                      className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700 text-xs h-8"
                     >
-                      <Trash2 size={14} className="mr-1" />
+                      <Trash2 size={12} className="mr-1" />
                       Delete
                     </Button>
                   </div>
