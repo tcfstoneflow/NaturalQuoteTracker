@@ -1,5 +1,6 @@
 import { Switch, Route } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
@@ -11,29 +12,54 @@ import UserManagement from "@/pages/user-management";
 import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
+import Login from "@/pages/login";
+import PublicInventory from "@/pages/public-inventory";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
-  // Since this is wrapped in SignedIn, user is already authenticated
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-hidden">
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/sales-dashboard" component={SalesDashboard} />
-          <Route path="/clients" component={Clients} />
-          <Route path="/inventory" component={Inventory} />
-          <Route path="/quotes" component={Quotes} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/sql-query" component={SQLQuery} />
-          <Route path="/user-management" component={UserManagement} />
-          <Route path="/showroom-visits" component={ShowroomVisits} />
-          <Route path="/slab-management/:productId" component={SlabManagement} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-    </div>
+    <Switch>
+      {/* Public routes - accessible without authentication */}
+      <Route path="/public-inventory" component={PublicInventory} />
+      
+      {/* Admin/Staff routes - require authentication */}
+      {isAuthenticated ? (
+        <Route path="*">
+          {() => (
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar />
+              <main className="flex-1 overflow-hidden">
+                <Switch>
+                  <Route path="/" component={Dashboard} />
+                  <Route path="/sales-dashboard" component={SalesDashboard} />
+                  <Route path="/clients" component={Clients} />
+                  <Route path="/inventory" component={Inventory} />
+                  <Route path="/quotes" component={Quotes} />
+                  <Route path="/reports" component={Reports} />
+                  <Route path="/sql-query" component={SQLQuery} />
+                  <Route path="/user-management" component={UserManagement} />
+                  <Route path="/showroom-visits" component={ShowroomVisits} />
+                  <Route path="/slab-management/:productId" component={SlabManagement} />
+                  <Route component={NotFound} />
+                </Switch>
+              </main>
+            </div>
+          )}
+        </Route>
+      ) : (
+        <Route path="*" component={Login} />
+      )}
+    </Switch>
   );
 }
 
