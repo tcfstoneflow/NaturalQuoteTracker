@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Calendar, Activity, Users, Shield, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,21 +14,54 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertUserSchema } from "@shared/schema";
 import TopBar from "@/components/layout/topbar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { z } from "zod";
 
 type UserForm = z.infer<typeof insertUserSchema>;
 
 export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const { toast } = useToast();
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["/api/users"],
   });
+
+  // Enhanced filtering logic
+  const filteredUsers = users?.filter((user: any) => {
+    const matchesSearch = 
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    const matchesStatus = statusFilter === "all" || 
+      (statusFilter === "active" && user.isActive) ||
+      (statusFilter === "inactive" && !user.isActive);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  }) || [];
+
+  // User statistics
+  const userStats = users ? {
+    total: users.length,
+    active: users.filter((u: any) => u.isActive).length,
+    inactive: users.filter((u: any) => !u.isActive).length,
+    admins: users.filter((u: any) => u.role === 'admin').length,
+    salesReps: users.filter((u: any) => u.role === 'sales_rep').length,
+    inventorySpecialists: users.filter((u: any) => u.role === 'inventory_specialist').length,
+  } : { total: 0, active: 0, inactive: 0, admins: 0, salesReps: 0, inventorySpecialists: 0 };
 
   const form = useForm<UserForm>({
     resolver: zodResolver(insertUserSchema),
@@ -245,9 +278,128 @@ export default function UserManagement() {
             </Dialog>
           </div>
 
-          {/* Users Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users?.map((user: any) => (
+          {/* Statistics Dashboard */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <Card>
+              <CardContent className="flex items-center p-4">
+                <Users className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Users</p>
+                  <p className="text-2xl font-bold">{userStats.total}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="flex items-center p-4">
+                <UserCheck className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Active</p>
+                  <p className="text-2xl font-bold text-green-600">{userStats.active}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="flex items-center p-4">
+                <UserX className="h-8 w-8 text-red-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Inactive</p>
+                  <p className="text-2xl font-bold text-red-600">{userStats.inactive}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="flex items-center p-4">
+                <Shield className="h-8 w-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Admins</p>
+                  <p className="text-2xl font-bold text-purple-600">{userStats.admins}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="flex items-center p-4">
+                <Activity className="h-8 w-8 text-orange-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Sales Reps</p>
+                  <p className="text-2xl font-bold text-orange-600">{userStats.salesReps}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="flex items-center p-4">
+                <Activity className="h-8 w-8 text-cyan-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Inventory</p>
+                  <p className="text-2xl font-bold text-cyan-600">{userStats.inventorySpecialists}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Search and Filter Controls */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search by name, username, or email..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="All Roles" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="sales_rep">Sales Rep</SelectItem>
+                      <SelectItem value="inventory_specialist">Inventory</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => setViewMode(viewMode === "grid" ? "table" : "grid")}
+                  >
+                    {viewMode === "grid" ? "Table View" : "Grid View"}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mt-4 text-sm text-gray-600">
+                Showing {filteredUsers.length} of {userStats.total} users
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Users Display */}
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredUsers.map((user: any) => (
               <Card key={user.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -319,18 +471,203 @@ export default function UserManagement() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          {(!users || users.length === 0) && (
+            </div>
+          ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <div className="text-center space-y-2">
-                  <h3 className="text-lg font-medium text-primary-custom">No users found</h3>
-                  <p className="text-secondary-custom">Get started by adding your first sales representative</p>
-                </div>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Login</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user: any) => (
+                      <TableRow key={user.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">
+                          {user.firstName} {user.lastName}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{user.username}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {user.role === 'admin' 
+                              ? 'Administrator' 
+                              : user.role === 'inventory_specialist' 
+                              ? 'Inventory Specialist' 
+                              : 'Sales Rep'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={user.isActive ? "default" : "secondary"}
+                            className={user.isActive ? "bg-green-600 text-white" : ""}
+                          >
+                            {user.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {user.lastLogin 
+                            ? new Date(user.lastLogin).toLocaleDateString()
+                            : 'Never'
+                          }
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => toggleUserMutation.mutate({ 
+                                id: user.id, 
+                                isActive: !user.isActive 
+                              })}
+                              disabled={toggleUserMutation.isPending}
+                            >
+                              {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setPasswordDialogOpen(true);
+                              }}
+                            >
+                              <Key className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                
+                {filteredUsers.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">No users match your search criteria</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
+
+          {/* Enhanced User Edit Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit User</DialogTitle>
+                <DialogDescription>
+                  Update user information and role assignments
+                </DialogDescription>
+              </DialogHeader>
+              
+              {selectedUser && (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit((data) => {
+                    updateUserMutation.mutate({ id: selectedUser.id, ...data });
+                  })} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} defaultValue={selectedUser.firstName} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} defaultValue={selectedUser.lastName} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} defaultValue={selectedUser.email} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Role</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={selectedUser.role}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="sales_rep">Sales Representative</SelectItem>
+                              <SelectItem value="inventory_specialist">Inventory Specialist</SelectItem>
+                              <SelectItem value="admin">Administrator</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={updateUserMutation.isPending}
+                      >
+                        {updateUserMutation.isPending ? "Updating..." : "Update User"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
