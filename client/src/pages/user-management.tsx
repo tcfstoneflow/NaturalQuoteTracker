@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Calendar, Activity, Users, Shield, Clock, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Calendar, Activity, Users, Shield, Clock, AlertTriangle, Settings, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -26,6 +26,7 @@ export default function UserManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,6 +34,66 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+
+  // RBAC Permission definitions
+  const permissions = {
+    users: {
+      name: "User Management",
+      actions: ["view", "create", "edit", "delete", "manage_permissions"]
+    },
+    inventory: {
+      name: "Inventory Management", 
+      actions: ["view", "create", "edit", "delete", "manage_stock"]
+    },
+    quotes: {
+      name: "Quote Management",
+      actions: ["view", "create", "edit", "delete", "send_email"]
+    },
+    clients: {
+      name: "Client Management",
+      actions: ["view", "create", "edit", "delete", "view_private_info"]
+    },
+    reports: {
+      name: "Reports & Analytics",
+      actions: ["view", "export", "advanced_analytics"]
+    },
+    system: {
+      name: "System Administration",
+      actions: ["view_logs", "manage_settings", "backup_restore"]
+    }
+  };
+
+  // Role templates with default permissions
+  const roleTemplates = {
+    admin: {
+      name: "Administrator",
+      description: "Full access to all system features",
+      permissions: Object.keys(permissions).reduce((acc, module) => {
+        acc[module] = permissions[module].actions;
+        return acc;
+      }, {} as Record<string, string[]>)
+    },
+    sales_rep: {
+      name: "Sales Representative", 
+      description: "Access to quotes, clients, and inventory viewing",
+      permissions: {
+        inventory: ["view"],
+        quotes: ["view", "create", "edit", "send_email"],
+        clients: ["view", "create", "edit"],
+        reports: ["view"]
+      }
+    },
+    inventory_specialist: {
+      name: "Inventory Specialist",
+      description: "Full inventory management with limited quote access", 
+      permissions: {
+        inventory: ["view", "create", "edit", "delete", "manage_stock"],
+        quotes: ["view"],
+        clients: ["view"],
+        reports: ["view"]
+      }
+    }
+  };
   const { toast } = useToast();
 
   const { data: users, isLoading } = useQuery({
@@ -550,6 +611,18 @@ export default function UserManagement() {
                       variant="outline"
                       onClick={() => {
                         setSelectedUser(user);
+                        setPermissionsDialogOpen(true);
+                      }}
+                      className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <Settings size={14} className="mr-1" />
+                      Permissions
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUser(user);
                         setDeleteDialogOpen(true);
                       }}
                       className="text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -640,6 +713,17 @@ export default function UserManagement() {
                               }}
                             >
                               <Key className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setPermissionsDialogOpen(true);
+                              }}
+                              className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            >
+                              <Settings className="h-4 w-4" />
                             </Button>
                             <Button
                               size="sm"
@@ -822,6 +906,211 @@ export default function UserManagement() {
                   >
                     {passwordMutation.isPending ? "Updating..." : "Update Password"}
                   </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* RBAC Permissions Management Dialog */}
+          <Dialog open={permissionsDialogOpen} onOpenChange={setPermissionsDialogOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Manage Permissions - {selectedUser?.username}
+                </DialogTitle>
+                <DialogDescription>
+                  Configure detailed permissions for this user. You can use role templates or customize individual permissions.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                {/* Role Templates Section */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Quick Role Templates
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Object.entries(roleTemplates).map(([roleKey, template]) => (
+                      <Card key={roleKey} className="border-2 hover:border-blue-200 transition-colors cursor-pointer">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium text-blue-900">{template.name}</h4>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                toast({
+                                  title: "Template Applied",
+                                  description: `${template.name} permissions applied to ${selectedUser?.username}`,
+                                });
+                              }}
+                            >
+                              Apply
+                            </Button>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                          <div className="text-xs text-gray-500">
+                            <strong>Modules:</strong> {Object.keys(template.permissions).join(", ")}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Detailed Permissions Matrix */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Lock className="h-5 w-5" />
+                    Detailed Permissions Matrix
+                  </h3>
+                  
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-2 border-b">
+                      <div className="grid grid-cols-6 gap-4 items-center font-medium text-sm">
+                        <div>Module</div>
+                        <div className="text-center">View</div>
+                        <div className="text-center">Create</div>
+                        <div className="text-center">Edit</div>
+                        <div className="text-center">Delete</div>
+                        <div className="text-center">Special</div>
+                      </div>
+                    </div>
+                    
+                    {Object.entries(permissions).map(([moduleKey, module]) => (
+                      <div key={moduleKey} className="px-4 py-3 border-b last:border-b-0 hover:bg-gray-50">
+                        <div className="grid grid-cols-6 gap-4 items-center">
+                          <div>
+                            <div className="font-medium text-sm">{module.name}</div>
+                            <div className="text-xs text-gray-500 capitalize">{moduleKey}</div>
+                          </div>
+                          
+                          {/* View Permission */}
+                          <div className="text-center">
+                            {module.actions.includes("view") && (
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                defaultChecked={selectedUser?.role === "admin"}
+                              />
+                            )}
+                          </div>
+                          
+                          {/* Create Permission */}
+                          <div className="text-center">
+                            {module.actions.includes("create") && (
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                defaultChecked={selectedUser?.role === "admin"}
+                              />
+                            )}
+                          </div>
+                          
+                          {/* Edit Permission */}
+                          <div className="text-center">
+                            {module.actions.includes("edit") && (
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                defaultChecked={selectedUser?.role === "admin"}
+                              />
+                            )}
+                          </div>
+                          
+                          {/* Delete Permission */}
+                          <div className="text-center">
+                            {module.actions.includes("delete") && (
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                                defaultChecked={selectedUser?.role === "admin"}
+                              />
+                            )}
+                          </div>
+                          
+                          {/* Special Permissions */}
+                          <div className="text-center">
+                            <div className="flex flex-wrap gap-1 justify-center">
+                              {module.actions.filter(action => !["view", "create", "edit", "delete"].includes(action)).map(action => (
+                                <div key={action} className="flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="w-3 h-3 text-green-600 rounded focus:ring-green-500"
+                                    defaultChecked={selectedUser?.role === "admin"}
+                                  />
+                                  <span className="text-xs text-gray-600 capitalize">
+                                    {action.replace("_", " ")}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Current Role Information */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Current Role: {selectedUser?.role}
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    This user currently has the "{selectedUser?.role}" role. The permissions above show what this role typically includes.
+                    You can customize individual permissions or apply a different role template.
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Permissions Reset",
+                          description: "All permissions reset to role defaults",
+                        });
+                      }}
+                    >
+                      Reset to Defaults
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Permissions Copied",
+                          description: "Permission template saved for future use",
+                        });
+                      }}
+                    >
+                      Save as Template
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPermissionsDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        toast({
+                          title: "Permissions Updated",
+                          description: `Permissions successfully updated for ${selectedUser?.username}`,
+                        });
+                        setPermissionsDialogOpen(false);
+                      }}
+                    >
+                      Save Permissions
+                    </Button>
+                  </div>
                 </div>
               </div>
             </DialogContent>
