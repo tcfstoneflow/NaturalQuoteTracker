@@ -13,36 +13,6 @@ declare module "express-session" {
 const app = express();
 
 // Early API route registration before Vite middleware
-app.get('/api/user', async (req, res) => {
-  try {
-    const { getCurrentUser } = await import('./auth');
-    await getCurrentUser(req, res);
-  } catch (error: any) {
-    console.error("Get user error:", error);
-    res.status(500).json({ error: "Failed to get user" });
-  }
-});
-
-app.post('/api/auth/login', express.json(), async (req, res) => {
-  try {
-    const { login } = await import('./auth');
-    await login(req, res);
-  } catch (error: any) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Login failed" });
-  }
-});
-
-app.post('/api/auth/logout', async (req, res) => {
-  try {
-    const { logout } = await import('./auth');
-    await logout(req, res);
-  } catch (error: any) {
-    console.error("Logout error:", error);
-    res.status(500).json({ error: "Logout failed" });
-  }
-});
-
 app.post('/api/contact/showroom-visit', express.json(), async (req, res) => {
   try {
     const { storage } = await import('./storage');

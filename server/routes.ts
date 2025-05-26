@@ -50,41 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", login);
   app.post("/api/auth/register", requireAuth, requireRole(['admin']), register);
   app.post("/api/auth/logout", logout);
-  app.get("/api/user", getCurrentUser);
-
-  // Clerk authentication routes
-  app.post('/api/clerk/sync-user', async (req, res) => {
-    try {
-      const { clerkUserId, email, firstName, lastName, username } = req.body;
-      
-      if (!clerkUserId || !email) {
-        return res.status(400).json({ error: 'Missing required fields' });
-      }
-      
-      // Check if user already exists in our database by email
-      let user = await storage.getUserByEmail(email);
-      
-      if (!user) {
-        // Create new user with default role for Clerk users
-        const { hashPassword } = await import('./auth');
-        const hashedPassword = await hashPassword('clerk-auth-' + Date.now()); // Dummy password for Clerk users
-        
-        user = await storage.createUser({
-          username: username || email.split('@')[0],
-          email,
-          password: hashedPassword,
-          firstName: firstName || '',
-          lastName: lastName || '',
-          role: 'sales_rep', // Default role for new Clerk users
-        });
-      }
-      
-      res.json(user);
-    } catch (error: any) {
-      console.error('Clerk sync user error:', error);
-      res.status(500).json({ error: 'Failed to sync user' });
-    }
-  });
+  app.get("/api/auth/user", requireAuth, getCurrentUser);
 
   // User management routes (admin only)
   app.get("/api/users", requireAuth, requireRole(['admin']), async (req, res) => {
@@ -784,29 +750,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/sales-dashboard/my-quotes', async (req: any, res) => {
-    console.log('SALES DASHBOARD FINAL: Route hit, checking authentication...');
-    
-    // Manual authentication check with detailed logging
-    if (!req.session || !req.session.userId) {
-      console.log('SALES DASHBOARD FINAL: No session or userId found');
-      console.log('SALES DASHBOARD FINAL: Session:', req.session);
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
+  app.get('/api/sales-dashboard/my-quotes', requireAuth, async (req: any, res) => {
     try {
-      const userId = req.session.userId;
-      console.log(`SALES DASHBOARD FINAL: Session userId: ${userId}`);
+      const userId = req.user.id;
+      const userRole = req.user.role || 'sales';
       
-      // Get user details
-      const user = await storage.getUser(userId);
-      if (!user || !user.isActive) {
-        console.log('SALES DASHBOARD FINAL: User not found or inactive');
-        return res.status(401).json({ error: 'Invalid session' });
-      }
-
-      const userRole = user.role || 'sales';
-      console.log(`SALES DASHBOARD FINAL: User ${user.username}, Role: ${userRole}`);
+      console.log(`SALES DASHBOARD FINAL: User ID ${userId}, Role: ${userRole}`);
       
       // Get ALL quotes first
       const allQuotes = await storage.getQuotes();

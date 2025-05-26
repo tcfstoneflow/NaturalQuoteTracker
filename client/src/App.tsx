@@ -1,4 +1,7 @@
 import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
@@ -9,11 +12,11 @@ import Quotes from "@/pages/quotes";
 import Reports from "@/pages/reports";
 import SQLQuery from "@/pages/sql-query";
 import UserManagement from "@/pages/user-management";
+import Login from "@/pages/login";
+import PublicInventory from "@/pages/public-inventory";
 import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
-import Login from "@/pages/login";
-import PublicInventory from "@/pages/public-inventory";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -65,9 +68,12 @@ function Router() {
 
 function App() {
   return (
-    <TooltipProvider>
-      <Router />
-    </TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
