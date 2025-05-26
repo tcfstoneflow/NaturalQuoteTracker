@@ -36,7 +36,7 @@ export default function Login() {
         description: "You've successfully logged in.",
       });
       // Invalidate auth queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       // Small delay to ensure auth state updates before navigation
       setTimeout(() => {
         setLocation("/");
