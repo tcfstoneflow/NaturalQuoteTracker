@@ -69,7 +69,7 @@ export default function UserManagement() {
       name: "Administrator",
       description: "Full access to all system features",
       permissions: Object.keys(permissions).reduce((acc, module) => {
-        acc[module] = permissions[module].actions;
+        acc[module] = permissions[module as keyof typeof permissions].actions;
         return acc;
       }, {} as Record<string, string[]>)
     },
@@ -93,6 +93,17 @@ export default function UserManagement() {
         reports: ["view"]
       }
     }
+  };
+
+  // Helper function to check if a user has a specific permission
+  const hasPermission = (userRole: string, moduleKey: string, action: string) => {
+    if (userRole === "admin") return true;
+    
+    const roleTemplate = roleTemplates[userRole as keyof typeof roleTemplates];
+    if (!roleTemplate) return false;
+    
+    const modulePermissions = roleTemplate.permissions[moduleKey];
+    return modulePermissions?.includes(action) || false;
   };
   const { toast } = useToast();
 
@@ -993,7 +1004,7 @@ export default function UserManagement() {
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                defaultChecked={selectedUser?.role === "admin"}
+                                defaultChecked={selectedUser ? hasPermission(selectedUser.role, moduleKey, "view") : false}
                               />
                             )}
                           </div>
@@ -1004,7 +1015,7 @@ export default function UserManagement() {
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                defaultChecked={selectedUser?.role === "admin"}
+                                defaultChecked={selectedUser ? hasPermission(selectedUser.role, moduleKey, "create") : false}
                               />
                             )}
                           </div>
@@ -1015,7 +1026,7 @@ export default function UserManagement() {
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                defaultChecked={selectedUser?.role === "admin"}
+                                defaultChecked={selectedUser ? hasPermission(selectedUser.role, moduleKey, "edit") : false}
                               />
                             )}
                           </div>
@@ -1026,7 +1037,7 @@ export default function UserManagement() {
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
-                                defaultChecked={selectedUser?.role === "admin"}
+                                defaultChecked={selectedUser ? hasPermission(selectedUser.role, moduleKey, "delete") : false}
                               />
                             )}
                           </div>
@@ -1039,7 +1050,7 @@ export default function UserManagement() {
                                   <input
                                     type="checkbox"
                                     className="w-3 h-3 text-green-600 rounded focus:ring-green-500"
-                                    defaultChecked={selectedUser?.role === "admin"}
+                                    defaultChecked={selectedUser ? hasPermission(selectedUser.role, moduleKey, action) : false}
                                   />
                                   <span className="text-xs text-gray-600 capitalize">
                                     {action.replace("_", " ")}
