@@ -28,19 +28,19 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginForm) => {
-      return await apiRequest("POST", "/api/auth/login", data);
+      const response = await apiRequest("POST", "/api/auth/login", data);
+      const result = await response.json();
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Welcome back!",
         description: "You've successfully logged in.",
       });
-      // Invalidate auth queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      // Small delay to ensure auth state updates before navigation
-      setTimeout(() => {
-        setLocation("/");
-      }, 100);
+      // Set user data directly in cache
+      queryClient.setQueryData(["/api/user"], data.user);
+      // Navigate immediately
+      setLocation("/");
     },
     onError: (error: any) => {
       toast({
