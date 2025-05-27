@@ -79,12 +79,9 @@ export default function Quotes() {
 
   // Check if user has permission for a specific action based on role templates
   const hasPermission = (module: string, action: string) => {
-    if (!user || !user.role) return false;
+    if (!user?.user || !user.user.role) return false;
     
-    // Debug log to check user role
-    console.log('Checking permission:', { userRole: user.role, module, action });
-    
-    if (user.role === 'admin') return true; // Admins have all permissions
+    if (user.user.role === 'admin') return true; // Admins have all permissions
     
     // Role-based permissions (matching User Management templates)
     const roleTemplates = {
@@ -102,7 +99,7 @@ export default function Quotes() {
       }
     };
     
-    const rolePermissions = roleTemplates[user.role as keyof typeof roleTemplates];
+    const rolePermissions = roleTemplates[user.user.role as keyof typeof roleTemplates];
     if (!rolePermissions) return false;
     
     const modulePermissions = rolePermissions[module as keyof typeof rolePermissions];
@@ -332,7 +329,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Valid Until</TableHead>
-                    {user?.role === 'admin' && <TableHead>Created By</TableHead>}
+                    {user?.user?.role === 'admin' && <TableHead>Created By</TableHead>}
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -383,7 +380,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                             {new Date(quote.validUntil).toLocaleDateString()}
                           </div>
                         </TableCell>
-                        {user?.role === 'admin' && (
+                        {user?.user?.role === 'admin' && (
                           <TableCell>
                             <CreatedByInfo createdBy={quote.createdBy} />
                           </TableCell>
