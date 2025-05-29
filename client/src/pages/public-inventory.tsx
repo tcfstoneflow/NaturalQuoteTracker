@@ -428,24 +428,25 @@ export default function PublicInventory() {
                             {product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
                               <div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Individual Slabs Available</h3>
+                                <div className="text-xs text-gray-500 mb-2">
+                                  Debug: {product.slabs.length} slabs found
+                                </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
                                   {product.slabs
                                     .filter((slab: any) => slab.status === 'available')
                                     .map((slab: any) => (
                                       <div 
                                         key={slab.id} 
-                                        className="cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 border border-gray-200 rounded-lg bg-white"
+                                        className="cursor-pointer hover:shadow-lg hover:bg-blue-50 transition-all duration-200 border-2 border-gray-200 hover:border-blue-300 rounded-lg bg-white p-1"
                                         onClick={(e) => {
                                           e.preventDefault();
                                           e.stopPropagation();
-                                          console.log('Slab clicked:', slab.slabNumber, slab);
-                                          console.log('Product:', product);
-                                          const slabWithProduct = { ...slab, product };
-                                          console.log('Setting selected slab:', slabWithProduct);
-                                          setSelectedSlab(slabWithProduct);
+                                          console.log('SLAB CARD CLICKED!', slab.slabNumber);
+                                          alert(`Clicked on slab: ${slab.slabNumber}`);
+                                          setSelectedSlab({ ...slab, product });
                                           setIsSlabDetailsOpen(true);
-                                          console.log('Modal should be open now');
                                         }}
+                                        style={{ minHeight: '80px' }}
                                       >
                                         <div className="p-3">
                                           <div className="flex justify-between items-start mb-2">
