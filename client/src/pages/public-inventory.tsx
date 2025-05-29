@@ -425,22 +425,73 @@ export default function PublicInventory() {
 
                             {product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
                               <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Warehouse Locations</h3>
-                                <div className="space-y-1">
+                                <h3 className="font-semibold text-gray-900 mb-2">Individual Slabs Available</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
                                   {product.slabs
                                     .filter((slab: any) => slab.status === 'available')
-                                    .reduce((locations: string[], slab: any) => {
-                                      if (slab.location && !locations.includes(slab.location)) {
-                                        locations.push(slab.location);
-                                      }
-                                      return locations;
-                                    }, [])
-                                    .map((location: string) => (
-                                      <div key={location} className="flex items-center text-sm text-gray-600">
-                                        <MapPin className="h-4 w-4 mr-2" />
-                                        {location}
-                                      </div>
+                                    .map((slab: any) => (
+                                      <Card 
+                                        key={slab.id} 
+                                        className="cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 border-gray-200"
+                                        onClick={() => {
+                                          toast({
+                                            title: "Slab Selected",
+                                            description: `Selected ${slab.slabNumber} - Contact us for a quote on this specific slab.`,
+                                          });
+                                        }}
+                                      >
+                                        <CardContent className="p-3">
+                                          <div className="flex justify-between items-start mb-2">
+                                            <div className="font-medium text-sm">{slab.slabNumber}</div>
+                                            <Badge variant="secondary" className="text-xs">
+                                              Available
+                                            </Badge>
+                                          </div>
+                                          
+                                          {(slab.length && slab.width) && (
+                                            <div className="text-xs text-gray-600 mb-1">
+                                              {slab.length}" × {slab.width}"
+                                              <span className="ml-1 text-primary font-medium">
+                                                ({((slab.length * slab.width) / 144).toFixed(1)} sq ft)
+                                              </span>
+                                            </div>
+                                          )}
+                                          
+                                          {slab.location && (
+                                            <div className="flex items-center text-xs text-gray-500">
+                                              <MapPin className="h-3 w-3 mr-1" />
+                                              {slab.location}
+                                            </div>
+                                          )}
+                                          
+                                          {slab.barcode && (
+                                            <div className="text-xs font-mono text-gray-400 mt-1 truncate">
+                                              {slab.barcode}
+                                            </div>
+                                          )}
+                                        </CardContent>
+                                      </Card>
                                     ))}
+                                </div>
+                                
+                                {/* Warehouse Locations Summary */}
+                                <div className="mt-3 pt-3 border-t border-gray-100">
+                                  <div className="text-sm text-gray-600 mb-1">Warehouse Locations:</div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {product.slabs
+                                      .filter((slab: any) => slab.status === 'available')
+                                      .reduce((locations: string[], slab: any) => {
+                                        if (slab.location && !locations.includes(slab.location)) {
+                                          locations.push(slab.location);
+                                        }
+                                        return locations;
+                                      }, [])
+                                      .map((location: string) => (
+                                        <Badge key={location} variant="outline" className="text-xs">
+                                          {location}
+                                        </Badge>
+                                      ))}
+                                  </div>
                                 </div>
                               </div>
                             )}
