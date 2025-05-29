@@ -430,17 +430,18 @@ export default function PublicInventory() {
                                   {product.slabs
                                     .filter((slab: any) => slab.status === 'available')
                                     .map((slab: any) => (
-                                      <Card 
+                                      <div 
                                         key={slab.id} 
-                                        className="cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 border-gray-200"
+                                        className="cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 border border-gray-200 rounded-lg bg-white"
                                         onClick={() => {
+                                          console.log('Slab clicked:', slab.slabNumber);
                                           toast({
                                             title: "Slab Selected",
                                             description: `Selected ${slab.slabNumber} - Contact us for a quote on this specific slab.`,
                                           });
                                         }}
                                       >
-                                        <CardContent className="p-3">
+                                        <div className="p-3">
                                           <div className="flex justify-between items-start mb-2">
                                             <div className="font-medium text-sm">{slab.slabNumber}</div>
                                             <Badge variant="secondary" className="text-xs">
@@ -469,8 +470,8 @@ export default function PublicInventory() {
                                               {slab.barcode}
                                             </div>
                                           )}
-                                        </CardContent>
-                                      </Card>
+                                        </div>
+                                      </div>
                                     ))}
                                 </div>
                                 
