@@ -32,6 +32,8 @@ export default function PublicInventory() {
   const [sortBy, setSortBy] = useState("name");
   const [productsWithSlabs, setProductsWithSlabs] = useState<any[]>([]);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [selectedSlab, setSelectedSlab] = useState<any>(null);
+  const [isSlabDetailsOpen, setIsSlabDetailsOpen] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -435,10 +437,8 @@ export default function PublicInventory() {
                                         className="cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 border border-gray-200 rounded-lg bg-white"
                                         onClick={() => {
                                           console.log('Slab clicked:', slab.slabNumber);
-                                          toast({
-                                            title: "Slab Selected",
-                                            description: `Selected ${slab.slabNumber} - Contact us for a quote on this specific slab.`,
-                                          });
+                                          setSelectedSlab({ ...slab, product });
+                                          setIsSlabDetailsOpen(true);
                                         }}
                                       >
                                         <div className="p-3">
@@ -645,6 +645,153 @@ export default function PublicInventory() {
           </div>
         </div>
       </footer>
+
+      {/* Slab Details Modal */}
+      <Dialog open={isSlabDetailsOpen} onOpenChange={setIsSlabDetailsOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Slab Details - {selectedSlab?.slabNumber}
+            </DialogTitle>
+            <DialogDescription>
+              Detailed information about this natural stone slab
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSlab && (
+            <div className="space-y-6">
+              {/* Product Information */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-lg mb-3">{selectedSlab.product?.name}</h3>
+                {selectedSlab.product?.imageUrl && (
+                  <div className="mb-4">
+                    <img 
+                      src={selectedSlab.product.imageUrl} 
+                      alt={selectedSlab.product.name}
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Material:</span>
+                    <p className="text-gray-600">{selectedSlab.product?.category || 'Natural Stone'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Color:</span>
+                    <p className="text-gray-600">{selectedSlab.product?.color || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Bundle ID:</span>
+                    <p className="text-gray-600 font-mono">{selectedSlab.product?.bundleId}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Status:</span>
+                    <Badge variant="secondary">Available</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slab Specifications */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Ruler className="h-4 w-4" />
+                    Dimensions
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Length:</span>
+                      <span className="font-medium">{selectedSlab.length ? `${selectedSlab.length}"` : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Width:</span>
+                      <span className="font-medium">{selectedSlab.width ? `${selectedSlab.width}"` : 'N/A'}</span>
+                    </div>
+                    {(selectedSlab.length && selectedSlab.width) && (
+                      <div className="flex justify-between border-t pt-2">
+                        <span>Area:</span>
+                        <span className="font-medium text-primary">
+                          {((selectedSlab.length * selectedSlab.width) / 144).toFixed(1)} sq ft
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Location & Details
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Slab Number:</span>
+                      <span className="font-medium">{selectedSlab.slabNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Location:</span>
+                      <span className="font-medium">{selectedSlab.location || 'Warehouse'}</span>
+                    </div>
+                    {selectedSlab.barcode && (
+                      <div className="flex justify-between">
+                        <span>Barcode:</span>
+                        <span className="font-mono text-xs">{selectedSlab.barcode}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button 
+                  onClick={() => {
+                    setContactDialogOpen(true);
+                    setIsSlabDetailsOpen(false);
+                  }}
+                  className="flex-1"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Request Quote for This Slab
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    toast({
+                      title: "Showroom Visit",
+                      description: "Contact us to schedule a visit to see this slab in person.",
+                    });
+                  }}
+                  className="flex-1"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule Viewing
+                </Button>
+              </div>
+
+              {/* Additional Information */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">Need More Information?</h4>
+                <p className="text-blue-800 text-sm mb-3">
+                  Our team can provide detailed specifications, pricing, and installation guidance for this specific slab.
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="text-blue-700 border-blue-300">
+                    <Phone className="h-3 w-3 mr-1" />
+                    Call Us
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-blue-700 border-blue-300">
+                    <Mail className="h-3 w-3 mr-1" />
+                    Email
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
