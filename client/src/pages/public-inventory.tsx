@@ -435,10 +435,16 @@ export default function PublicInventory() {
                                       <div 
                                         key={slab.id} 
                                         className="cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 border border-gray-200 rounded-lg bg-white"
-                                        onClick={() => {
-                                          console.log('Slab clicked:', slab.slabNumber);
-                                          setSelectedSlab({ ...slab, product });
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          console.log('Slab clicked:', slab.slabNumber, slab);
+                                          console.log('Product:', product);
+                                          const slabWithProduct = { ...slab, product };
+                                          console.log('Setting selected slab:', slabWithProduct);
+                                          setSelectedSlab(slabWithProduct);
                                           setIsSlabDetailsOpen(true);
+                                          console.log('Modal should be open now');
                                         }}
                                       >
                                         <div className="p-3">

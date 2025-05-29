@@ -1,0 +1,135 @@
+3530-b2c53900bbc8f739.js:1 Replit version d5220ef8, pid2 version 0.0.1345
+_app-df22cac495f72ea1.js:38 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+_app-df22cac495f72ea1.js:38 [LaunchDarkly] LaunchDarkly client initialized
+_app-df22cac495f72ea1.js:38 Backpack couldn't override `window.ethereum`.
+(anonymous) @ _app-df22cac495f72ea1.js:38
+td.doubleclick.net/td/rul/11411994397?random=1748528261214&cv=11&fst=1748528261214&fmt=3&bg=ffffff&guid=ON&async=1&gtm=45be55r0h2v9171242957za200&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103130498~103130500~103200004~103233427~103252644~103252646~104481633~104481635&u_w=3360&u_h=1890&url=https%3A%2F%2Freplit.com%2F%40wandrewgilbert%2FNaturalQuoteTracker&ref=https%3A%2F%2Freplit.com%2Flogin%3Fgoto%3D%2F%40wandrewgilbert%2FNaturalQuoteTracker&hn=www.googleadservices.com&frm=0&tiba=NaturalQuoteTracker%20-%20Replit&npa=0&pscdl=noapi&auid=258766858.1748528225&fledge=1&data=event%3Dgtag.config:1 [Intervention] Ad was removed because its network usage exceeded the limit. See https://www.chromestatus.com/feature/4800491902992384?utm_source=devtools
+injected.js:1 Backpack couldn't override `window.ethereum`.
+Hxs @ injected.js:1
+ Backpack couldn't override `window.ethereum`.
+Hxs @ injected.js:1
+NaturalQuoteTracker:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'battery'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+framework-45f4cdb007d7ccaa.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-45f4cdb007d7ccaa.js:1
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+[Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+ [Report Only] Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+injectLeap.js:2 [Report Only] Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+ [Report Only] Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+injectLeap.js:2 [Report Only] Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+injected.js:1 Backpack couldn't override `window.ethereum`.
+Hxs @ injected.js:1
+injected.js:1 Backpack couldn't override `window.ethereum`.
+Hxs @ injected.js:1
+NaturalQuoteTracker:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+NaturalQuoteTracker:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+NaturalQuoteTracker:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+NaturalQuoteTracker:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+NaturalQuoteTracker:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+NaturalQuoteTracker:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+_app-df22cac495f72ea1.js:38 task queue exceeded allotted deadline by 37ms
+(anonymous) @ _app-df22cac495f72ea1.js:38
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32 Unrecognized feature: 'battery'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+injected.js:1 Backpack couldn't override `window.ethereum`.
+Hxs @ injected.js:1
+injected.js:1 Backpack couldn't override `window.ethereum`.
+Hxs @ injected.js:1
+aa4b1ecf-e61c-459b-9772-ad94554b0778-00-1ne08tgvbq68h.spock.replit.dev/api/auth/user:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 (Unauthorized)
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
