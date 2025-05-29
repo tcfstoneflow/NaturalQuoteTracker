@@ -520,6 +520,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public Slabs Endpoint for Client Inventory
+  app.get("/api/public/slabs", async (req, res) => {
+    try {
+      const { bundleId } = req.query;
+      const slabs = await storage.getSlabs(bundleId as string);
+      // Only return available slabs with limited information for public access
+      const publicSlabs = slabs
+        .filter(slab => slab.status?.toLowerCase() === 'available')
+        .map(slab => ({
+          id: slab.id,
+          slabNumber: slab.slabNumber,
+          length: slab.length,
+          width: slab.width,
+          location: slab.location,
+          barcode: slab.barcode,
+          status: slab.status
+        }));
+      res.json(publicSlabs);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch slabs", details: error.message });
+    }
+  });
+
   // Slab Management Routes
   app.get("/api/slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {

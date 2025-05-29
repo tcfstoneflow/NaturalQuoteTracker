@@ -97,7 +97,7 @@ export default function PublicInventory() {
           const productsWithSlabData = await Promise.all(
             products.map(async (product: any) => {
               try {
-                const slabsResponse = await fetch(`/api/slabs?bundleId=${product.bundleId}`)
+                const slabsResponse = await fetch(`/api/public/slabs?bundleId=${product.bundleId}`)
                   .then(res => res.json());
                 return {
                   ...product,
