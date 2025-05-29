@@ -431,6 +431,28 @@ export default function PublicInventory() {
                                 <div className="text-xs text-gray-500 mb-2">
                                   Debug: {product.slabs.length} slabs found
                                 </div>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => {
+                                    console.log('Test button clicked');
+                                    alert('Test modal opening');
+                                    setSelectedSlab({
+                                      id: 999,
+                                      slabNumber: "TEST-001",
+                                      length: 126,
+                                      width: 63,
+                                      location: "Test Location",
+                                      barcode: "TEST123456",
+                                      status: "available",
+                                      product: product
+                                    });
+                                    setIsSlabDetailsOpen(true);
+                                  }}
+                                  className="mb-2"
+                                >
+                                  Test Modal
+                                </Button>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
                                   {product.slabs
                                     .filter((slab: any) => slab.status === 'available')
