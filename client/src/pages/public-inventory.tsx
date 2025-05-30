@@ -259,7 +259,7 @@ export default function PublicInventory() {
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('Product card clicked!', product.id, product.name);
-                  alert(`Clicked on ${product.name} - Product ID: ${product.id}`);
+                  console.log('Current expanded products:', Array.from(expandedProducts));
                   setExpandedProducts(prev => {
                     const newSet = new Set(prev);
                     if (newSet.has(product.id)) {
@@ -269,6 +269,7 @@ export default function PublicInventory() {
                       newSet.add(product.id);
                       console.log('Expanding product', product.id);
                     }
+                    console.log('New expanded products:', Array.from(newSet));
                     return newSet;
                   });
                 }}
@@ -423,6 +424,11 @@ export default function PublicInventory() {
                               </div>
                             </div>
 
+                            {expandedProducts.has(product.id) && (
+                              <div className="bg-blue-50 p-2 mb-2 text-xs text-blue-600 rounded">
+                                DEBUG: Product {product.id} is expanded
+                              </div>
+                            )}
                             {expandedProducts.has(product.id) && product.slabLength && product.slabWidth && (
                               <div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Slab Dimensions</h3>
