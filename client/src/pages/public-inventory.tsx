@@ -34,6 +34,7 @@ export default function PublicInventory() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [selectedSlab, setSelectedSlab] = useState<any>(null);
   const [isSlabDetailsOpen, setIsSlabDetailsOpen] = useState(false);
+  const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set());
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -252,7 +253,22 @@ export default function PublicInventory() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedProducts.map((product: any) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <Card 
+                key={product.id} 
+                className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedProducts(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(product.id)) {
+                      newSet.delete(product.id);
+                    } else {
+                      newSet.add(product.id);
+                    }
+                    return newSet;
+                  });
+                }}
+              >
                 {/* Image Placeholder */}
                 <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative">
                   {product.imageUrl ? (
@@ -403,7 +419,7 @@ export default function PublicInventory() {
                               </div>
                             </div>
 
-                            {product.slabLength && product.slabWidth && (
+                            {expandedProducts.has(product.id) && product.slabLength && product.slabWidth && (
                               <div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Slab Dimensions</h3>
                                 <div className="space-y-2 text-sm">
@@ -425,7 +441,7 @@ export default function PublicInventory() {
                               </div>
                             )}
 
-                            {product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
+                            {expandedProducts.has(product.id) && product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
                               <div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Individual Slabs Available</h3>
                                 <div className="text-xs text-gray-500 mb-2">
