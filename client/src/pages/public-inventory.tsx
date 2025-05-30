@@ -34,7 +34,7 @@ export default function PublicInventory() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [selectedSlab, setSelectedSlab] = useState<any>(null);
   const [isSlabDetailsOpen, setIsSlabDetailsOpen] = useState(false);
-  const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set());
+  const [expandedProducts, setExpandedProducts] = useState<number[]>([]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -259,18 +259,19 @@ export default function PublicInventory() {
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('Product card clicked!', product.id, product.name);
-                  console.log('Current expanded products:', Array.from(expandedProducts));
+                  console.log('Current expanded products:', expandedProducts);
                   setExpandedProducts(prev => {
-                    const newSet = new Set(prev);
-                    if (newSet.has(product.id)) {
-                      newSet.delete(product.id);
+                    if (prev.includes(product.id)) {
                       console.log('Collapsing product', product.id);
+                      const newArray = prev.filter(id => id !== product.id);
+                      console.log('New expanded products:', newArray);
+                      return newArray;
                     } else {
-                      newSet.add(product.id);
                       console.log('Expanding product', product.id);
+                      const newArray = [...prev, product.id];
+                      console.log('New expanded products:', newArray);
+                      return newArray;
                     }
-                    console.log('New expanded products:', Array.from(newSet));
-                    return newSet;
                   });
                 }}
               >
@@ -424,12 +425,12 @@ export default function PublicInventory() {
                               </div>
                             </div>
 
-                            {expandedProducts.has(product.id) && (
+                            {expandedProducts.includes(product.id) && (
                               <div className="bg-blue-50 p-2 mb-2 text-xs text-blue-600 rounded">
                                 DEBUG: Product {product.id} is expanded
                               </div>
                             )}
-                            {expandedProducts.has(product.id) && product.slabLength && product.slabWidth && (
+                            {expandedProducts.includes(product.id) && product.slabLength && product.slabWidth && (
                               <div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Slab Dimensions</h3>
                                 <div className="space-y-2 text-sm">
@@ -451,7 +452,7 @@ export default function PublicInventory() {
                               </div>
                             )}
 
-                            {expandedProducts.has(product.id) && product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
+                            {expandedProducts.includes(product.id) && product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
                               <div>
                                 <h3 className="font-semibold text-gray-900 mb-2">Individual Slabs Available</h3>
                                 <div className="text-xs text-gray-500 mb-2">
