@@ -258,12 +258,16 @@ export default function PublicInventory() {
                 className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
+                  console.log('Product card clicked!', product.id, product.name);
+                  alert(`Clicked on ${product.name} - Product ID: ${product.id}`);
                   setExpandedProducts(prev => {
                     const newSet = new Set(prev);
                     if (newSet.has(product.id)) {
                       newSet.delete(product.id);
+                      console.log('Collapsing product', product.id);
                     } else {
                       newSet.add(product.id);
+                      console.log('Expanding product', product.id);
                     }
                     return newSet;
                   });
