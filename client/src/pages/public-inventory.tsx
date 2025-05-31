@@ -337,18 +337,12 @@ export default function PublicInventory() {
                 {/* Product Image */}
                 {selectedProduct.imageUrl && (
                   <div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
-                    <a 
-                      href={selectedProduct.imageUrl} 
-                      data-lightbox="product-gallery"
-                      data-title={`${selectedProduct.name} - ${selectedProduct.category} - Full Size`}
-                      className="block w-full h-full"
-                    >
-                      <img 
-                        src={selectedProduct.imageUrl} 
-                        alt={selectedProduct.name}
-                        className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                      />
-                    </a>
+                    <img 
+                      src={selectedProduct.imageUrl} 
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => openLightbox(selectedProduct.imageUrl, `${selectedProduct.name} - ${selectedProduct.category} - Full Size`)}
+                    />
                   </div>
                 )}
 
@@ -591,6 +585,14 @@ export default function PublicInventory() {
             </Form>
           </DialogContent>
         </Dialog>
+
+        {/* Custom Lightbox */}
+        <Lightbox
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          imageSrc={lightboxImage}
+          imageTitle={lightboxTitle}
+        />
       </div>
     </div>
   );
