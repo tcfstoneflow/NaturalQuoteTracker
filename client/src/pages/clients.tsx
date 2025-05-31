@@ -191,7 +191,10 @@ export default function Clients() {
       await apiRequest("DELETE", `/api/quotes/${quoteId}`);
     },
     onSuccess: () => {
+      // Invalidate multiple cache keys to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       toast({
         title: "Success",
         description: "Quote deleted successfully",
@@ -259,6 +262,9 @@ export default function Clients() {
   };
 
   const handleDeleteQuote = (quoteId: number, quoteName: string) => {
+    // Prevent multiple deletion attempts
+    if (deleteQuoteMutation.isPending) return;
+    
     if (window.confirm(`Are you sure you want to delete quote ${quoteName}?`)) {
       deleteQuoteMutation.mutate(quoteId);
     }
