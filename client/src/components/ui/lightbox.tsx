@@ -11,22 +11,16 @@ interface LightboxProps {
 
 export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProps) {
   useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
     if (isOpen) {
-      document.addEventListener('keydown', handleEsc);
       document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-
+    
     return () => {
-      document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -589,7 +589,10 @@ export default function PublicInventory() {
         {/* Custom Lightbox */}
         <Lightbox
           isOpen={lightboxOpen}
-          onClose={() => setLightboxOpen(false)}
+          onClose={() => {
+            setLightboxOpen(false);
+            // Don't close the modal - only close the lightbox
+          }}
           imageSrc={lightboxImage}
           imageTitle={lightboxTitle}
         />
