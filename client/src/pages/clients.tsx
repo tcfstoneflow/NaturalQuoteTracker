@@ -459,7 +459,17 @@ export default function Clients() {
           <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
             <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
               <DialogHeader>
-                <DialogTitle>Client Details</DialogTitle>
+                <div className="flex justify-between items-center">
+                  <DialogTitle>Client Details</DialogTitle>
+                  <Button 
+                    onClick={() => {
+                      setLocation(`/quotes?client=${viewingClient.id}`);
+                    }}
+                    className="bg-primary-custom hover:bg-primary-custom/90"
+                  >
+                    New Quote
+                  </Button>
+                </div>
               </DialogHeader>
               {viewingClient && (
                 <div className="flex flex-col h-full">
@@ -644,15 +654,7 @@ export default function Clients() {
                   </div>
                   </div>
 
-                  <div className="flex justify-between pt-4 border-t mt-4">
-                    <Button 
-                      onClick={() => {
-                        setLocation(`/quotes?client=${viewingClient.id}`);
-                      }}
-                      className="bg-primary-custom hover:bg-primary-custom/90"
-                    >
-                      New Quote
-                    </Button>
+                  <div className="flex justify-end pt-4 border-t mt-4">
                     <Button onClick={handleCloseViewModal} variant="outline">Close</Button>
                   </div>
                 </div>
