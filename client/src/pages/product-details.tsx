@@ -155,6 +155,10 @@ export default function ProductDetails() {
                     <div className="font-medium">{product.grade} Grade</div>
                   </div>
                   <div>
+                    <span className="text-gray-600">Finish:</span>
+                    <div className="font-medium">{product.finish}</div>
+                  </div>
+                  <div>
                     <span className="text-gray-600">Thickness:</span>
                     <div className="font-medium">{product.thickness}</div>
                   </div>
@@ -282,7 +286,7 @@ export default function ProductDetails() {
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-lg mb-2">{similarProduct.name}</h3>
                     <p className="text-sm text-gray-600 mb-3">
-                      {similarProduct.supplier} • {similarProduct.grade} Grade
+                      {similarProduct.supplier} • {similarProduct.finish}
                     </p>
                     
                     <div className="flex justify-between items-center text-sm">

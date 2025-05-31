@@ -22,6 +22,7 @@ interface Product {
   category: string;
   grade: string;
   thickness: string;
+  finish: string;
   price: string;
   unit: string;
   stockQuantity: number;
@@ -191,6 +192,7 @@ export default function Inventory() {
       category: product.category,
       grade: product.grade,
       thickness: product.thickness,
+      finish: product.finish || "Polished",
       price: product.price,
       unit: product.unit,
       stockQuantity: product.stockQuantity.toString(),
@@ -212,6 +214,7 @@ export default function Inventory() {
       category: "",
       grade: "",
       thickness: "",
+      finish: "",
       price: "",
       unit: "sq ft",
       stockQuantity: "",
@@ -612,6 +615,7 @@ export default function Inventory() {
                   <TableHead>Supplier</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Grade</TableHead>
+                  <TableHead>Finish</TableHead>
                   <TableHead>Thickness</TableHead>
                   <TableHead>Price/{" "}Unit</TableHead>
                   <TableHead>Slab Count</TableHead>
@@ -655,6 +659,7 @@ export default function Inventory() {
                         <Badge variant="secondary">{product.category}</Badge>
                       </TableCell>
                       <TableCell>{product.grade}</TableCell>
+                      <TableCell>{product.finish}</TableCell>
                       <TableCell>{product.thickness}</TableCell>
                       <TableCell>${product.price}/{product.unit}</TableCell>
                       <TableCell>
