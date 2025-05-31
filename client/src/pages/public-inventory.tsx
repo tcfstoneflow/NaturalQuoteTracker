@@ -15,6 +15,13 @@ import { Search, Filter, Package, Ruler, MapPin, Eye, Calendar, Phone, Mail } fr
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 
+// Initialize lightbox after component mounts
+declare global {
+  interface Window {
+    lightbox?: any;
+  }
+}
+
 // Contact form schema
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -69,6 +76,18 @@ export default function PublicInventory() {
     }));
     setProductsWithSlabs(productsWithSlabData);
   }, [products, allSlabs]);
+
+  // Initialize lightbox when component mounts and when images are loaded
+  useEffect(() => {
+    // Small delay to ensure DOM elements are ready
+    const timer = setTimeout(() => {
+      if (window.lightbox) {
+        window.lightbox.init();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [productsWithSlabs]);
 
   // Helper function to calculate slab area
   const calculateSlabArea = (length: number, width: number) => {
@@ -233,18 +252,26 @@ export default function PublicInventory() {
                 {/* Image */}
                 <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative">
                   {product.imageUrl ? (
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
+                    <a 
+                      href={product.imageUrl} 
+                      data-lightbox="product-gallery"
+                      data-title={`${product.name} - ${product.category}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="block w-full h-full"
+                    >
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.name}
+                        className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      />
+                    </a>
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <Package className="h-12 w-12 text-gray-400" />
                     </div>
                   )}
                   
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3 pointer-events-none">
                     <Badge variant={
                       (product.slabs?.filter((slab: any) => slab.status === 'available').length || product.stockQuantity || 0) > 5 ? "default" : "secondary"
                     }>
@@ -322,11 +349,18 @@ export default function PublicInventory() {
                 {/* Product Image */}
                 {selectedProduct.imageUrl && (
                   <div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={selectedProduct.imageUrl} 
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-cover"
-                    />
+                    <a 
+                      href={selectedProduct.imageUrl} 
+                      data-lightbox="product-gallery"
+                      data-title={`${selectedProduct.name} - ${selectedProduct.category} - Full Size`}
+                      className="block w-full h-full"
+                    >
+                      <img 
+                        src={selectedProduct.imageUrl} 
+                        alt={selectedProduct.name}
+                        className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      />
+                    </a>
                   </div>
                 )}
 
