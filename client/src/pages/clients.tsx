@@ -642,8 +642,16 @@ export default function Clients() {
                     )}
                   </div>
 
-                  <div className="flex justify-end pt-4">
-                    <Button onClick={handleCloseViewModal}>Close</Button>
+                  <div className="flex justify-between pt-4">
+                    <Button 
+                      onClick={() => {
+                        setLocation(`/quotes?client=${viewingClient.id}`);
+                      }}
+                      className="bg-primary-custom hover:bg-primary-custom/90"
+                    >
+                      New Quote
+                    </Button>
+                    <Button onClick={handleCloseViewModal} variant="outline">Close</Button>
                   </div>
                 </div>
               )}
