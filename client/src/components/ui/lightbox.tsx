@@ -24,15 +24,24 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+    }
+  };
+
   const lightboxContent = (
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80"
-      onClick={(e) => {
+      onClick={handleBackdropClick}
+      onMouseDown={(e) => {
         e.stopPropagation();
-        onClose();
       }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
+      onTouchStart={(e) => {
+        e.stopPropagation();
+      }}
       data-lightbox="container"
       style={{ 
         zIndex: 999999, 
@@ -50,6 +59,7 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
       >
         <div
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onClose();
           }}
