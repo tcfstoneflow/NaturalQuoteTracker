@@ -19,6 +19,7 @@ interface ShowroomVisit {
   message: string | null;
   status: string;
   assignedToUserId: number | null;
+  assignedSalesMember: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -42,6 +43,7 @@ export default function ShowroomVisits() {
   const [selectedVisit, setSelectedVisit] = useState<ShowroomVisit | null>(null);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("");
+  const [assignedSalesMember, setAssignedSalesMember] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -84,6 +86,7 @@ export default function ShowroomVisits() {
       updates: {
         status: status || selectedVisit.status,
         notes: notes || selectedVisit.notes,
+        assignedSalesMember: assignedSalesMember || selectedVisit.assignedSalesMember,
       },
     });
   };
@@ -92,6 +95,7 @@ export default function ShowroomVisits() {
     setSelectedVisit(visit);
     setStatus(visit.status);
     setNotes(visit.notes || "");
+    setAssignedSalesMember(visit.assignedSalesMember || "");
   };
 
   if (isLoading) {
@@ -225,6 +229,14 @@ export default function ShowroomVisits() {
                           <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Assign Sales member</label>
+                      <Input
+                        value={assignedSalesMember}
+                        onChange={(e) => setAssignedSalesMember(e.target.value)}
+                        placeholder="Enter sales member name..."
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Notes</label>

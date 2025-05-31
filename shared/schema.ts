@@ -137,6 +137,7 @@ export const showroomVisits = pgTable("showroom_visits", {
   message: text("message"),
   status: text("status").default("pending").notNull(), // "pending", "scheduled", "completed", "cancelled"
   assignedToUserId: integer("assigned_to_user_id"),
+  assignedSalesMember: text("assigned_sales_member"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
