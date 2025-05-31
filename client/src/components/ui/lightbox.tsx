@@ -33,7 +33,10 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
   const lightboxContent = (
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80"
-      onClick={onClose}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
       data-lightbox="container"
@@ -52,7 +55,10 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          onClick={() => onClose()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
           className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-90 transition-all duration-200 hover:scale-110 cursor-pointer"
           style={{ 
             zIndex: 1000000,
