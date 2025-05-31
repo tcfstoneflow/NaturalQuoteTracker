@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface LightboxProps {
@@ -29,12 +30,13 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
 
   if (!isOpen) return null;
 
-  return (
+  const lightboxContent = (
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80"
       onClick={onClose}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
+      style={{ zIndex: 999999 }}
     >
       <div 
         className="relative max-w-7xl max-h-full p-4"
@@ -46,7 +48,8 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-4 right-4 z-[10000] bg-black bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-90 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white"
+          className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-90 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white"
+          style={{ zIndex: 1000000 }}
         >
           <X className="h-8 w-8" />
         </button>
@@ -66,4 +69,6 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
       </div>
     </div>
   );
+
+  return createPortal(lightboxContent, document.body);
 }
