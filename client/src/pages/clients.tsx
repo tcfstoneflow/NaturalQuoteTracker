@@ -457,12 +457,13 @@ export default function Clients() {
 
           {/* Client Detail Modal */}
           <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle>Client Details</DialogTitle>
               </DialogHeader>
               {viewingClient && (
-                <div className="space-y-6">
+                <div className="flex flex-col h-full">
+                  <div className="space-y-6 overflow-y-auto flex-1 pr-2">
                   {/* Client Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
@@ -641,8 +642,9 @@ export default function Clients() {
                       </div>
                     )}
                   </div>
+                  </div>
 
-                  <div className="flex justify-between pt-4">
+                  <div className="flex justify-between pt-4 border-t mt-4">
                     <Button 
                       onClick={() => {
                         setLocation(`/quotes?client=${viewingClient.id}`);
