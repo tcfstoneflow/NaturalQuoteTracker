@@ -32,9 +32,11 @@ export default function Clients() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isQuoteViewModalOpen, setIsQuoteViewModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [viewingClient, setViewingClient] = useState<any>(null);
   const [viewingQuote, setViewingQuote] = useState<any>(null);
+  const [quoteToDelete, setQuoteToDelete] = useState<{id: number, name: string} | null>(null);
   const [aiSummary, setAiSummary] = useState<string>("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [, setLocation] = useLocation();
@@ -265,9 +267,21 @@ export default function Clients() {
     // Prevent multiple deletion attempts
     if (deleteQuoteMutation.isPending) return;
     
-    if (window.confirm(`Are you sure you want to delete quote ${quoteName}?`)) {
-      deleteQuoteMutation.mutate(quoteId);
+    setQuoteToDelete({ id: quoteId, name: quoteName });
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteQuote = () => {
+    if (quoteToDelete) {
+      deleteQuoteMutation.mutate(quoteToDelete.id);
+      setIsDeleteConfirmOpen(false);
+      setQuoteToDelete(null);
     }
+  };
+
+  const cancelDeleteQuote = () => {
+    setIsDeleteConfirmOpen(false);
+    setQuoteToDelete(null);
   };
 
   const generateAISummary = async (client: any) => {
@@ -761,6 +775,36 @@ export default function Clients() {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Confirmation Modal */}
+          <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Quote</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                {quoteToDelete && (
+                  <p>Are you sure you want to delete quote {quoteToDelete.name}?</p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={cancelDeleteQuote}
+                  disabled={deleteQuoteMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDeleteQuote}
+                  disabled={deleteQuoteMutation.isPending}
+                >
+                  {deleteQuoteMutation.isPending ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
           <CardContent>
