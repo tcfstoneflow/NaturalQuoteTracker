@@ -153,7 +153,7 @@ export default function Inventory() {
     e.preventDefault();
     
     // Ensure all required fields are provided
-    if (!formData.bundleId || !formData.name || !formData.supplier || !formData.category || !formData.grade || !formData.thickness) {
+    if (!formData.bundleId || !formData.name || !formData.supplier || !formData.category || !formData.finish) {
       toast({ title: "Please fill in all required fields including Bundle ID", variant: "destructive" });
       return;
     }
@@ -165,6 +165,7 @@ export default function Inventory() {
       category: formData.category,
       grade: formData.grade,
       thickness: formData.thickness.trim(),
+      finish: formData.finish,
       price: parseFloat(formData.price) || 0,
       unit: formData.unit || "sq ft",
       stockQuantity: parseInt(formData.stockQuantity) || 0,
