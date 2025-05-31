@@ -36,8 +36,12 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
     >
       <div className="relative max-w-7xl max-h-full p-4">
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 bg-black bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-90 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-4 right-4 z-20 bg-black bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-90 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white"
         >
           <X className="h-8 w-8" />
         </button>
