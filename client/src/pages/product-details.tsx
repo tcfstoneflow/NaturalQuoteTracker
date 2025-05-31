@@ -143,16 +143,16 @@ export default function ProductDetails() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-gray-600">Material:</span>
-                    <div className="font-medium">{product.material}</div>
+                    <span className="text-gray-600">Supplier:</span>
+                    <div className="font-medium">{product.supplier}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Color:</span>
-                    <div className="font-medium">{product.color}</div>
+                    <span className="text-gray-600">Category:</span>
+                    <div className="font-medium capitalize">{product.category}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Finish:</span>
-                    <div className="font-medium">{product.finish}</div>
+                    <span className="text-gray-600">Grade:</span>
+                    <div className="font-medium">{product.grade} Grade</div>
                   </div>
                   <div>
                     <span className="text-gray-600">Thickness:</span>
@@ -160,7 +160,7 @@ export default function ProductDetails() {
                   </div>
                   <div>
                     <span className="text-gray-600">Price per sq ft:</span>
-                    <div className="font-medium">${product.pricePerSqFt}</div>
+                    <div className="font-medium">${product.price}</div>
                   </div>
                   <div>
                     <span className="text-gray-600">Location:</span>
@@ -282,12 +282,12 @@ export default function ProductDetails() {
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-lg mb-2">{similarProduct.name}</h3>
                     <p className="text-sm text-gray-600 mb-3">
-                      {similarProduct.material} • {similarProduct.finish}
+                      {similarProduct.supplier} • {similarProduct.grade} Grade
                     </p>
                     
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">ID: {similarProduct.bundleId}</span>
-                      <span className="font-medium">${similarProduct.pricePerSqFt}/sq ft</span>
+                      <span className="font-medium">${similarProduct.price}/sq ft</span>
                     </div>
                     
                     <Button 
