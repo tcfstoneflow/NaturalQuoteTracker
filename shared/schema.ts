@@ -60,6 +60,7 @@ export const products = pgTable("products", {
   category: text("category").notNull(), // "marble", "granite", "quartz", "travertine", "porcelain"
   grade: text("grade").notNull(), // "premium", "standard", "economy"
   thickness: text("thickness").notNull(), // "2cm", "3cm"
+  finish: text("finish").notNull(), // "Polished", "Leather", "Brushed", "Matte"
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   unit: text("unit").notNull().default("sqft"),
   stockQuantity: integer("stock_quantity").notNull().default(0),

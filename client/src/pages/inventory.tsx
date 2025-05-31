@@ -48,6 +48,7 @@ const CATEGORIES = [
 ];
 
 const GRADES = ["Premium", "Standard", "Commercial"];
+const FINISH_OPTIONS = ["Polished", "Leather", "Brushed", "Matte"];
 const UNITS = ["sq ft", "linear ft", "slab"];
 
 export default function Inventory() {
@@ -69,6 +70,7 @@ export default function Inventory() {
     category: "",
     grade: "",
     thickness: "",
+    finish: "",
     price: "",
     unit: "sq ft",
     stockQuantity: "",
@@ -472,6 +474,21 @@ export default function Inventory() {
                       onChange={(e) => setFormData({ ...formData, thickness: e.target.value })}
                       placeholder="e.g. 3cm, 2cm"
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="finish">Finish *</Label>
+                    <Select value={formData.finish} onValueChange={(value) => setFormData({ ...formData, finish: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select finish" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FINISH_OPTIONS.map((finish) => (
+                          <SelectItem key={finish} value={finish}>
+                            {finish}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="price">Price per {formData.unit} *</Label>
