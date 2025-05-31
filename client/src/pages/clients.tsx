@@ -22,7 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { clientsApi } from "@/lib/api";
-import { Plus, Edit, Trash2, Mail, Phone, Building } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { Plus, Edit, Trash2, Mail, Phone, Building, Download, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -34,6 +35,8 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState<any>(null);
   const [viewingClient, setViewingClient] = useState<any>(null);
   const [viewingQuote, setViewingQuote] = useState<any>(null);
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
     name: "",
@@ -180,6 +183,131 @@ export default function Clients() {
   const handleCloseQuoteModal = () => {
     setIsQuoteViewModalOpen(false);
     setViewingQuote(null);
+  };
+
+  // Quote action mutations
+  const deleteQuoteMutation = useMutation({
+    mutationFn: async (quoteId: number) => {
+      await apiRequest("DELETE", `/api/quotes/${quoteId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      toast({
+        title: "Success",
+        description: "Quote deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete quote",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendEmailMutation = useMutation({
+    mutationFn: async (quoteId: number) => {
+      await apiRequest("POST", `/api/quotes/${quoteId}/send-email`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Quote email sent successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send email",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Quote action handlers
+  const handleEditQuote = (quoteId: number) => {
+    setLocation(`/quotes?edit=${quoteId}`);
+  };
+
+  const handleDownloadQuote = async (quoteId: number) => {
+    try {
+      const response = await fetch(`/api/quotes/${quoteId}/pdf`);
+      if (!response.ok) throw new Error('Failed to download PDF');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `quote-${quoteId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendEmail = (quoteId: number) => {
+    sendEmailMutation.mutate(quoteId);
+  };
+
+  const handleDeleteQuote = (quoteId: number, quoteName: string) => {
+    if (window.confirm(`Are you sure you want to delete quote ${quoteName}?`)) {
+      deleteQuoteMutation.mutate(quoteId);
+    }
+  };
+
+  const generateAISummary = async (client: any) => {
+    if (!client || isGeneratingAI) return;
+    
+    setIsGeneratingAI(true);
+    try {
+      const response = await apiRequest("POST", "/api/clients/ai-summary", {
+        clientId: client.id
+      });
+      const result = await response.json();
+      setAiSummary(result.summary);
+    } catch (error) {
+      console.error("Error generating AI summary:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate AI summary. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const generateAIPurchaseSummary = async (clientId: number) => {
+    setIsGeneratingAI(true);
+    try {
+      const response = await fetch(`/api/clients/${clientId}/ai-summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate AI summary');
+      }
+      
+      const data = await response.json();
+      setAiSummary(data.summary);
+    } catch (error) {
+      console.error('Error generating AI summary:', error);
+      setAiSummary('Unable to generate purchase summary at this time.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   return (
@@ -388,31 +516,101 @@ export default function Clients() {
                         {clientQuotes.map((quote: any) => (
                           <div 
                             key={quote.id} 
-                            className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => {
-                              handleViewQuote(quote);
-                            }}
+                            className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
                           >
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <h4 className="font-medium text-blue-600 hover:text-blue-800">{quote.quoteNumber}</h4>
-                                <p className="text-sm text-gray-600">{quote.projectName}</p>
+                            <div 
+                              className="cursor-pointer"
+                              onClick={() => {
+                                handleViewQuote(quote);
+                              }}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h4 className="font-medium text-blue-600 hover:text-blue-800">{quote.quoteNumber}</h4>
+                                  <p className="text-sm text-gray-600">{quote.projectName}</p>
+                                </div>
+                                <Badge 
+                                  variant={quote.status === 'approved' ? 'default' : 'secondary'}
+                                  className={
+                                    quote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                    quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }
+                                >
+                                  {quote.status}
+                                </Badge>
                               </div>
-                              <Badge 
-                                variant={quote.status === 'approved' ? 'default' : 'secondary'}
-                                className={
-                                  quote.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                  quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }
-                              >
-                                {quote.status}
-                              </Badge>
+                              <div className="flex justify-between items-center text-sm text-gray-600">
+                                <span>Created: {new Date(quote.createdAt).toLocaleDateString()}</span>
+                                <span className="font-medium">${parseFloat(quote.subtotal || 0).toLocaleString()}</span>
+                              </div>
                             </div>
-                            <div className="flex justify-between items-center text-sm text-gray-600">
-                              <span>Created: {new Date(quote.createdAt).toLocaleDateString()}</span>
-                              <span className="font-medium">${parseFloat(quote.subtotal || 0).toLocaleString()}</span>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewQuote(quote);
+                                }}
+                                className="h-8 w-8 p-0"
+                                title="View Quote"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditQuote(quote.id);
+                                }}
+                                className="h-8 w-8 p-0"
+                                title="Edit Quote"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownloadQuote(quote.id);
+                                }}
+                                className="h-8 w-8 p-0"
+                                title="Download PDF"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSendEmail(quote.id);
+                                }}
+                                className="h-8 w-8 p-0"
+                                title="Send Email"
+                                disabled={sendEmailMutation.isPending}
+                              >
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteQuote(quote.id, quote.quoteNumber);
+                                }}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
+                                title="Delete Quote"
+                                disabled={deleteQuoteMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
                         ))}
