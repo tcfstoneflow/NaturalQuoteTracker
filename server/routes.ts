@@ -327,6 +327,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/products/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertProductSchema.partial().parse(req.body);
+      
+      // Check if user is trying to update price and if they have permission
+      if (validatedData.price !== undefined && req.user?.role !== 'admin') {
+        return res.status(403).json({ error: 'Only administrators can modify pricing' });
+      }
+      
+      const product = await storage.updateProduct(id, validatedData);
+      res.json(product);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   app.delete("/api/products/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
