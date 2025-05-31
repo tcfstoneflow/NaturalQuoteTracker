@@ -30,8 +30,10 @@ export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isQuoteViewModalOpen, setIsQuoteViewModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [viewingClient, setViewingClient] = useState<any>(null);
+  const [viewingQuote, setViewingQuote] = useState<any>(null);
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
     name: "",
@@ -168,6 +170,16 @@ export default function Clients() {
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
     setViewingClient(null);
+  };
+
+  const handleViewQuote = (quote: any) => {
+    setViewingQuote(quote);
+    setIsQuoteViewModalOpen(true);
+  };
+
+  const handleCloseQuoteModal = () => {
+    setIsQuoteViewModalOpen(false);
+    setViewingQuote(null);
   };
 
   return (
@@ -378,7 +390,7 @@ export default function Clients() {
                             key={quote.id} 
                             className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() => {
-                              setLocation(`/quotes`);
+                              handleViewQuote(quote);
                             }}
                           >
                             <div className="flex justify-between items-start mb-2">
@@ -414,6 +426,134 @@ export default function Clients() {
 
                   <div className="flex justify-end pt-4">
                     <Button onClick={handleCloseViewModal}>Close</Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Quote Detail Modal */}
+          <Dialog open={isQuoteViewModalOpen} onOpenChange={setIsQuoteViewModalOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Quote Details</DialogTitle>
+              </DialogHeader>
+              {viewingQuote && (
+                <div className="space-y-6">
+                  {/* Quote Header */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-primary-custom">Quote Information</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Quote Number</Label>
+                          <p className="text-sm text-gray-700">{viewingQuote.quoteNumber}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Project Name</Label>
+                          <p className="text-sm text-gray-700">{viewingQuote.projectName}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Status</Label>
+                          <Badge 
+                            variant={viewingQuote.status === 'approved' ? 'default' : 'secondary'}
+                            className={
+                              viewingQuote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              viewingQuote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              viewingQuote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }
+                          >
+                            {viewingQuote.status}
+                          </Badge>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Created Date</Label>
+                          <p className="text-sm text-gray-700">{new Date(viewingQuote.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-primary-custom">Client Information</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Client Name</Label>
+                          <p className="text-sm text-gray-700">{viewingQuote.client.name}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Email</Label>
+                          <p className="text-sm text-gray-700">{viewingQuote.client.email || '—'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Phone</Label>
+                          <p className="text-sm text-gray-700">{viewingQuote.client.phone || '—'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Company</Label>
+                          <p className="text-sm text-gray-700">{viewingQuote.client.company || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quote Description */}
+                  {viewingQuote.description && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-primary-custom mb-2">Description</h3>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{viewingQuote.description}</p>
+                    </div>
+                  )}
+
+                  {/* Line Items */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary-custom mb-4">Quote Items</h3>
+                    {viewingQuote.lineItems && viewingQuote.lineItems.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse border border-gray-300">
+                            <thead>
+                              <tr className="bg-gray-50">
+                                <th className="border border-gray-300 p-2 text-left">Product</th>
+                                <th className="border border-gray-300 p-2 text-right">Quantity</th>
+                                <th className="border border-gray-300 p-2 text-right">Unit Price</th>
+                                <th className="border border-gray-300 p-2 text-right">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {viewingQuote.lineItems.map((item: any, index: number) => (
+                                <tr key={index}>
+                                  <td className="border border-gray-300 p-2">
+                                    <div>
+                                      <p className="font-medium">{item.product?.name || 'Unknown Product'}</p>
+                                      {item.notes && <p className="text-sm text-gray-600">{item.notes}</p>}
+                                    </div>
+                                  </td>
+                                  <td className="border border-gray-300 p-2 text-right">{item.quantity}</td>
+                                  <td className="border border-gray-300 p-2 text-right">${parseFloat(item.unitPrice || 0).toLocaleString()}</td>
+                                  <td className="border border-gray-300 p-2 text-right">${parseFloat(item.totalPrice || 0).toLocaleString()}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="flex justify-end">
+                          <div className="text-right">
+                            <p className="text-lg font-semibold">
+                              Total: ${parseFloat(viewingQuote.subtotal || 0).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <p className="text-gray-500">No items in this quote</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end pt-4">
+                    <Button onClick={handleCloseQuoteModal}>Close</Button>
                   </div>
                 </div>
               )}
