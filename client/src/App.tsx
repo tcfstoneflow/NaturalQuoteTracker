@@ -14,6 +14,7 @@ import SQLQuery from "@/pages/sql-query";
 import UserManagement from "@/pages/user-management";
 import Login from "@/pages/login";
 import PublicInventory from "@/pages/public-inventory";
+import ProductDetails from "@/pages/product-details";
 import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
@@ -34,6 +35,7 @@ function Router() {
     <Switch>
       {/* Public routes - accessible without authentication */}
       <Route path="/public-inventory" component={PublicInventory} />
+      <Route path="/product/:id" component={ProductDetails} />
       
       {/* Admin/Staff routes - require authentication */}
       {isAuthenticated ? (

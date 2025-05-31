@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocation } from "wouter";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,16 +34,13 @@ export default function PublicInventory() {
   const [sortBy, setSortBy] = useState("name");
   const [productsWithSlabs, setProductsWithSlabs] = useState<any[]>([]);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const [selectedSlab, setSelectedSlab] = useState<any>(null);
-  const [isSlabDetailsOpen, setIsSlabDetailsOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxTitle, setLightboxTitle] = useState("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const contactForm = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
