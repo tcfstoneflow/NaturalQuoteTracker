@@ -79,13 +79,22 @@ export default function PublicInventory() {
 
   // Initialize lightbox when component mounts and when images are loaded
   useEffect(() => {
-    // Small delay to ensure DOM elements are ready
-    const timer = setTimeout(() => {
-      if (window.lightbox) {
-        window.lightbox.init();
+    // Ensure lightbox is properly initialized after DOM updates
+    const initializeLightbox = () => {
+      // Re-initialize lightbox for dynamically loaded content
+      if (typeof window !== 'undefined' && (window as any).lightbox) {
+        (window as any).lightbox.init();
+      } else if (typeof window !== 'undefined' && (window as any).$) {
+        // If jQuery is available but lightbox isn't ready yet, wait a bit
+        setTimeout(() => {
+          if ((window as any).lightbox) {
+            (window as any).lightbox.init();
+          }
+        }, 500);
       }
-    }, 100);
+    };
 
+    const timer = setTimeout(initializeLightbox, 200);
     return () => clearTimeout(timer);
   }, [productsWithSlabs]);
 
