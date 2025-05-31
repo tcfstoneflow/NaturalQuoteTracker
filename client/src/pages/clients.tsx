@@ -461,14 +461,17 @@ export default function Clients() {
               <DialogHeader>
                 <div className="flex justify-between items-center">
                   <DialogTitle>Client Details</DialogTitle>
-                  <Button 
-                    onClick={() => {
-                      setLocation(`/quotes?client=${viewingClient.id}`);
-                    }}
-                    className="bg-primary-custom hover:bg-primary-custom/90"
-                  >
-                    New Quote
-                  </Button>
+                  {viewingClient && (
+                    <Button 
+                      onClick={() => {
+                        setLocation(`/quotes?client=${viewingClient.id}`);
+                      }}
+                      className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2"
+                    >
+                      <span className="text-lg">+</span>
+                      New Quote
+                    </Button>
+                  )}
                 </div>
               </DialogHeader>
               {viewingClient && (
