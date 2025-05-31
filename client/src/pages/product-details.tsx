@@ -31,10 +31,7 @@ export default function ProductDetails() {
     .filter((p: any) => p.category === product?.category && p.id !== product?.id)
     .slice(0, 3);
 
-  // Debug logging
-  console.log('Current product:', product);
-  console.log('All products:', allProducts);
-  console.log('Similar products:', similarProducts);
+
 
   const openLightbox = (imageSrc: string, title: string) => {
     setLightboxImage(imageSrc);

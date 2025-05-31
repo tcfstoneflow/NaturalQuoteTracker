@@ -303,16 +303,16 @@ export default function PublicInventory() {
                     
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-gray-600">Material:</span>
-                        <div className="font-medium">{product.material}</div>
+                        <span className="text-gray-600">Supplier:</span>
+                        <div className="font-medium">{product.supplier}</div>
                       </div>
                       <div>
-                        <span className="text-gray-600">Color:</span>
-                        <div className="font-medium">{product.color}</div>
+                        <span className="text-gray-600">Location:</span>
+                        <div className="font-medium">{product.location || 'N/A'}</div>
                       </div>
                       <div>
-                        <span className="text-gray-600">Finish:</span>
-                        <div className="font-medium">{product.finish}</div>
+                        <span className="text-gray-600">Price per sq ft:</span>
+                        <div className="font-medium">${product.price}</div>
                       </div>
                       <div>
                         <span className="text-gray-600">Available Slabs:</span>
