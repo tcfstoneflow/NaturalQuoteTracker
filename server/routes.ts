@@ -362,8 +362,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Quotes
   app.get("/api/quotes", async (req, res) => {
     try {
-      const quotes = await storage.getQuotes();
-      res.json(quotes);
+      const { clientId } = req.query;
+      
+      if (clientId) {
+        const quotes = await storage.getClientQuotes(parseInt(clientId as string));
+        res.json(quotes);
+      } else {
+        const quotes = await storage.getQuotes();
+        res.json(quotes);
+      }
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

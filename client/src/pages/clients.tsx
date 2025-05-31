@@ -28,7 +28,9 @@ import { useToast } from "@/hooks/use-toast";
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
+  const [viewingClient, setViewingClient] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -47,6 +49,14 @@ export default function Clients() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ['/api/clients', searchQuery],
     queryFn: () => clientsApi.getAll(searchQuery || undefined),
+  });
+
+  // Fetch client quotes/purchase history when viewing a client
+  const { data: clientQuotes } = useQuery({
+    queryKey: ['/api/quotes', { clientId: viewingClient?.id }],
+    queryFn: () => 
+      viewingClient ? fetch(`/api/quotes?clientId=${viewingClient.id}`).then(res => res.json()) : [],
+    enabled: !!viewingClient,
   });
 
   const createMutation = useMutation({
@@ -146,6 +156,16 @@ export default function Clients() {
     if (window.confirm("Are you sure you want to delete this client?")) {
       deleteMutation.mutate(clientId);
     }
+  };
+
+  const handleViewClient = (client: any) => {
+    setViewingClient(client);
+    setIsViewModalOpen(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewingClient(null);
   };
 
   return (
@@ -272,6 +292,115 @@ export default function Clients() {
               </DialogContent>
             </Dialog>
           </CardHeader>
+
+          {/* Client Detail Modal */}
+          <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Client Details</DialogTitle>
+              </DialogHeader>
+              {viewingClient && (
+                <div className="space-y-6">
+                  {/* Client Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-primary-custom">Contact Information</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Name</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.name}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Email</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.email || '—'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Phone</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.phone || '—'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Company</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.company || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-primary-custom">Address Information</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Address</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.address || '—'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">City</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.city || '—'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">State</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.state || '—'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">ZIP Code</Label>
+                          <p className="text-sm text-gray-700">{viewingClient.zipCode || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  {viewingClient.notes && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-primary-custom mb-2">Notes</h3>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{viewingClient.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Purchase History */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary-custom mb-4">Purchase History</h3>
+                    {clientQuotes && clientQuotes.length > 0 ? (
+                      <div className="space-y-3">
+                        {clientQuotes.map((quote: any) => (
+                          <div key={quote.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h4 className="font-medium">{quote.quoteNumber}</h4>
+                                <p className="text-sm text-gray-600">{quote.projectName}</p>
+                              </div>
+                              <Badge 
+                                variant={quote.status === 'approved' ? 'default' : 'secondary'}
+                                className={
+                                  quote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }
+                              >
+                                {quote.status}
+                              </Badge>
+                            </div>
+                            <div className="flex justify-between items-center text-sm text-gray-600">
+                              <span>Created: {new Date(quote.createdAt).toLocaleDateString()}</span>
+                              <span className="font-medium">${quote.subtotal}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <p className="text-gray-500">No purchase history available</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end pt-4">
+                    <Button onClick={handleCloseViewModal}>Close</Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
           <CardContent>
             {isLoading ? (
               <div className="text-center py-8">Loading clients...</div>
@@ -288,7 +417,11 @@ export default function Clients() {
                 </TableHeader>
                 <TableBody>
                   {clients?.map((client: any) => (
-                    <TableRow key={client.id}>
+                    <TableRow 
+                      key={client.id} 
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleViewClient(client)}
+                    >
                       <TableCell>
                         <div>
                           <p className="font-medium text-primary-custom">{client.name}</p>
@@ -333,14 +466,20 @@ export default function Clients() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleOpenEditModal(client)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditModal(client);
+                            }}
                           >
                             <Edit size={16} />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(client.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(client.id);
+                            }}
                             className="text-error-red hover:bg-red-50"
                           >
                             <Trash2 size={16} />
