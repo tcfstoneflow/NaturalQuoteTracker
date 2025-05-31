@@ -14,13 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Filter, Package, Ruler, MapPin, Eye, Calendar, Phone, Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
-
-// Initialize lightbox after component mounts
-declare global {
-  interface Window {
-    lightbox?: any;
-  }
-}
+import { Lightbox } from "@/components/ui/lightbox";
 
 // Contact form schema
 const contactSchema = z.object({
@@ -43,6 +37,9 @@ export default function PublicInventory() {
   const [isSlabDetailsOpen, setIsSlabDetailsOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState("");
+  const [lightboxTitle, setLightboxTitle] = useState("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -77,26 +74,12 @@ export default function PublicInventory() {
     setProductsWithSlabs(productsWithSlabData);
   }, [products, allSlabs]);
 
-  // Initialize lightbox when component mounts and when images are loaded
-  useEffect(() => {
-    // Ensure lightbox is properly initialized after DOM updates
-    const initializeLightbox = () => {
-      // Re-initialize lightbox for dynamically loaded content
-      if (typeof window !== 'undefined' && (window as any).lightbox) {
-        (window as any).lightbox.init();
-      } else if (typeof window !== 'undefined' && (window as any).$) {
-        // If jQuery is available but lightbox isn't ready yet, wait a bit
-        setTimeout(() => {
-          if ((window as any).lightbox) {
-            (window as any).lightbox.init();
-          }
-        }, 500);
-      }
-    };
-
-    const timer = setTimeout(initializeLightbox, 200);
-    return () => clearTimeout(timer);
-  }, [productsWithSlabs]);
+  // Function to open image in lightbox
+  const openLightbox = (imageSrc: string, title: string) => {
+    setLightboxImage(imageSrc);
+    setLightboxTitle(title);
+    setLightboxOpen(true);
+  };
 
   // Helper function to calculate slab area
   const calculateSlabArea = (length: number, width: number) => {
@@ -261,19 +244,15 @@ export default function PublicInventory() {
                 {/* Image */}
                 <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative">
                   {product.imageUrl ? (
-                    <a 
-                      href={product.imageUrl} 
-                      data-lightbox="product-gallery"
-                      data-title={`${product.name} - ${product.category}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="block w-full h-full"
-                    >
-                      <img 
-                        src={product.imageUrl} 
-                        alt={product.name}
-                        className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                      />
-                    </a>
+                    <img 
+                      src={product.imageUrl} 
+                      alt={product.name}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openLightbox(product.imageUrl, `${product.name} - ${product.category}`);
+                      }}
+                    />
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <Package className="h-12 w-12 text-gray-400" />
