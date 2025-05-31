@@ -189,6 +189,12 @@ export default function ShowroomVisits() {
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <span className="text-gray-600">Preferred: {visit.preferredDate}</span>
               </div>
+              {visit.assignedSalesMember && (
+                <div className="flex items-center gap-2 text-sm">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-600 font-medium">Sales member: {visit.assignedSalesMember}</span>
+                </div>
+              )}
               {visit.message && (
                 <div className="flex items-start gap-2 text-sm">
                   <MessageSquare className="h-4 w-4 text-gray-400 mt-0.5" />
