@@ -42,6 +42,15 @@ export default function PublicInventory() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
+  // Handle URL parameters for category filtering
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam) {
+      setCategoryFilter(categoryParam);
+    }
+  }, []);
+
   const contactForm = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
