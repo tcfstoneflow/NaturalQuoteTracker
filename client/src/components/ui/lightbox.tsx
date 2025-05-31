@@ -20,21 +20,11 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
     if (isOpen) {
       document.addEventListener('keydown', handleEsc);
       document.body.style.overflow = 'hidden';
-      // Disable pointer events on all elements except the lightbox
-      const allElements = document.querySelectorAll('*:not([data-lightbox])');
-      allElements.forEach(el => {
-        (el as HTMLElement).style.pointerEvents = 'none';
-      });
     }
 
     return () => {
       document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
-      // Re-enable pointer events
-      const allElements = document.querySelectorAll('*');
-      allElements.forEach(el => {
-        (el as HTMLElement).style.pointerEvents = '';
-      });
     };
   }, [isOpen, onClose]);
 
@@ -61,23 +51,16 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
         className="relative max-w-7xl max-h-full p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }}
-          onMouseEnter={(e) => e.stopPropagation()}
-          onMouseLeave={(e) => e.stopPropagation()}
-          className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-90 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white"
+        <div
+          onClick={() => onClose()}
+          className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-90 transition-all duration-200 hover:scale-110 cursor-pointer"
           style={{ 
             zIndex: 1000000,
-            pointerEvents: 'auto',
             position: 'absolute'
           }}
         >
           <X className="h-8 w-8" />
-        </button>
+        </div>
         
         <img
           src={imageSrc}
