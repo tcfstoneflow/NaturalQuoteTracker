@@ -56,19 +56,22 @@ export default function PublicInventory() {
     queryKey: ["/api/products"],
   });
 
-  // Fetch all slabs in a single query
-  const { data: allSlabs = [] } = useQuery({
-    queryKey: ["/api/public/slabs"],
-    queryFn: () => fetch(`/api/public/slabs`).then(res => res.json()),
-  });
+  // Fetch slabs for each product
+  const slabQueries = products.map((product: any) => 
+    useQuery({
+      queryKey: ["/api/public/slabs", product.id],
+      queryFn: () => fetch(`/api/public/slabs?productId=${product.id}`).then(res => res.json()),
+      enabled: !!product.id,
+    })
+  );
 
   useEffect(() => {
-    const productsWithSlabData = products.map((product: any) => ({
+    const productsWithSlabData = products.map((product: any, index: number) => ({
       ...product,
-      slabs: allSlabs.filter((slab: any) => slab.productId === product.id)
+      slabs: slabQueries[index]?.data || []
     }));
     setProductsWithSlabs(productsWithSlabData);
-  }, [products, allSlabs]);
+  }, [products, ...slabQueries.map(q => q.data)]);
 
   // Helper function to calculate slab area
   const calculateSlabArea = (length: number, width: number) => {
