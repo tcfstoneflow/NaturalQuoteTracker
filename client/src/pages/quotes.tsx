@@ -29,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { quotesApi } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import { Eye, Edit, Send, Download, FileText, Calendar, DollarSign, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
@@ -66,6 +67,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
 export default function Quotes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [createdByFilter, setCreatedByFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -136,6 +138,11 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
   const { data: quotes, isLoading } = useQuery({
     queryKey: ['/api/quotes'],
     queryFn: quotesApi.getAll,
+  });
+
+  const { data: users } = useQuery({
+    queryKey: ['/api/users'],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const updateStatusMutation = useMutation({
@@ -253,7 +260,8 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                          quote.client.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          quote.projectName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesCreatedBy = createdByFilter === "all" || quote.createdBy?.toString() === createdByFilter;
+    return matchesSearch && matchesStatus && matchesCreatedBy;
   });
 
   const getStatusColor = (status: string) => {
@@ -294,6 +302,19 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                     <SelectItem value="approved">Approved</SelectItem>
                     <SelectItem value="rejected">Rejected</SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={createdByFilter} onValueChange={setCreatedByFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by created by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    {users?.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.firstName || user.username}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
