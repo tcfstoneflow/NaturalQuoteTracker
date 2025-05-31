@@ -16,8 +16,8 @@ export default function ProductDetails() {
   const [lightboxTitle, setLightboxTitle] = useState("");
 
   const { data: product, isLoading } = useQuery({
-    queryKey: ["/api/products", id, "with-slabs"],
-    queryFn: () => fetch(`/api/products/${id}/with-slabs`).then(res => res.json()),
+    queryKey: ["/api/public/products", id],
+    queryFn: () => fetch(`/api/public/products/${id}`).then(res => res.json()),
     enabled: !!id,
   });
 

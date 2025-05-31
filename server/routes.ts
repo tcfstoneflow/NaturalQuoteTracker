@@ -543,6 +543,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public Product Details Endpoint for Client Access
+  app.get("/api/public/products/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const product = await storage.getProductWithSlabs(id);
+      
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      // Filter to only show available slabs for public access
+      const publicProduct = {
+        ...product,
+        slabs: product.slabs?.filter(slab => slab.status?.toLowerCase() === 'available') || []
+      };
+
+      res.json(publicProduct);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch product details", details: error.message });
+    }
+  });
+
   // Slab Management Routes
   app.get("/api/slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
