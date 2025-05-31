@@ -24,6 +24,7 @@ import {
 import { clientsApi } from "@/lib/api";
 import { Plus, Edit, Trash2, Mail, Phone, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +32,7 @@ export default function Clients() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [viewingClient, setViewingClient] = useState<any>(null);
+  const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -358,14 +360,30 @@ export default function Clients() {
 
                   {/* Purchase History */}
                   <div>
-                    <h3 className="text-lg font-semibold text-primary-custom mb-4">Purchase History</h3>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-primary-custom">Purchase History</h3>
+                      {clientQuotes && clientQuotes.length > 0 && (
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">Total Amount</p>
+                          <p className="text-lg font-semibold text-primary-custom">
+                            ${clientQuotes.reduce((total: number, quote: any) => total + parseFloat(quote.subtotal || 0), 0).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                     {clientQuotes && clientQuotes.length > 0 ? (
                       <div className="space-y-3">
                         {clientQuotes.map((quote: any) => (
-                          <div key={quote.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                          <div 
+                            key={quote.id} 
+                            className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => {
+                              setLocation(`/quotes`);
+                            }}
+                          >
                             <div className="flex justify-between items-start mb-2">
                               <div>
-                                <h4 className="font-medium">{quote.quoteNumber}</h4>
+                                <h4 className="font-medium text-blue-600 hover:text-blue-800">{quote.quoteNumber}</h4>
                                 <p className="text-sm text-gray-600">{quote.projectName}</p>
                               </div>
                               <Badge 
@@ -382,7 +400,7 @@ export default function Clients() {
                             </div>
                             <div className="flex justify-between items-center text-sm text-gray-600">
                               <span>Created: {new Date(quote.createdAt).toLocaleDateString()}</span>
-                              <span className="font-medium">${quote.subtotal}</span>
+                              <span className="font-medium">${parseFloat(quote.subtotal || 0).toLocaleString()}</span>
                             </div>
                           </div>
                         ))}
