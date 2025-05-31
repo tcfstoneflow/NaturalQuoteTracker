@@ -34,7 +34,8 @@ export default function PublicInventory() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [selectedSlab, setSelectedSlab] = useState<any>(null);
   const [isSlabDetailsOpen, setIsSlabDetailsOpen] = useState(false);
-  const [expandedProducts, setExpandedProducts] = useState<number[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -259,20 +260,8 @@ export default function PublicInventory() {
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('Product card clicked!', product.id, product.name);
-                  console.log('Current expanded products:', expandedProducts);
-                  setExpandedProducts(prev => {
-                    if (prev.includes(product.id)) {
-                      console.log('Collapsing product', product.id);
-                      const newArray = prev.filter(id => id !== product.id);
-                      console.log('New expanded products:', newArray);
-                      return newArray;
-                    } else {
-                      console.log('Expanding product', product.id);
-                      const newArray = [...prev, product.id];
-                      console.log('New expanded products:', newArray);
-                      return newArray;
-                    }
-                  });
+                  setSelectedProduct(product);
+                  setIsProductDetailsOpen(true);
                 }}
               >
                 {/* Image Placeholder */}
@@ -425,152 +414,171 @@ export default function PublicInventory() {
                               </div>
                             </div>
 
-                            {expandedProducts.includes(product.id) && (
-                              <div className="bg-blue-50 p-2 mb-2 text-xs text-blue-600 rounded">
-                                DEBUG: Product {product.id} is expanded
+
+
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {/* Product Details Modal */}
+                <Dialog open={isProductDetailsOpen} onOpenChange={setIsProductDetailsOpen}>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold">
+                        {selectedProduct?.name}
+                      </DialogTitle>
+                      <DialogDescription>
+                        Bundle ID: {selectedProduct?.bundleId} | Category: {selectedProduct?.category}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedProduct && (
+                      <div className="space-y-6">
+                        {/* Product Image */}
+                        {selectedProduct.imageUrl && (
+                          <div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                            <img 
+                              src={selectedProduct.imageUrl} 
+                              alt={selectedProduct.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {/* Product Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h3 className="font-semibold text-gray-900 mb-3">Product Information</h3>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Material:</span>
+                                <span>{selectedProduct.material}</span>
                               </div>
-                            )}
-                            {expandedProducts.includes(product.id) && product.slabLength && product.slabWidth && (
-                              <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Slab Dimensions</h3>
-                                <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Color:</span>
+                                <span>{selectedProduct.color}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Finish:</span>
+                                <span>{selectedProduct.finish}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Thickness:</span>
+                                <span>{selectedProduct.thickness}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="font-semibold text-gray-900 mb-3">Slab Specifications</h3>
+                            <div className="space-y-2 text-sm">
+                              {selectedProduct.slabLength && selectedProduct.slabWidth && (
+                                <>
                                   <div className="flex justify-between">
-                                    <span className="text-gray-600">Length:</span>
-                                    <span>{product.slabLength}"</span>
+                                    <span className="text-gray-600">Slab Length:</span>
+                                    <span>{selectedProduct.slabLength}"</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-gray-600">Width:</span>
-                                    <span>{product.slabWidth}"</span>
+                                    <span className="text-gray-600">Slab Width:</span>
+                                    <span>{selectedProduct.slabWidth}"</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-gray-600">Area per Slab:</span>
                                     <span className="font-semibold">
-                                      {calculateSlabArea(product.slabLength, product.slabWidth)} sq ft
+                                      {calculateSlabArea(selectedProduct.slabLength, selectedProduct.slabWidth)} sq ft
                                     </span>
                                   </div>
-                                </div>
+                                </>
+                              )}
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Available Slabs:</span>
+                                <span className="font-semibold">
+                                  {selectedProduct.slabs && Array.isArray(selectedProduct.slabs) ? 
+                                    selectedProduct.slabs.filter((slab: any) => slab.status === 'available').length : 
+                                    selectedProduct.stockQuantity
+                                  }
+                                </span>
                               </div>
-                            )}
-
-                            {expandedProducts.includes(product.id) && product.slabs && Array.isArray(product.slabs) && product.slabs.length > 0 && (
-                              <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Individual Slabs Available</h3>
-                                <div className="text-xs text-gray-500 mb-2">
-                                  Debug: {product.slabs.length} slabs found
-                                </div>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={() => {
-                                    console.log('Test button clicked');
-                                    alert('Test modal opening');
-                                    setSelectedSlab({
-                                      id: 999,
-                                      slabNumber: "TEST-001",
-                                      length: 126,
-                                      width: 63,
-                                      location: "Test Location",
-                                      barcode: "TEST123456",
-                                      status: "available",
-                                      product: product
-                                    });
-                                    setIsSlabDetailsOpen(true);
-                                  }}
-                                  className="mb-2"
-                                >
-                                  Test Modal
-                                </Button>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
-                                  {product.slabs
-                                    .filter((slab: any) => slab.status === 'available')
-                                    .map((slab: any) => (
-                                      <div 
-                                        key={slab.id} 
-                                        className="cursor-pointer hover:shadow-lg hover:bg-blue-50 transition-all duration-200 border-2 border-gray-200 hover:border-blue-300 rounded-lg bg-white p-1"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          console.log('SLAB CARD CLICKED!', slab.slabNumber);
-                                          alert(`Clicked on slab: ${slab.slabNumber}`);
-                                          setSelectedSlab({ ...slab, product });
-                                          setIsSlabDetailsOpen(true);
-                                        }}
-                                        style={{ minHeight: '80px' }}
-                                      >
-                                        <div className="p-3">
-                                          <div className="flex justify-between items-start mb-2">
-                                            <div className="font-medium text-sm">{slab.slabNumber}</div>
-                                            <Badge variant="secondary" className="text-xs">
-                                              Available
-                                            </Badge>
-                                          </div>
-                                          
-                                          {(slab.length && slab.width) && (
-                                            <div className="text-xs text-gray-600 mb-1">
-                                              {slab.length}" × {slab.width}"
-                                              <span className="ml-1 text-primary font-medium">
-                                                ({((slab.length * slab.width) / 144).toFixed(1)} sq ft)
-                                              </span>
-                                            </div>
-                                          )}
-                                          
-                                          {slab.location && (
-                                            <div className="flex items-center text-xs text-gray-500">
-                                              <MapPin className="h-3 w-3 mr-1" />
-                                              {slab.location}
-                                            </div>
-                                          )}
-                                          
-                                          {slab.barcode && (
-                                            <div className="text-xs font-mono text-gray-400 mt-1 truncate">
-                                              {slab.barcode}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                </div>
-                                
-                                {/* Warehouse Locations Summary */}
-                                <div className="mt-3 pt-3 border-t border-gray-100">
-                                  <div className="text-sm text-gray-600 mb-1">Warehouse Locations:</div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {product.slabs
-                                      .filter((slab: any) => slab.status === 'available')
-                                      .reduce((locations: string[], slab: any) => {
-                                        if (slab.location && !locations.includes(slab.location)) {
-                                          locations.push(slab.location);
-                                        }
-                                        return locations;
-                                      }, [])
-                                      .map((location: string) => (
-                                        <Badge key={location} variant="outline" className="text-xs">
-                                          {location}
-                                        </Badge>
-                                      ))}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            <div className="pt-4 border-t">
-                              <Button className="w-full">
-                                Request Quote for This Bundle
-                              </Button>
                             </div>
                           </div>
                         </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
 
-        {/* Call to Action */}
-        <div className="bg-white rounded-lg shadow-sm border p-8 mt-12 text-center">
+                        {/* Individual Slabs */}
+                        {selectedProduct.slabs && Array.isArray(selectedProduct.slabs) && selectedProduct.slabs.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold text-gray-900 mb-3">Individual Slabs Available</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto">
+                              {selectedProduct.slabs
+                                .filter((slab: any) => slab.status === 'available')
+                                .map((slab: any) => (
+                                  <div 
+                                    key={slab.id} 
+                                    className="cursor-pointer hover:shadow-lg hover:bg-blue-50 transition-all duration-200 border-2 border-gray-200 hover:border-blue-300 rounded-lg bg-white p-3"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSlab({ ...slab, product: selectedProduct });
+                                      setIsSlabDetailsOpen(true);
+                                    }}
+                                  >
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="font-medium text-sm">#{slab.slabNumber}</div>
+                                      <Badge variant="secondary" className="text-xs">
+                                        Available
+                                      </Badge>
+                                    </div>
+                                    
+                                    {(slab.length && slab.width) && (
+                                      <div className="text-xs text-gray-600 mb-1">
+                                        {slab.length}" × {slab.width}"
+                                        <span className="ml-1 text-primary font-medium">
+                                          ({((slab.length * slab.width) / 144).toFixed(1)} sq ft)
+                                        </span>
+                                      </div>
+                                    )}
+                                    
+                                    {slab.location && (
+                                      <div className="flex items-center text-xs text-gray-500">
+                                        <MapPin className="h-3 w-3 mr-1" />
+                                        {slab.location}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4 border-t">
+                          <Button 
+                            className="flex-1"
+                            onClick={() => {
+                              // Handle quote request
+                              toast({
+                                title: "Quote Request",
+                                description: `Quote request initiated for ${selectedProduct.name}`,
+                              });
+                            }}
+                          >
+                            Request Quote for This Bundle
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setContactDialogOpen(true)}
+                          >
+                            Contact Us
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+
+                {/* Call to Action */}
+                <div className="bg-white rounded-lg shadow-sm border p-8 mt-12 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Need Help Finding the Perfect Stone?
           </h2>
