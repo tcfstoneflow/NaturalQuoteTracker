@@ -1323,14 +1323,38 @@ export class DatabaseStorage implements IStorage {
       const endOfDay = new Date(targetDate);
       endOfDay.setHours(23, 59, 59, 999);
 
-      // Get quotes for clients managed by this sales manager
+      // Get quotes created by this sales manager for the specific date
       const quotesData = await db
-        .select()
+        .select({
+          quote: quotes,
+          client: clients,
+          items: sql<any[]>`
+            COALESCE(
+              (SELECT json_agg(
+                json_build_object(
+                  'id', qli.id,
+                  'quantity', qli.quantity,
+                  'unitPrice', qli.unit_price,
+                  'totalPrice', qli.total_price,
+                  'product', json_build_object(
+                    'id', p.id,
+                    'name', p.name,
+                    'category', p.category
+                  )
+                )
+              )
+              FROM quote_line_items qli
+              LEFT JOIN products p ON qli.product_id = p.id
+              WHERE qli.quote_id = quotes.id),
+              '[]'::json
+            )
+          `
+        })
         .from(quotes)
         .innerJoin(clients, eq(quotes.clientId, clients.id))
         .where(
           and(
-            eq(clients.salesManagerId, managerId),
+            eq(quotes.createdBy, managerId),
             gte(quotes.createdAt, startOfDay),
             lte(quotes.createdAt, endOfDay)
           )
@@ -1338,18 +1362,31 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(quotes.createdAt));
 
       // Transform the data to match the expected format
-      const transformedQuotes = quotesData.map((row: any) => ({
-        id: row.quotes.id,
-        quoteNumber: row.quotes.quoteNumber,
-        status: row.quotes.status,
-        total: parseFloat(row.quotes.totalAmount || '0'),
-        createdAt: row.quotes.createdAt,
-        validUntil: row.quotes.validUntil,
-        client: {
-          name: row.clients.name,
-          email: row.clients.email
-        }
-      }));
+      const transformedQuotes = quotesData.map((row: any) => {
+        // Calculate total from line items
+        const items = row.items || [];
+        const total = items.reduce((sum: number, item: any) => 
+          sum + parseFloat(item.totalPrice || '0'), 0
+        );
+
+        return {
+          id: row.quote.id,
+          quoteNumber: row.quote.quoteNumber,
+          status: row.quote.status,
+          total: total,
+          createdAt: row.quote.createdAt,
+          validUntil: row.quote.validUntil,
+          notes: row.quote.notes,
+          items: items,
+          client: {
+            id: row.client.id,
+            name: row.client.name,
+            email: row.client.email,
+            phone: row.client.phone,
+            company: row.client.company
+          }
+        };
+      });
 
       return transformedQuotes;
     } catch (error) {
