@@ -213,28 +213,31 @@ export default function Clients() {
     },
   });
 
-  const generateAISummaryMutation = useMutation({
-    mutationFn: async (clientId: number) => {
-      const response = await apiRequest('POST', `/api/clients/${clientId}/ai-summary`);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setAiSummary(data.summary);
-      setIsGeneratingAI(false);
+  const generateAISummary = async (client: any) => {
+    if (!client || isGeneratingAI) return;
+
+    setIsGeneratingAI(true);
+    try {
+      const response = await apiRequest("POST", "/api/clients/ai-summary", {
+        clientId: client.id
+      });
+      const result = await response.json();
+      setAiSummary(result.summary);
       toast({
         title: "AI Summary Generated",
         description: "Purchase history analysis complete",
       });
-    },
-    onError: (error: any) => {
-      setIsGeneratingAI(false);
+    } catch (error: any) {
+      console.error("Error generating AI summary:", error);
       toast({
-        title: "AI Summary Error",
-        description: error.message || "Failed to generate AI summary",
+        title: "Error",
+        description: "Failed to generate AI summary. Please try again.",
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   const handleOpenCreateModal = () => {
     setEditingClient(null);
