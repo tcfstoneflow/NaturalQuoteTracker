@@ -487,6 +487,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (renderUrl) {
+        // Save the generated render to the product gallery
+        await storage.createGalleryImage({
+          productId: id,
+          imageUrl: renderUrl,
+          title: `${product.name} Kitchen Visualization`,
+          description: `Realistic kitchen countertop render showing ${product.name} natural stone`,
+          installationType: 'kitchen',
+          isAiGenerated: false,
+          isActive: true,
+          sortOrder: 0
+        });
+        
         res.json({ renderUrl, message: 'Python render generated successfully' });
       } else {
         res.status(500).json({ error: 'Failed to generate Python render' });
