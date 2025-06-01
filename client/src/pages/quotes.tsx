@@ -165,6 +165,29 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     },
   });
 
+  const updateSalesRepMutation = useMutation({
+    mutationFn: ({ id, salesRepId }: { id: number; salesRepId: number | null }) => 
+      quotesApi.update(id, { salesRepId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      toast({
+        title: "Success",
+        description: "Sales rep assignment updated successfully",
+      });
+      // Update the selected quote to reflect the change
+      if (selectedQuote) {
+        setSelectedQuote({ ...selectedQuote, salesRepId: selectedQuote.salesRepId });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => quotesApi.delete(id),
     onSuccess: () => {
@@ -521,6 +544,47 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                         <Label className="text-sm font-medium text-secondary-custom">Created By</Label>
                         <CreatedByInfo createdBy={selectedQuote.createdBy} />
                       </div>
+                      {user?.user?.role === 'admin' && (
+                        <div>
+                          <Label className="text-sm font-medium text-secondary-custom">Sales Rep</Label>
+                          <div className="flex items-center space-x-2 mt-1">
+                            {selectedQuote.salesRepId ? (
+                              <div className="text-sm">
+                                <div className="font-medium text-primary-custom">
+                                  {users?.find((u: any) => u.id === selectedQuote.salesRepId)?.username || 'Unknown'}
+                                </div>
+                                <div className="text-gray-500">
+                                  {users?.find((u: any) => u.id === selectedQuote.salesRepId)?.role || ''}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-sm">Not assigned</span>
+                            )}
+                            <Select 
+                              value={selectedQuote.salesRepId?.toString() || ""} 
+                              onValueChange={(value) => {
+                                const salesRepId = value ? parseInt(value) : null;
+                                updateSalesRepMutation.mutate({ 
+                                  id: selectedQuote.id, 
+                                  salesRepId 
+                                });
+                              }}
+                            >
+                              <SelectTrigger className="w-48">
+                                <SelectValue placeholder="Select sales rep" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">No assignment</SelectItem>
+                                {users?.filter((u: any) => u.role === 'sales_rep' || u.role === 'admin').map((user: any) => (
+                                  <SelectItem key={user.id} value={user.id.toString()}>
+                                    {user.username} ({user.role})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
