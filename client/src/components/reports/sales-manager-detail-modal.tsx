@@ -59,8 +59,9 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
     }).format(amount);
   };
 
-  const formatPercentage = (rate: number) => {
-    return `${rate.toFixed(1)}%`;
+  const formatPercentage = (rate: number | string) => {
+    const numRate = typeof rate === 'string' ? parseFloat(rate) : rate;
+    return `${numRate.toFixed(1)}%`;
   };
 
   const getPeriodLabel = (period: TimePeriod) => {
