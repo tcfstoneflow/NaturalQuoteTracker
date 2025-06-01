@@ -96,7 +96,7 @@ export default function ShowroomVisits() {
       updates: {
         status: status || selectedVisit.status,
         notes: notes || selectedVisit.notes,
-        assignedToUserId: assignedToUserId ? parseInt(assignedToUserId) : null,
+        assignedToUserId: assignedToUserId && assignedToUserId !== "none" ? parseInt(assignedToUserId) : null,
       },
     });
   };
@@ -105,7 +105,7 @@ export default function ShowroomVisits() {
     setSelectedVisit(visit);
     setStatus(visit.status);
     setNotes(visit.notes || "");
-    setAssignedToUserId(visit.assignedToUserId?.toString() || "");
+    setAssignedToUserId(visit.assignedToUserId?.toString() || "none");
   };
 
   if (isLoading) {
@@ -253,7 +253,7 @@ export default function ShowroomVisits() {
                           <SelectValue placeholder="Select a sales manager..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No assignment</SelectItem>
+                          <SelectItem value="none">No assignment</SelectItem>
                           {salesManagers.map((manager: any) => (
                             <SelectItem key={manager.id} value={manager.id.toString()}>
                               {manager.firstName} {manager.lastName} ({manager.role})
