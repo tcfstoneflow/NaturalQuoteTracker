@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
 
 // Extend Express session interface
 declare module "express-session" {
@@ -11,6 +12,9 @@ declare module "express-session" {
 }
 
 const app = express();
+
+// Serve static files from upload directory
+app.use('/upload', express.static(path.join(process.cwd(), 'upload')));
 
 // Increase body size limit for file uploads and large requests
 app.use(express.json({ limit: '50mb' }));
