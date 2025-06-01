@@ -16,6 +16,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
 import {
   LineChart,
   Line,
@@ -69,6 +70,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedChartType, setSelectedChartType] = useState<string | null>(null);
+  const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
 
   const { data: performanceData, isLoading } = useQuery({
     queryKey: ['/api/dashboard/product-performance-detail', product?.productId, selectedPeriod],
@@ -404,7 +406,8 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                         {quotesForDate.map((quote: any) => (
                           <div
                             key={quote.id}
-                            className="border rounded-lg p-4 hover:bg-gray-50"
+                            className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => setSelectedQuote(quote)}
                           >
                             <div className="flex justify-between items-start">
                               <div>
@@ -456,6 +459,97 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
           )}
         </div>
       </DialogContent>
+
+      {/* Quote Detail Modal */}
+      {selectedQuote && (
+        <Dialog open={!!selectedQuote} onOpenChange={() => setSelectedQuote(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Quote #{selectedQuote.quoteNumber}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Quote Header Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Client Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p><strong>Name:</strong> {selectedQuote.client?.name || 'Unknown'}</p>
+                    <p><strong>Email:</strong> {selectedQuote.client?.email || 'N/A'}</p>
+                    <p><strong>Status:</strong> <span className="capitalize">{selectedQuote.status}</span></p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quote Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p><strong>Created:</strong> {new Date(selectedQuote.createdAt).toLocaleDateString()}</p>
+                    <p><strong>Valid Until:</strong> {selectedQuote.validUntil ? new Date(selectedQuote.validUntil).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>Total Amount:</strong> <span className="text-xl font-bold text-green-600">{formatCurrency(selectedQuote.total || 0)}</span></p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Line Items */}
+              {selectedQuote.lineItems && selectedQuote.lineItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quote Items</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-3">Product</th>
+                            <th className="text-center p-3">Quantity</th>
+                            <th className="text-right p-3">Unit Price</th>
+                            <th className="text-right p-3">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedQuote.lineItems.map((item: any, index: number) => (
+                            <tr key={index} className="border-b hover:bg-gray-50">
+                              <td className="p-3">{item.product?.name || 'Unknown Product'}</td>
+                              <td className="text-center p-3">{item.quantity}</td>
+                              <td className="text-right p-3">{formatCurrency(parseFloat(item.unitPrice || '0'))}</td>
+                              <td className="text-right p-3 font-medium">{formatCurrency(parseFloat(item.totalPrice || '0'))}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedQuote(null)}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    window.open(`/quotes?highlight=${selectedQuote.id}`, '_blank');
+                  }}
+                >
+                  View Full Quote
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
