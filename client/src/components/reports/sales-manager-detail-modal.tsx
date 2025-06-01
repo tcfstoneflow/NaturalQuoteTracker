@@ -95,6 +95,24 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
+  const formatXAxisDate = (value: string) => {
+    const date = new Date(value);
+    if (selectedPeriod === 'day') return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (selectedPeriod === 'week' || selectedPeriod === 'month') return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString([], { year: 'numeric', month: 'short' });
+  };
+
+  const formatTooltipDate = (value: string) => {
+    return new Date(value).toLocaleDateString();
+  };
+
+  const handleChartClick = (data: any, chartType: string) => {
+    if (data && data.activeLabel) {
+      setSelectedDate(data.activeLabel);
+      setSelectedChartType(chartType);
+    }
+  };
+
   if (!manager) return null;
 
   // Calculate dynamic totals from performance data
@@ -128,45 +146,6 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
   };
 
   const { totalRevenue, totalQuotes, avgConversionRate } = calculateTotals();
-
-  const formatXAxisDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (selectedPeriod === "day") {
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } else if (selectedPeriod === "week") {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
-    } else if (selectedPeriod === "month") {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short' });
-    }
-  };
-
-  const formatTooltipDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (selectedPeriod === "day") {
-      return date.toLocaleString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        hour: 'numeric', 
-        minute: '2-digit' 
-      });
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      });
-    }
-  };
-
-  const handleChartClick = (data: any, chartType: string) => {
-    if (data && data.activePayload && data.activePayload[0]) {
-      const clickedDate = data.activePayload[0].payload.date;
-      setSelectedDate(clickedDate);
-      setSelectedChartType(chartType);
-    }
-  };
 
   if (!manager) return null;
 
