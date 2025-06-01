@@ -241,7 +241,7 @@ export default function Clients() {
       state: "",
       zipCode: "",
       notes: "",
-      salesManagerId: "",
+      salesManagerId: "none",
     });
     setIsCreateModalOpen(true);
   };
@@ -250,7 +250,7 @@ export default function Clients() {
     setEditingClient(client);
     setFormData({
       ...client,
-      salesManagerId: client.salesManagerId ? client.salesManagerId.toString() : "",
+      salesManagerId: client.salesManagerId ? client.salesManagerId.toString() : "none",
     });
     setIsCreateModalOpen(true);
   };
@@ -265,7 +265,7 @@ export default function Clients() {
     
     const submitData = {
       ...formData,
-      salesManagerId: formData.salesManagerId ? parseInt(formData.salesManagerId) : null,
+      salesManagerId: formData.salesManagerId && formData.salesManagerId !== "none" ? parseInt(formData.salesManagerId) : null,
     };
     
     if (editingClient) {
@@ -589,7 +589,7 @@ export default function Clients() {
                           <SelectValue placeholder="Select a sales manager" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No Sales Manager</SelectItem>
+                          <SelectItem value="none">No Sales Manager</SelectItem>
                           {Array.isArray(salesManagers) && salesManagers.map((manager: any) => (
                             <SelectItem key={manager.id} value={manager.id.toString()}>
                               {manager.firstName} {manager.lastName}
