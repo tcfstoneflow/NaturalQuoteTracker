@@ -1407,6 +1407,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user endpoint
+  app.get("/api/user", requireAuth, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json(user);
+    } catch (error: any) {
+      console.error('Get user error:', error);
+      res.status(500).json({ error: "Failed to fetch user", details: error.message });
+    }
+  });
+
   // Avatar upload endpoint
   app.post("/api/upload/avatar", requireAuth, async (req: any, res) => {
     try {
