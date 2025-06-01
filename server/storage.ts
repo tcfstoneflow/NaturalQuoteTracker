@@ -1284,7 +1284,7 @@ export class DatabaseStorage implements IStorage {
             id: row.quotes.id,
             quoteNumber: row.quotes.quoteNumber,
             status: row.quotes.status,
-            total: parseFloat(row.quotes.total || '0'),
+            total: parseFloat(row.quotes.totalAmount || '0'),
             createdAt: row.quotes.createdAt,
             validUntil: row.quotes.validUntil,
             client: {
