@@ -66,6 +66,7 @@ interface ProductPerformanceData {
 
 export default function ProductDetailModal({ product, isOpen, onClose }: ProductDetailModalProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const { data: performanceData, isLoading } = useQuery({
     queryKey: ['/api/dashboard/product-performance-detail', product?.productId, selectedPeriod],
@@ -78,6 +79,19 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
       return response.json();
     },
     enabled: !!product && isOpen
+  });
+
+  const { data: quotesForDate, isLoading: isLoadingQuotes } = useQuery({
+    queryKey: ['/api/dashboard/product-quotes', product?.productId, selectedDate],
+    queryFn: async () => {
+      if (!product || !selectedDate) return null;
+      const response = await fetch(`/api/dashboard/product-quotes/${product.productId}?date=${selectedDate}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch quotes for selected date');
+      }
+      return response.json();
+    },
+    enabled: !!product && !!selectedDate && isOpen
   });
 
   const formatCurrency = (amount: number | string) => {
@@ -120,6 +134,13 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
       });
     }
     return dateStr;
+  };
+
+  const handleChartClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const clickedDate = data.activePayload[0].payload.date;
+      setSelectedDate(clickedDate);
+    }
   };
 
   if (!product) return null;
@@ -250,7 +271,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={performanceData || []}>
+                    <LineChart data={performanceData || []} onClick={handleChartClick}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="date" 
@@ -287,7 +308,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={performanceData || []}>
+                    <LineChart data={performanceData || []} onClick={handleChartClick}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="date" 
@@ -324,7 +345,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={performanceData || []}>
+                    <LineChart data={performanceData || []} onClick={handleChartClick}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="date" 
