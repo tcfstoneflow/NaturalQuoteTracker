@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TopBar from "@/components/layout/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { dashboardApi, quotesApi, clientsApi, productsApi } from "@/lib/api";
 import { TrendingUp, DollarSign, Users, Package, FileText, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import TopProductsModal from "@/components/reports/top-products-modal";
 
 export default function Reports() {
+  const [showTopProductsModal, setShowTopProductsModal] = useState(false);
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
     queryFn: dashboardApi.getStats,
@@ -292,6 +297,41 @@ export default function Reports() {
           </Card>
         </div>
 
+        {/* Additional Reports Section */}
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <TrendingUp size={20} />
+                  <span>Advanced Reports</span>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-900">Top Selling Products</h4>
+                    <Package className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    View the top 5 selling products by revenue with customizable time periods
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowTopProductsModal(true)}
+                    className="w-full"
+                  >
+                    View Report
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Quote Status Distribution */}
         <Card>
           <CardHeader>
@@ -338,6 +378,12 @@ export default function Reports() {
             )}
           </CardContent>
         </Card>
+
+        {/* Top Products Modal */}
+        <TopProductsModal 
+          open={showTopProductsModal}
+          onOpenChange={setShowTopProductsModal}
+        />
       </div>
     </div>
   );

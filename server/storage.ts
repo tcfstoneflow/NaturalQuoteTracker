@@ -107,6 +107,9 @@ export interface IStorage {
 
   // Product Gallery
   getProductGalleryImages(productId: number): Promise<ProductGalleryImage[]>;
+  
+  // Reports
+  getTopSellingProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
