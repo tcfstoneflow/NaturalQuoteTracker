@@ -525,7 +525,7 @@ export default function Clients() {
                   {viewingClient && (
                     <Button 
                       onClick={() => {
-                        setLocation(`/quotes?client=${viewingClient.id}`);
+                        handleOpenNewQuoteModal(viewingClient);
                       }}
                       className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2 ml-[25px] mr-[25px] mt-[5px] mb-[5px]"
                     >
@@ -883,6 +883,99 @@ export default function Clients() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* New Quote Modal */}
+          <Dialog open={isNewQuoteModalOpen} onOpenChange={setIsNewQuoteModalOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create New Quote</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                createQuoteMutation.mutate(quoteFormData);
+              }} className="space-y-4">
+                {/* Client Information Display */}
+                {viewingClient && (
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <h4 className="font-medium text-sm text-gray-700 mb-2">Client</h4>
+                    <p className="font-semibold">{viewingClient.name}</p>
+                    <p className="text-sm text-gray-600">{viewingClient.email}</p>
+                    {viewingClient.company && (
+                      <p className="text-sm text-gray-600">{viewingClient.company}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Project Name */}
+                <div>
+                  <Label htmlFor="projectName">Project Name *</Label>
+                  <Input
+                    id="projectName"
+                    value={quoteFormData.projectName}
+                    onChange={(e) => setQuoteFormData(prev => ({
+                      ...prev,
+                      projectName: e.target.value
+                    }))}
+                    placeholder="Enter project name"
+                    required
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <textarea
+                    id="description"
+                    className="w-full min-h-[80px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={quoteFormData.description}
+                    onChange={(e) => setQuoteFormData(prev => ({
+                      ...prev,
+                      description: e.target.value
+                    }))}
+                    placeholder="Enter project description"
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <select
+                    id="status"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={quoteFormData.status}
+                    onChange={(e) => setQuoteFormData(prev => ({
+                      ...prev,
+                      status: e.target.value
+                    }))}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsNewQuoteModalOpen(false)}
+                    disabled={createQuoteMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    disabled={createQuoteMutation.isPending}
+                  >
+                    {createQuoteMutation.isPending ? "Creating..." : "Create Quote"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+          
           <CardContent>
             {isLoading ? (
               <div className="text-center py-8">Loading clients...</div>
