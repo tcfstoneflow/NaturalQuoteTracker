@@ -235,6 +235,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       subtotal: totals.subtotal,
       taxRate: totals.taxRate,
       taxAmount: totals.taxAmount,
+      processingFee: totals.processingFee,
       totalAmount: totals.total,
     };
 
