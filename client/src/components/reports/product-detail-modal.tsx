@@ -329,6 +329,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                         angle={-45}
                         textAnchor="end"
                         height={60}
+                        tickFormatter={formatXAxisDate}
                       />
                       <YAxis tick={{ fontSize: 12 }} />
                       <Tooltip 
