@@ -197,5 +197,15 @@ export async function getCurrentUser(req: Request, res: Response) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
 
-  res.json({ user: req.user });
+  try {
+    const { storage } = await import('./storage');
+    const fullUser = await storage.getUser(req.user.id);
+    if (!fullUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ user: fullUser });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.json({ user: req.user });
+  }
 }
