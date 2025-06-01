@@ -82,12 +82,14 @@ export default function Inventory() {
   });
 
   const [galleryImages, setGalleryImages] = useState<Array<{
+    id?: number;
     url: string;
     title: string;
     description: string;
     installationType: string;
     isAiGenerated: boolean;
   }>>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
@@ -155,6 +157,17 @@ export default function Inventory() {
       return response.json();
     },
     onSuccess: async (updatedProduct) => {
+      // Delete gallery images that were marked for deletion
+      for (const imageId of deletedImageIds) {
+        try {
+          await fetch(`/api/gallery/${imageId}`, {
+            method: "DELETE",
+          });
+        } catch (error) {
+          console.error('Failed to delete gallery image:', error);
+        }
+      }
+      
       // Handle gallery images separately
       if (galleryImages.length > 0) {
         for (const image of galleryImages) {
@@ -264,6 +277,7 @@ export default function Inventory() {
       if (response.ok) {
         const existingImages = await response.json();
         setGalleryImages(existingImages.map((img: any) => ({
+          id: img.id,
           url: img.imageUrl,
           title: img.title || '',
           description: img.description || '',
@@ -277,6 +291,9 @@ export default function Inventory() {
       console.error('Failed to load gallery images:', error);
       setGalleryImages([]);
     }
+    
+    // Reset deleted images tracking
+    setDeletedImageIds([]);
     
     setIsOpen(true);
   };
@@ -709,7 +726,15 @@ export default function Inventory() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setGalleryImages(galleryImages.filter((_, i) => i !== index))}
+                          onClick={() => {
+                            const imageToDelete = galleryImages[index];
+                            // If image has an ID, track it for deletion from database
+                            if (imageToDelete.id) {
+                              setDeletedImageIds([...deletedImageIds, imageToDelete.id]);
+                            }
+                            // Remove from local state
+                            setGalleryImages(galleryImages.filter((_, i) => i !== index));
+                          }}
                         >
                           <X className="h-4 w-4" />
                         </Button>
