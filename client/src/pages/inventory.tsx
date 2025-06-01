@@ -753,30 +753,43 @@ export default function Inventory() {
                         </Button>
                       </div>
                       
-                      <div>
-                        <Label>Upload Image</Label>
-                        <ImageUpload
-                          value={image.url}
-                          onChange={(value) => {
-                            const newImages = [...galleryImages];
-                            newImages[index].url = value;
-                            setGalleryImages(newImages);
-                          }}
-                          className="mt-2"
-                        />
-                      </div>
-
-                      {image.url && (
+                      {image.url && !image.url.startsWith('data:') ? (
                         <div>
-                          <Label>Preview</Label>
+                          <Label>Current Image</Label>
                           <img 
                             src={image.url} 
-                            alt={image.title}
-                            className="w-full h-32 object-cover rounded-md mt-2"
+                            alt={image.title || `Gallery Image ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-md mt-2 border"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
                             }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => {
+                              const newImages = [...galleryImages];
+                              newImages[index].url = '';
+                              setGalleryImages(newImages);
+                            }}
+                          >
+                            Replace Image
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          <Label>Upload Image</Label>
+                          <ImageUpload
+                            value={image.url}
+                            onChange={(value) => {
+                              const newImages = [...galleryImages];
+                              newImages[index].url = value;
+                              setGalleryImages(newImages);
+                            }}
+                            className="mt-2"
                           />
                         </div>
                       )}
