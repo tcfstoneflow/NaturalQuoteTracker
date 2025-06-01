@@ -48,12 +48,16 @@ export default function ProductDetails() {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log('Render response:', data);
       toast({
         title: "Python Render Generated",
         description: "Your countertop visualization has been created successfully!",
       });
       if (data.renderUrl) {
+        console.log('Opening lightbox with URL:', data.renderUrl);
         openLightbox(data.renderUrl, `${product.name} - Python Render`);
+      } else {
+        console.error('No renderUrl in response:', data);
       }
     },
     onError: (error: any) => {
