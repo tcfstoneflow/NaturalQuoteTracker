@@ -80,6 +80,27 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
 
   if (!manager) return null;
 
+  // Calculate dynamic totals from performance data
+  const calculateTotals = () => {
+    if (!performanceData || performanceData.length === 0) {
+      return {
+        totalRevenue: manager.totalRevenue,
+        totalQuotes: manager.totalQuotes,
+        avgConversionRate: manager.conversionRate
+      };
+    }
+
+    const totalRevenue = performanceData.reduce((sum, item) => sum + (item.revenue || 0), 0);
+    const totalQuotes = performanceData.reduce((sum, item) => sum + (item.quotes || 0), 0);
+    const avgConversionRate = performanceData.length > 0 
+      ? performanceData.reduce((sum, item) => sum + (item.conversionRate || 0), 0) / performanceData.length
+      : 0;
+
+    return { totalRevenue, totalQuotes, avgConversionRate };
+  };
+
+  const { totalRevenue, totalQuotes, avgConversionRate } = calculateTotals();
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -116,21 +137,21 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                   <div>
                     <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
                       <DollarSign className="h-4 w-4" />
-                      <span className="text-2xl font-bold">{formatCurrency(manager.totalRevenue)}</span>
+                      <span className="text-2xl font-bold">{formatCurrency(totalRevenue)}</span>
                     </div>
                     <p className="text-sm text-gray-600">Revenue</p>
                   </div>
                   <div>
                     <div className="flex items-center justify-center gap-1 text-blue-600 mb-1">
                       <FileText className="h-4 w-4" />
-                      <span className="text-2xl font-bold">{manager.totalQuotes}</span>
+                      <span className="text-2xl font-bold">{totalQuotes}</span>
                     </div>
                     <p className="text-sm text-gray-600">Quotes</p>
                   </div>
                   <div>
                     <div className="flex items-center justify-center gap-1 text-purple-600 mb-1">
                       <TrendingUp className="h-4 w-4" />
-                      <span className="text-2xl font-bold">{formatPercentage(manager.conversionRate)}</span>
+                      <span className="text-2xl font-bold">{formatPercentage(avgConversionRate)}</span>
                     </div>
                     <p className="text-sm text-gray-600">Conv.</p>
                   </div>
