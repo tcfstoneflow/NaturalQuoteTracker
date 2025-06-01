@@ -1251,40 +1251,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProductQuotesByDate(productId: number, date: string): Promise<any[]> {
-    // Parse the date to get the start and end of the day
-    const targetDate = new Date(date);
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    try {
+      // Parse the date to get the start and end of the day
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
 
-    const quotesWithDetails = await db
-      .select({
-        id: quotes.id,
-        quoteNumber: quotes.quoteNumber,
-        clientName: clients.name,
-        clientEmail: clients.email,
-        status: quotes.status,
-        total: quotes.total,
-        createdAt: quotes.createdAt,
-        validUntil: quotes.validUntil,
-        quantity: quoteLineItems.quantity,
-        unitPrice: quoteLineItems.unitPrice,
-        totalPrice: quoteLineItems.totalPrice
-      })
-      .from(quotes)
-      .innerJoin(clients, eq(quotes.clientId, clients.id))
-      .innerJoin(quoteLineItems, eq(quotes.id, quoteLineItems.quoteId))
-      .where(
-        and(
-          eq(quoteLineItems.productId, productId),
-          gte(quotes.createdAt, startOfDay),
-          lte(quotes.createdAt, endOfDay)
+      // First get the quotes for the specific product and date
+      const quotesData = await db
+        .select()
+        .from(quotes)
+        .innerJoin(clients, eq(quotes.clientId, clients.id))
+        .innerJoin(quoteLineItems, eq(quotes.id, quoteLineItems.quoteId))
+        .where(
+          and(
+            eq(quoteLineItems.productId, productId),
+            gte(quotes.createdAt, startOfDay),
+            lte(quotes.createdAt, endOfDay)
+          )
         )
-      )
-      .orderBy(desc(quotes.createdAt));
+        .orderBy(desc(quotes.createdAt));
 
-    return quotesWithDetails;
+      // Transform the data to match the expected format
+      const transformedQuotes = quotesData.map((row: any) => ({
+        id: row.quotes.id,
+        quoteNumber: row.quotes.quoteNumber,
+        status: row.quotes.status,
+        total: parseFloat(row.quotes.total || '0'),
+        createdAt: row.quotes.createdAt,
+        validUntil: row.quotes.validUntil,
+        client: {
+          name: row.clients.name,
+          email: row.clients.email
+        },
+        lineItems: [{
+          quantity: row.quote_line_items.quantity,
+          unitPrice: row.quote_line_items.unitPrice,
+          totalPrice: row.quote_line_items.totalPrice,
+          product: { name: 'Product' } // Will be enriched if needed
+        }]
+      }));
+
+      return transformedQuotes;
+    } catch (error) {
+      console.error('Product quotes by date error:', error);
+      return [];
+    }
   }
 }
 
