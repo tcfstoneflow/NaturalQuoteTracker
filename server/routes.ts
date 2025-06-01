@@ -345,6 +345,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       const product = await storage.createProduct(productData);
+      
+      // Trigger AI rendering if imageUrl was provided
+      if (productData.imageUrl) {
+        // Run AI processing in background to avoid blocking the response
+        processSlabUpload(product.id, productData.imageUrl).catch(error => {
+          console.error('Background AI rendering failed:', error);
+        });
+      }
+      
       res.status(201).json(product);
     } catch (error: any) {
       console.error("Product creation error:", error.message);
