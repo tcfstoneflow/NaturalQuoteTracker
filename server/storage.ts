@@ -514,7 +514,7 @@ export class DatabaseStorage implements IStorage {
           lte(quotes.createdAt, endDate)
         ))
         .leftJoin(clients, eq(clients.salesManagerId, users.id))
-        .where(eq(users.role, 'sales_manager'))
+        .where(or(eq(users.role, 'sales_manager'), eq(users.role, 'sales_rep')))
         .groupBy(users.id, users.firstName, users.lastName)
         .orderBy(sql`COALESCE(SUM(
           (SELECT SUM(CAST(qli.total_price AS DECIMAL)) 
