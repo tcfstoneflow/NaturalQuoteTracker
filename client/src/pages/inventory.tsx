@@ -610,80 +610,16 @@ export default function Inventory() {
                         </Button>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Image URL</Label>
-                          <Input
-                            value={image.url}
-                            onChange={(e) => {
-                              const newImages = [...galleryImages];
-                              newImages[index].url = e.target.value;
-                              setGalleryImages(newImages);
-                            }}
-                            placeholder="https://..."
-                          />
-                        </div>
-                        <div>
-                          <Label>Title</Label>
-                          <Input
-                            value={image.title}
-                            onChange={(e) => {
-                              const newImages = [...galleryImages];
-                              newImages[index].title = e.target.value;
-                              setGalleryImages(newImages);
-                            }}
-                            placeholder="e.g. Modern Kitchen Installation"
-                          />
-                        </div>
-                        <div>
-                          <Label>Installation Type</Label>
-                          <Select 
-                            value={image.installationType} 
-                            onValueChange={(value) => {
-                              const newImages = [...galleryImages];
-                              newImages[index].installationType = value;
-                              setGalleryImages(newImages);
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="kitchen">Kitchen</SelectItem>
-                              <SelectItem value="bathroom">Bathroom</SelectItem>
-                              <SelectItem value="backsplash">Backsplash</SelectItem>
-                              <SelectItem value="general">General</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`ai-generated-${index}`}
-                            checked={image.isAiGenerated}
-                            onChange={(e) => {
-                              const newImages = [...galleryImages];
-                              newImages[index].isAiGenerated = e.target.checked;
-                              setGalleryImages(newImages);
-                            }}
-                            className="rounded"
-                          />
-                          <Label htmlFor={`ai-generated-${index}`} className="text-sm">
-                            AI Generated Render
-                          </Label>
-                        </div>
-                      </div>
-                      
                       <div>
-                        <Label>Description</Label>
-                        <Input
-                          value={image.description}
-                          onChange={(e) => {
+                        <Label>Upload Image</Label>
+                        <ImageUpload
+                          value={image.url}
+                          onChange={(value) => {
                             const newImages = [...galleryImages];
-                            newImages[index].description = e.target.value;
+                            newImages[index].url = value;
                             setGalleryImages(newImages);
                           }}
-                          placeholder="Brief description of the installation"
+                          className="mt-2"
                         />
                       </div>
 

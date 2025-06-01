@@ -425,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: url,
         title,
         description: description || null,
-        type: installationType || 'general',
+        installationType: installationType || 'general',
         isAiGenerated: isAiGenerated || false
       });
       
