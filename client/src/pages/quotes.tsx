@@ -561,9 +561,9 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                               <span className="text-gray-400 text-sm">Not assigned</span>
                             )}
                             <Select 
-                              value={selectedQuote.salesRepId?.toString() || ""} 
+                              value={selectedQuote.salesRepId?.toString() || "none"} 
                               onValueChange={(value) => {
-                                const salesRepId = value ? parseInt(value) : null;
+                                const salesRepId = value === "none" ? null : parseInt(value);
                                 updateSalesRepMutation.mutate({ 
                                   id: selectedQuote.id, 
                                   salesRepId 
@@ -574,7 +574,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                                 <SelectValue placeholder="Select sales rep" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">No assignment</SelectItem>
+                                <SelectItem value="none">No assignment</SelectItem>
                                 {users?.filter((u: any) => u.role === 'sales_rep' || u.role === 'admin').map((user: any) => (
                                   <SelectItem key={user.id} value={user.id.toString()}>
                                     {user.username} ({user.role})
