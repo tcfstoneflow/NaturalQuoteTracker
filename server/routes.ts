@@ -1361,6 +1361,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile update endpoint for settings page
+  app.patch("/api/user/profile", requireAuth, async (req: any, res) => {
+    try {
+      const { firstName, lastName, email, phoneNumber } = req.body;
+      
+      const updatedUser = await storage.updateUserProfile(req.user!.id, {
+        firstName,
+        lastName,
+        email,
+        phoneNumber
+      });
+
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      res.status(500).json({ error: "Failed to update profile", details: error.message });
+    }
+  });
+
+  // Password update endpoint for settings page
+  app.patch("/api/user/password", requireAuth, async (req: any, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      // Verify current password
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const isValidPassword = await verifyPassword(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Hash new password and update
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updateUser(req.user!.id, { password: hashedPassword });
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error: any) {
+      console.error('Update password error:', error);
+      res.status(500).json({ error: "Failed to update password", details: error.message });
+    }
+  });
+
   // Avatar upload endpoint
   app.post("/api/upload/avatar", requireAuth, async (req: any, res) => {
     try {
