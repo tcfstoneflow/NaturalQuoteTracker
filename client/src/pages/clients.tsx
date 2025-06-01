@@ -165,6 +165,7 @@ export default function Clients() {
           subtotal: subtotal.toFixed(2),
           taxRate: taxRate.toFixed(4),
           taxAmount: taxAmount.toFixed(2),
+          processingFee: processingFee.toFixed(2),
           totalAmount: total.toFixed(2),
           notes: quoteData.description
         },
@@ -952,6 +953,12 @@ export default function Clients() {
                               <span>Subtotal:</span>
                               <span>${parseFloat(viewingQuote.subtotal || 0).toLocaleString()}</span>
                             </div>
+                            {viewingQuote.processingFee && parseFloat(viewingQuote.processingFee) > 0 && (
+                              <div className="flex justify-between text-sm">
+                                <span>Processing Fee (3.5%):</span>
+                                <span>${parseFloat(viewingQuote.processingFee).toLocaleString()}</span>
+                              </div>
+                            )}
                             {viewingQuote.taxAmount && parseFloat(viewingQuote.taxAmount) > 0 && (
                               <div className="flex justify-between text-sm">
                                 <span>Tax ({parseFloat(viewingQuote.taxRate || 0) * 100}%):</span>

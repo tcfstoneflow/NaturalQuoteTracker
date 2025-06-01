@@ -82,6 +82,7 @@ export const quotes = pgTable("quotes", {
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull().default("0"),
   taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).notNull().default("0.085"),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  processingFee: decimal("processing_fee", { precision: 10, scale: 2 }).notNull().default("0"),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   validUntil: timestamp("valid_until").notNull(),
   notes: text("notes"),
