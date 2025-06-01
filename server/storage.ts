@@ -33,7 +33,8 @@ export interface IStorage {
   getUserByPasswordResetToken(token: string): Promise<User | undefined>;
   clearPasswordResetToken(id: number): Promise<void>;
   updatePassword(id: number, passwordHash: string): Promise<void>;
-  updateUserProfile(id: number, updates: { firstName?: string; lastName?: string; email?: string; phoneNumber?: string; avatarUrl?: string }): Promise<User>;
+  updateUserProfile(id: number, updates: { firstName?: string; lastName?: string; email?: string; username?: string; role?: string }): Promise<User>;
+  updateUserAvatar(id: number, avatarUrl: string): Promise<User>;
   
   // MFA methods
   createMFACode(mfaCode: any): Promise<void>;
@@ -256,10 +257,20 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id));
   }
 
-  async updateUserProfile(id: number, updates: { firstName?: string; lastName?: string; email?: string; phoneNumber?: string; avatarUrl?: string }): Promise<User> {
+  async updateUserProfile(id: number, updates: { firstName?: string; lastName?: string; email?: string; username?: string; role?: string }): Promise<User> {
     const [updatedUser] = await db
       .update(users)
       .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    
+    return updatedUser;
+  }
+
+  async updateUserAvatar(id: number, avatarUrl: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ profileImageUrl: avatarUrl })
       .where(eq(users.id, id))
       .returning();
     

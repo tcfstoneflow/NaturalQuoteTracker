@@ -93,6 +93,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile management routes
+  app.patch("/api/users/:id/profile", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { firstName, lastName, email, username, role } = req.body;
+      
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        email,
+        username,
+        role
+      });
+      
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error('Update user profile error:', error);
+      res.status(500).json({ error: 'Failed to update user profile' });
+    }
+  });
+
+  // Avatar upload route
+  const avatarUpload = multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        const uploadDir = './upload/avatars';
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        const userId = req.params.id;
+        const extension = path.extname(file.originalname);
+        cb(null, `user-${userId}-${Date.now()}${extension}`);
+      }
+    }),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'));
+      }
+    }
+  });
+
+  app.post("/api/users/:id/avatar", requireAuth, requireRole(['admin']), avatarUpload.single('avatar'), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (!req.file) {
+        return res.status(400).json({ error: 'No image file provided' });
+      }
+      
+      const avatarUrl = `/upload/avatars/${req.file.filename}`;
+      const updatedUser = await storage.updateUserAvatar(userId, avatarUrl);
+      
+      res.json({ success: true, avatarUrl, user: updatedUser });
+    } catch (error: any) {
+      console.error('Avatar upload error:', error);
+      res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+  });
+
   app.delete("/api/users/:id", requireAuth, requireRole(['admin']), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);

@@ -30,6 +30,8 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [settingsTab, setSettingsTab] = useState("profile");
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -213,7 +215,29 @@ export default function UserManagement() {
     },
   });
 
-  const passwordMutation = useMutation({
+  const updateUserProfileMutation = useMutation({
+    mutationFn: async ({ userId, profileData }: { userId: number; profileData: any }) => {
+      return await apiRequest("PATCH", `/api/users/${userId}/profile`, profileData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User profile updated successfully",
+      });
+      setUserSettingsDialogOpen(false);
+      setSelectedUser(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user profile",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updatePasswordMutation = useMutation({
     mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
       return await apiRequest("POST", `/api/users/${userId}/password`, { password: newPassword });
     },
@@ -222,14 +246,34 @@ export default function UserManagement() {
         title: "Success",
         description: "Password updated successfully",
       });
-      setPasswordDialogOpen(false);
       setNewPassword("");
-      setSelectedUser(null);
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update password",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async ({ userId, file }: { userId: number; file: File }) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      return await apiRequest("POST", `/api/users/${userId}/avatar`, formData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Avatar uploaded successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload avatar",
         variant: "destructive",
       });
     },
@@ -867,60 +911,224 @@ export default function UserManagement() {
             </DialogContent>
           </Dialog>
 
-          {/* Password Reset Dialog */}
-          <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
-            <DialogContent className="sm:max-w-md">
+          {/* User Settings Dialog */}
+          <Dialog open={userSettingsDialogOpen} onOpenChange={setUserSettingsDialogOpen}>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Reset Password</DialogTitle>
+                <DialogTitle>User Settings</DialogTitle>
                 <DialogDescription>
-                  Set a new password for {selectedUser?.firstName} {selectedUser?.lastName}
+                  Manage profile settings for {selectedUser?.firstName} {selectedUser?.lastName}
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-4">
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-                
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setPasswordDialogOpen(false);
-                      setNewPassword("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      if (selectedUser && newPassword.trim()) {
-                        passwordMutation.mutate({
-                          userId: selectedUser.id,
-                          newPassword: newPassword.trim()
-                        });
-                      }
-                    }}
-                    disabled={!newPassword.trim() || passwordMutation.isPending}
-                  >
-                    {passwordMutation.isPending ? "Updating..." : "Update Password"}
-                  </Button>
-                </div>
-              </div>
+              {selectedUser && (
+                <Tabs value={settingsTab} onValueChange={setSettingsTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="profile">Profile</TabsTrigger>
+                    <TabsTrigger value="avatar">Avatar</TabsTrigger>
+                    <TabsTrigger value="security">Security</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="profile" className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">First Name</label>
+                        <Input
+                          defaultValue={selectedUser.firstName}
+                          placeholder="First name"
+                          id="firstName"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Last Name</label>
+                        <Input
+                          defaultValue={selectedUser.lastName}
+                          placeholder="Last name"
+                          id="lastName"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Email</label>
+                      <Input
+                        defaultValue={selectedUser.email}
+                        placeholder="Email address"
+                        type="email"
+                        id="email"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Username</label>
+                      <Input
+                        defaultValue={selectedUser.username}
+                        placeholder="Username"
+                        id="username"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Role</label>
+                      <Select defaultValue={selectedUser.role}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sales_rep">Sales Representative</SelectItem>
+                          <SelectItem value="inventory_specialist">Inventory Specialist</SelectItem>
+                          <SelectItem value="admin">Administrator</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setUserSettingsDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const formData = new FormData();
+                          const firstName = (document.getElementById('firstName') as HTMLInputElement)?.value;
+                          const lastName = (document.getElementById('lastName') as HTMLInputElement)?.value;
+                          const email = (document.getElementById('email') as HTMLInputElement)?.value;
+                          const username = (document.getElementById('username') as HTMLInputElement)?.value;
+                          
+                          updateUserProfileMutation.mutate({
+                            userId: selectedUser.id,
+                            profileData: { firstName, lastName, email, username }
+                          });
+                        }}
+                        disabled={updateUserProfileMutation.isPending}
+                      >
+                        {updateUserProfileMutation.isPending ? "Updating..." : "Update Profile"}
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="avatar" className="space-y-4">
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="relative">
+                        {selectedUser.profileImageUrl ? (
+                          <img
+                            src={selectedUser.profileImageUrl}
+                            alt={`${selectedUser.firstName} ${selectedUser.lastName}`}
+                            className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                            <User className="w-12 h-12 text-gray-400" />
+                          </div>
+                        )}
+                        <Button
+                          size="sm"
+                          className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0"
+                          onClick={() => document.getElementById('avatarUpload')?.click()}
+                        >
+                          <Camera className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <input
+                        id="avatarUpload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setProfileImage(file);
+                          }
+                        }}
+                      />
+                      
+                      {profileImage && (
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600 mb-2">Selected: {profileImage.name}</p>
+                          <Button
+                            onClick={() => {
+                              if (profileImage) {
+                                uploadAvatarMutation.mutate({
+                                  userId: selectedUser.id,
+                                  file: profileImage
+                                });
+                                setProfileImage(null);
+                              }
+                            }}
+                            disabled={uploadAvatarMutation.isPending}
+                          >
+                            {uploadAvatarMutation.isPending ? "Uploading..." : "Upload Avatar"}
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('avatarUpload')?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Choose New Avatar
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="security" className="space-y-4">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">New Password</label>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter new password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Password should be at least 8 characters long
+                        </p>
+                      </div>
+                      
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setNewPassword("");
+                            setShowPassword(false);
+                          }}
+                        >
+                          Clear
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (selectedUser && newPassword.trim().length >= 8) {
+                              updatePasswordMutation.mutate({
+                                userId: selectedUser.id,
+                                newPassword: newPassword.trim()
+                              });
+                            }
+                          }}
+                          disabled={!newPassword.trim() || newPassword.length < 8 || updatePasswordMutation.isPending}
+                        >
+                          {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              )}
             </DialogContent>
           </Dialog>
 
