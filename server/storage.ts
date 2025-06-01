@@ -638,6 +638,91 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getProductPerformanceDetail(productId: number, startDate: Date, endDate: Date, intervalFormat: string): Promise<any[]> {
+    try {
+      // Generate time series intervals based on the interval format
+      const intervals: string[] = [];
+      const current = new Date(startDate);
+      const end = new Date(endDate);
+
+      while (current <= end) {
+        if (intervalFormat === 'hour') {
+          intervals.push(current.toISOString());
+          current.setHours(current.getHours() + 1);
+        } else if (intervalFormat === 'day') {
+          intervals.push(current.toISOString().split('T')[0]);
+          current.setDate(current.getDate() + 1);
+        } else if (intervalFormat === 'month') {
+          intervals.push(current.toISOString().slice(0, 7)); // YYYY-MM format
+          current.setMonth(current.getMonth() + 1);
+        }
+      }
+
+      // Get product sales data grouped by time intervals
+      const salesData = await db
+        .select({
+          date: sql<string>`
+            CASE 
+              WHEN ${sql.raw(`'${intervalFormat}'`)} = 'hour' THEN DATE_TRUNC('hour', ${quotes.createdAt})::text
+              WHEN ${sql.raw(`'${intervalFormat}'`)} = 'day' THEN DATE(${quotes.createdAt})::text
+              WHEN ${sql.raw(`'${intervalFormat}'`)} = 'month' THEN TO_CHAR(${quotes.createdAt}, 'YYYY-MM')
+            END
+          `,
+          sales: sql<number>`COALESCE(SUM(CAST(${quoteLineItems.quantity} AS DECIMAL)), 0)`,
+          revenue: sql<number>`COALESCE(SUM(CAST(${quoteLineItems.totalPrice} AS DECIMAL)), 0)`,
+          orderCount: sql<number>`COUNT(DISTINCT ${quotes.id})`,
+          stockLevel: sql<number>`AVG(${products.stockQuantity})`
+        })
+        .from(quoteLineItems)
+        .innerJoin(quotes, eq(quoteLineItems.quoteId, quotes.id))
+        .innerJoin(products, eq(quoteLineItems.productId, products.id))
+        .where(and(
+          eq(quoteLineItems.productId, productId),
+          eq(quotes.status, 'approved'),
+          gte(quotes.createdAt, startDate),
+          lte(quotes.createdAt, endDate)
+        ))
+        .groupBy(sql`
+          CASE 
+            WHEN ${sql.raw(`'${intervalFormat}'`)} = 'hour' THEN DATE_TRUNC('hour', ${quotes.createdAt})::text
+            WHEN ${sql.raw(`'${intervalFormat}'`)} = 'day' THEN DATE(${quotes.createdAt})::text
+            WHEN ${sql.raw(`'${intervalFormat}'`)} = 'month' THEN TO_CHAR(${quotes.createdAt}, 'YYYY-MM')
+          END
+        `)
+        .orderBy(sql`
+          CASE 
+            WHEN ${sql.raw(`'${intervalFormat}'`)} = 'hour' THEN DATE_TRUNC('hour', ${quotes.createdAt})::text
+            WHEN ${sql.raw(`'${intervalFormat}'`)} = 'day' THEN DATE(${quotes.createdAt})::text
+            WHEN ${sql.raw(`'${intervalFormat}'`)} = 'month' THEN TO_CHAR(${quotes.createdAt}, 'YYYY-MM')
+          END
+        `);
+
+      // Create a map of sales data by date for quick lookup
+      const salesMap = new Map();
+      salesData.forEach(row => {
+        salesMap.set(row.date, row);
+      });
+
+      // Build the complete time series with zero values for missing intervals
+      const result = intervals.map(interval => {
+        const data = salesMap.get(interval) || { sales: 0, revenue: 0, orderCount: 0, stockLevel: 0 };
+        
+        return {
+          date: interval,
+          sales: data.sales,
+          revenue: data.revenue,
+          orderCount: data.orderCount,
+          stockLevel: Math.round(data.stockLevel || 0)
+        };
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error getting product performance detail:', error);
+      return [];
+    }
+  }
+
   async getTopClients(startDate: Date, endDate: Date, limit: number = 10): Promise<any[]> {
     try {
       const result = await db
