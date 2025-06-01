@@ -222,42 +222,7 @@ export default function ProductDetails() {
               </Card>
             )}
 
-            {/* Visualization Tools */}
-            {product.imageUrl && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Palette className="h-5 w-5" />
-                    Visualization Tools
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-600">
-                      Generate realistic countertop visualizations using this slab
-                    </p>
-                    <Button
-                      onClick={() => pythonRenderMutation.mutate()}
-                      disabled={pythonRenderMutation.isPending}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      {pythonRenderMutation.isPending ? (
-                        <>
-                          <Wand2 className="h-4 w-4 mr-2 animate-spin" />
-                          Generating Render...
-                        </>
-                      ) : (
-                        <>
-                          <Palette className="h-4 w-4 mr-2" />
-                          Generate Kitchen Render
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+
 
             {/* Action Button */}
             <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
