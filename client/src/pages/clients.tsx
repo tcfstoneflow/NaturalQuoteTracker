@@ -213,31 +213,7 @@ export default function Clients() {
     },
   });
 
-  const generateAISummary = async (client: any) => {
-    if (!client || isGeneratingAI) return;
 
-    setIsGeneratingAI(true);
-    try {
-      const response = await apiRequest("POST", "/api/clients/ai-summary", {
-        clientId: client.id
-      });
-      const result = await response.json();
-      setAiSummary(result.summary);
-      toast({
-        title: "AI Summary Generated",
-        description: "Purchase history analysis complete",
-      });
-    } catch (error: any) {
-      console.error("Error generating AI summary:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate AI summary. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
 
   const handleOpenCreateModal = () => {
     setEditingClient(null);
@@ -304,11 +280,7 @@ export default function Clients() {
     setIsNewQuoteModalOpen(true);
   };
 
-  const handleGenerateAISummary = (client: any) => {
-    setIsGeneratingAI(true);
-    setAiSummary("");
-    generateAISummaryMutation.mutate(client.id);
-  };
+
 
   const handleAddLineItem = () => {
     const newItem = {
@@ -494,9 +466,11 @@ export default function Clients() {
     setQuoteToDelete(null);
   };
 
+
+
   const generateAISummary = async (client: any) => {
     if (!client || isGeneratingAI) return;
-    
+
     setIsGeneratingAI(true);
     try {
       const response = await apiRequest("POST", "/api/clients/ai-summary", {
@@ -504,37 +478,17 @@ export default function Clients() {
       });
       const result = await response.json();
       setAiSummary(result.summary);
-    } catch (error) {
+      toast({
+        title: "AI Summary Generated",
+        description: "Purchase history analysis complete",
+      });
+    } catch (error: any) {
       console.error("Error generating AI summary:", error);
       toast({
         title: "Error",
         description: "Failed to generate AI summary. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
-
-  const generateAIPurchaseSummary = async (clientId: number) => {
-    setIsGeneratingAI(true);
-    try {
-      const response = await fetch(`/api/clients/${clientId}/ai-summary`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate AI summary');
-      }
-      
-      const data = await response.json();
-      setAiSummary(data.summary);
-    } catch (error) {
-      console.error('Error generating AI summary:', error);
-      setAiSummary('Unable to generate purchase summary at this time.');
     } finally {
       setIsGeneratingAI(false);
     }
@@ -748,7 +702,7 @@ export default function Clients() {
                       <div className="flex justify-between items-center mb-3">
                         <h3 className="text-lg font-semibold text-primary-custom">AI Purchase Summary</h3>
                         <Button 
-                          onClick={() => handleGenerateAISummary(viewingClient)}
+                          onClick={() => generateAISummary(viewingClient)}
                           disabled={isGeneratingAI}
                           className="bg-blue-500 hover:bg-blue-600 text-white"
                         >

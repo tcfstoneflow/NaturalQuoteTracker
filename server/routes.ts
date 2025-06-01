@@ -237,9 +237,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Client AI Summary
-  app.post("/api/clients/:id/ai-summary", requireAuth, async (req, res) => {
+  app.post("/api/clients/ai-summary", requireAuth, async (req, res) => {
     try {
-      const clientId = parseInt(req.params.id);
+      const { clientId } = req.body;
+      
+      if (!clientId) {
+        return res.status(400).json({ error: "Client ID is required" });
+      }
       
       // Get client details
       const client = await storage.getClient(clientId);
