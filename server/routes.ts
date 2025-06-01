@@ -400,6 +400,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Gallery Images routes
+  app.get("/api/products/:id/gallery", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const galleryImages = await storage.getGalleryImages(productId);
+      res.json(galleryImages);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/products/:id/gallery", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const { url, title, description, installationType, isAiGenerated } = req.body;
+      
+      if (!url || !title) {
+        return res.status(400).json({ error: "URL and title are required" });
+      }
+      
+      const galleryImage = await storage.createGalleryImage({
+        productId,
+        imageUrl: url,
+        title,
+        description: description || null,
+        type: installationType || 'general',
+        isAiGenerated: isAiGenerated || false
+      });
+      
+      res.status(201).json(galleryImage);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/gallery/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteGalleryImage(id);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Gallery image not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Quotes
   app.get("/api/quotes", async (req, res) => {
     try {

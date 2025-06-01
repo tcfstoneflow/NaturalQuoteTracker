@@ -100,6 +100,11 @@ export interface IStorage {
   deleteShowroomVisit(id: number): Promise<boolean>;
   getPendingShowroomVisits(): Promise<ShowroomVisit[]>;
 
+  // Gallery Images
+  getGalleryImages(productId: number): Promise<ProductGalleryImage[]>;
+  createGalleryImage(image: InsertProductGalleryImage): Promise<ProductGalleryImage>;
+  deleteGalleryImage(id: number): Promise<boolean>;
+
   // Product Gallery
   getProductGalleryImages(productId: number): Promise<ProductGalleryImage[]>;
 }
@@ -840,6 +845,22 @@ export class DatabaseStorage implements IStorage {
         eq(productGalleryImages.isActive, true)
       ))
       .orderBy(asc(productGalleryImages.sortOrder));
+  }
+
+  async getGalleryImages(productId: number): Promise<ProductGalleryImage[]> {
+    return await db.select().from(productGalleryImages)
+      .where(eq(productGalleryImages.productId, productId))
+      .orderBy(asc(productGalleryImages.createdAt));
+  }
+
+  async createGalleryImage(image: InsertProductGalleryImage): Promise<ProductGalleryImage> {
+    const [newImage] = await db.insert(productGalleryImages).values(image).returning();
+    return newImage;
+  }
+
+  async deleteGalleryImage(id: number): Promise<boolean> {
+    const result = await db.delete(productGalleryImages).where(eq(productGalleryImages.id, id));
+    return (result.rowCount || 0) > 0;
   }
 }
 
