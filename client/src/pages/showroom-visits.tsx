@@ -52,13 +52,13 @@ export default function ShowroomVisits() {
     queryKey: ["/api/showroom-visits"],
   });
 
-  // Fetch sales managers for the dropdown
+  // Fetch sales staff for the dropdown (managers, reps, and admins)
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
   });
 
-  const salesManagers = users.filter((user: any) => 
-    user.role === 'sales_manager' || user.role === 'admin'
+  const salesStaff = users.filter((user: any) => 
+    user.role === 'sales_manager' || user.role === 'sales_rep' || user.role === 'admin'
   );
 
   const updateVisitMutation = useMutation({
@@ -250,13 +250,13 @@ export default function ShowroomVisits() {
                       <label className="text-sm font-medium">Assign Sales Member</label>
                       <Select value={assignedToUserId} onValueChange={setAssignedToUserId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a sales manager..." />
+                          <SelectValue placeholder="Select sales staff..." />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No assignment</SelectItem>
-                          {salesManagers.map((manager: any) => (
-                            <SelectItem key={manager.id} value={manager.id.toString()}>
-                              {manager.firstName} {manager.lastName} ({manager.role})
+                          {salesStaff.map((staff: any) => (
+                            <SelectItem key={staff.id} value={staff.id.toString()}>
+                              {staff.firstName} {staff.lastName} ({staff.role})
                             </SelectItem>
                           ))}
                         </SelectContent>
