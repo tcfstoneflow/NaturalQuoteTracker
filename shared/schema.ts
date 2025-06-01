@@ -144,6 +144,20 @@ export const showroomVisits = pgTable("showroom_visits", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Gallery images for products showing stone in real installations
+export const productGalleryImages = pgTable("product_gallery_images", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  imageUrl: text("image_url").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  installationType: text("installation_type").notNull(), // "kitchen", "bathroom", "countertop", "backsplash", "fireplace", "floor"
+  isAiGenerated: boolean("is_ai_generated").default(false).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const clientsRelations = relations(clients, ({ many }) => ({
   quotes: many(quotes),
@@ -171,6 +185,14 @@ export const quoteLineItemsRelations = relations(quoteLineItems, ({ one }) => ({
 export const productsRelations = relations(products, ({ many }) => ({
   quoteLineItems: many(quoteLineItems),
   slabs: many(slabs),
+  galleryImages: many(productGalleryImages),
+}));
+
+export const productGalleryImagesRelations = relations(productGalleryImages, ({ one }) => ({
+  product: one(products, {
+    fields: [productGalleryImages.productId],
+    references: [products.id],
+  }),
 }));
 
 export const slabsRelations = relations(slabs, ({ one }) => ({
@@ -269,6 +291,11 @@ export const insertShowroomVisitSchema = createInsertSchema(showroomVisits).omit
   updatedAt: true,
 });
 
+export const insertProductGalleryImageSchema = createInsertSchema(productGalleryImages).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -298,6 +325,9 @@ export type InsertSlab = z.infer<typeof insertSlabSchema>;
 
 export type ShowroomVisit = typeof showroomVisits.$inferSelect;
 export type InsertShowroomVisit = z.infer<typeof insertShowroomVisitSchema>;
+
+export type ProductGalleryImage = typeof productGalleryImages.$inferSelect;
+export type InsertProductGalleryImage = z.infer<typeof insertProductGalleryImageSchema>;
 
 export type MfaCode = typeof mfaCodes.$inferSelect;
 export type InsertMfaCode = typeof mfaCodes.$inferInsert;
