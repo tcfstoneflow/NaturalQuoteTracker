@@ -39,6 +39,7 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedChartType, setSelectedChartType] = useState<string | null>(null);
+  const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
 
   const { data: performanceData, isLoading } = useQuery({
     queryKey: ['/api/dashboard/sales-manager-performance-detail', manager?.managerId, selectedPeriod],
@@ -150,6 +151,7 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
   if (!manager) return null;
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -379,7 +381,7 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                             <div
                               key={quote.id}
                               className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer hover:border-blue-300"
-                              onClick={() => window.open(`/quotes?highlight=${quote.id}`, '_blank')}
+                              onClick={() => setSelectedQuote(quote)}
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
@@ -434,5 +436,89 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Quote Preview Modal */}
+    {selectedQuote && (
+      <Dialog open={!!selectedQuote} onOpenChange={(open) => !open && setSelectedQuote(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Quote Details - #{selectedQuote.quoteNumber}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Quote Header */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Client Information</h3>
+                <div className="space-y-1 text-sm">
+                  <p><strong>Name:</strong> {selectedQuote.client.name}</p>
+                  <p><strong>Email:</strong> {selectedQuote.client.email}</p>
+                  {selectedQuote.client.phone && <p><strong>Phone:</strong> {selectedQuote.client.phone}</p>}
+                  {selectedQuote.client.company && <p><strong>Company:</strong> {selectedQuote.client.company}</p>}
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Quote Information</h3>
+                <div className="space-y-1 text-sm">
+                  <p><strong>Status:</strong> 
+                    <Badge className="ml-2" variant={
+                      selectedQuote.status === 'approved' ? 'default' :
+                      selectedQuote.status === 'pending' ? 'secondary' :
+                      selectedQuote.status === 'rejected' ? 'destructive' : 'outline'
+                    }>
+                      {selectedQuote.status}
+                    </Badge>
+                  </p>
+                  <p><strong>Created:</strong> {new Date(selectedQuote.createdAt).toLocaleDateString()}</p>
+                  <p><strong>Total:</strong> <span className="font-semibold text-green-600">{formatCurrency(selectedQuote.total)}</span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quote Items */}
+            {selectedQuote.items && selectedQuote.items.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Quote Items</h3>
+                <div className="space-y-2">
+                  {selectedQuote.items.map((item: any, index: number) => (
+                    <div key={index} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-medium">{item.product?.name || 'Product'}</p>
+                        <p className="text-sm text-gray-500">Quantity: {item.quantity} | Unit Price: {formatCurrency(parseFloat(item.unitPrice))}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{formatCurrency(parseFloat(item.totalPrice))}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {selectedQuote.notes && (
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Notes</h3>
+                <p className="text-sm text-gray-600 p-3 bg-gray-50 rounded-lg">{selectedQuote.notes}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => setSelectedQuote(null)}>
+                Close
+              </Button>
+              <Button onClick={() => window.open(`/quotes?highlight=${selectedQuote.id}`, '_blank')}>
+                View Full Quote
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )}
+  </>
   );
 }
