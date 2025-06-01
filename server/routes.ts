@@ -7,6 +7,7 @@ import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";
 import { login, register, logout, getCurrentUser, requireAuth, requireRole, requireInventoryAccess, requirePricingAccess } from "./auth";
 import { analyzeClientPurchases } from "./client-analysis";
+import { processSlabUpload } from "./ai-rendering";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form - place at top to avoid conflicts
@@ -362,6 +363,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const product = await storage.updateProduct(id, validatedData);
+      
+      // Trigger AI rendering if imageUrl was updated
+      if (validatedData.imageUrl) {
+        // Run AI processing in background to avoid blocking the response
+        processSlabUpload(id, validatedData.imageUrl).catch(error => {
+          console.error('Background AI rendering failed:', error);
+        });
+      }
+      
       res.json(product);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -379,6 +389,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const product = await storage.updateProduct(id, validatedData);
+      
+      // Trigger AI rendering if imageUrl was updated
+      if (validatedData.imageUrl) {
+        // Run AI processing in background to avoid blocking the response
+        processSlabUpload(id, validatedData.imageUrl).catch(error => {
+          console.error('Background AI rendering failed:', error);
+        });
+      }
+      
       res.json(product);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -397,6 +416,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Manual AI render generation for existing products
+  app.post("/api/products/:id/generate-render", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const product = await storage.getProduct(id);
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      if (!product.imageUrl) {
+        return res.status(400).json({ error: 'Product must have an image to generate AI render' });
+      }
+      
+      // Run AI rendering in background
+      processSlabUpload(id, product.imageUrl).catch(error => {
+        console.error('Manual AI rendering failed:', error);
+      });
+      
+      res.json({ message: 'AI render generation started in background' });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
   });
 
