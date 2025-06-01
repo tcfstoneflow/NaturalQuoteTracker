@@ -153,12 +153,27 @@ export default function Sidebar() {
       {/* User Profile */}
       <div className="p-4 border-t border-neutral-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-neutral-200 rounded-full flex items-center justify-center">
-            <User className="text-secondary-custom" size={18} />
+          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-medium">
+              {user?.user?.firstName && user?.user?.lastName 
+                ? `${user.user.firstName.charAt(0)}${user.user.lastName.charAt(0)}`
+                : user?.user?.username?.charAt(0)?.toUpperCase() || 'U'
+              }
+            </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-primary-custom truncate">Sarah Johnson</p>
-            <p className="text-xs text-secondary-custom truncate">Sales Manager</p>
+            <p className="text-sm font-medium text-primary-custom truncate">
+              {user?.user?.firstName && user?.user?.lastName 
+                ? `${user.user.firstName} ${user.user.lastName}`
+                : user?.user?.username || 'User'
+              }
+            </p>
+            <p className="text-xs text-secondary-custom truncate">
+              {user?.user?.role === 'admin' ? 'Administrator' :
+               user?.user?.role === 'sales_rep' ? 'Sales Representative' :
+               user?.user?.role === 'inventory_specialist' ? 'Inventory Specialist' :
+               user?.user?.role === 'sales_manager' ? 'Sales Manager' : 'User'}
+            </p>
           </div>
           <Link href="/settings" className="text-secondary-custom hover:text-primary">
             <Settings size={16} />
