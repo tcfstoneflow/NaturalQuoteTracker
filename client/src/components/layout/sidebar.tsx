@@ -160,9 +160,9 @@ export default function Sidebar() {
             <p className="text-sm font-medium text-primary-custom truncate">Sarah Johnson</p>
             <p className="text-xs text-secondary-custom truncate">Sales Manager</p>
           </div>
-          <button className="text-secondary-custom hover:text-primary">
+          <Link href="/settings" className="text-secondary-custom hover:text-primary">
             <Settings size={16} />
-          </button>
+          </Link>
         </div>
       </div>
     </aside>

@@ -188,7 +188,7 @@ export default function Settings() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <Settings className="mx-auto h-8 w-8 animate-spin text-primary mb-4" />
+          <Settings className="mx-auto h-8 w-8 animate-spin text-primary mb-4" size={32} />
           <p>Loading settings...</p>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopBar />
+      <TopBar title="Settings" />
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">

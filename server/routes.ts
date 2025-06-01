@@ -1343,7 +1343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Profile management endpoints
-  app.put("/api/profile", requireAuth, async (req: AuthRequest, res) => {
+  app.put("/api/profile", requireAuth, async (req: any, res) => {
     try {
       const { firstName, lastName, email, phoneNumber } = req.body;
       
@@ -1362,7 +1362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Avatar upload endpoint
-  app.post("/api/upload/avatar", requireAuth, async (req: AuthRequest, res) => {
+  app.post("/api/upload/avatar", requireAuth, async (req: any, res) => {
     try {
       const fs = require('fs');
       const path = require('path');
@@ -1417,7 +1417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Password change endpoint
-  app.put("/api/profile/password", requireAuth, async (req: AuthRequest, res) => {
+  app.put("/api/profile/password", requireAuth, async (req: any, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
       
