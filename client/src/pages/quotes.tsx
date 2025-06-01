@@ -606,6 +606,12 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                       <span className="text-secondary-custom">Subtotal:</span>
                       <span>${parseFloat(selectedQuote.subtotal).toFixed(2)}</span>
                     </div>
+                    {selectedQuote.processingFee && parseFloat(selectedQuote.processingFee) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-secondary-custom">Processing Fee (3.5%):</span>
+                        <span>${parseFloat(selectedQuote.processingFee).toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-secondary-custom">
                         Tax ({(parseFloat(selectedQuote.taxRate) * 100).toFixed(2)}%):
