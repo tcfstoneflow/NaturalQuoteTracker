@@ -89,6 +89,7 @@ export const quotes = pgTable("quotes", {
   validUntil: timestamp("valid_until").notNull(),
   notes: text("notes"),
   sentAt: timestamp("sent_at"),
+  salesRepId: integer("sales_rep_id").references(() => users.id),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -179,6 +180,14 @@ export const quotesRelations = relations(quotes, ({ one, many }) => ({
     references: [clients.id],
   }),
   lineItems: many(quoteLineItems),
+  salesRep: one(users, {
+    fields: [quotes.salesRepId],
+    references: [users.id],
+  }),
+  createdByUser: one(users, {
+    fields: [quotes.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const quoteLineItemsRelations = relations(quoteLineItems, ({ one }) => ({
