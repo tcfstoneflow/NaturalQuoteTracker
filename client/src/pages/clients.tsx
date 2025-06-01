@@ -213,6 +213,29 @@ export default function Clients() {
     },
   });
 
+  const generateAISummaryMutation = useMutation({
+    mutationFn: async (clientId: number) => {
+      const response = await apiRequest('POST', `/api/clients/${clientId}/ai-summary`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAiSummary(data.summary);
+      setIsGeneratingAI(false);
+      toast({
+        title: "AI Summary Generated",
+        description: "Purchase history analysis complete",
+      });
+    },
+    onError: (error: any) => {
+      setIsGeneratingAI(false);
+      toast({
+        title: "AI Summary Error",
+        description: error.message || "Failed to generate AI summary",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleOpenCreateModal = () => {
     setEditingClient(null);
     setFormData({

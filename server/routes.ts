@@ -6,6 +6,7 @@ import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";
 import { login, register, logout, getCurrentUser, requireAuth, requireRole, requireInventoryAccess, requirePricingAccess } from "./auth";
+import { analyzeClientPurchases } from "./client-analysis";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form - place at top to avoid conflicts
@@ -232,6 +233,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Client AI Summary
+  app.post("/api/clients/:id/ai-summary", requireAuth, async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      
+      // Get client details
+      const client = await storage.getClient(clientId);
+      if (!client) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+
+      // Get client's quotes
+      const quotes = await storage.getClientQuotes(clientId);
+      
+      if (quotes.length === 0) {
+        return res.json({ 
+          summary: "This client has no purchase history yet. Consider reaching out to discuss their natural stone needs and project requirements."
+        });
+      }
+
+      // Generate AI analysis
+      const analysis = await analyzeClientPurchases(client.name, quotes);
+      
+      // Format the summary for display
+      const summary = `Based on ${quotes.length} quotes totaling $${analysis.totalSpent.toFixed(2)}, this client shows preference for ${analysis.preferredStoneTypes.join(', ')}. ${analysis.purchasePatterns} ${analysis.recommendations}`;
+      
+      res.json({ summary });
+    } catch (error: any) {
+      if (error.message.includes('OpenAI API key')) {
+        return res.status(503).json({ error: "AI analysis service is not configured. Please contact your administrator." });
+      }
+      console.error('Client AI summary error:', error);
+      res.status(500).json({ error: "Failed to generate client summary" });
     }
   });
 
