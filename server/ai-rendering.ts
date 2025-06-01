@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { storage } from "./storage";
+import path from "path";
+import fs from "fs";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -8,6 +10,9 @@ interface RenderRequest {
   slabImageUrl: string;
   productName: string;
 }
+
+// Path to the lifestyle kitchen template
+const LIFESTYLE_KITCHEN_PATH = path.join(process.cwd(), 'attached_assets', 'ChatGPT Image May 27, 2025 at 01_37_25 PM.png');
 
 export async function generateCountertopRender(request: RenderRequest): Promise<string | null> {
   try {
@@ -19,19 +24,27 @@ export async function generateCountertopRender(request: RenderRequest): Promise<
       return null;
     }
 
-    // Create a detailed prompt based on the actual slab characteristics
-    const prompt = `Create a photorealistic kitchen countertop installation using this exact stone material: ${slabAnalysis}
+    // Analyze the lifestyle kitchen photo to understand the scene
+    const kitchenAnalysis = await analyzeKitchenScene();
+    
+    if (!kitchenAnalysis) {
+      console.error('Failed to analyze kitchen scene');
+      return null;
+    }
 
-    Kitchen specifications:
-    - Modern design with warm wood cabinets and black window frames
-    - Natural lighting from large windows showing the stone's true colors
-    - Black undermount sink with matte black faucet
-    - The stone material as described above as the countertop surface
-    - Clean, minimalist styling with plants and natural elements
-    - Professional photography quality with accurate color representation
-    - Show the exact patterns, veining, and texture of the stone material
-    - Maintain realistic lighting that highlights the stone's natural beauty
-    - Ensure the stone patterns flow naturally across the countertop surface`;
+    // Create a detailed prompt that combines both analyses
+    const prompt = `Create a photorealistic kitchen countertop installation that recreates this exact scene: ${kitchenAnalysis}
+
+    Replace ONLY the countertop surfaces with this stone material: ${slabAnalysis}
+
+    Critical requirements:
+    - Recreate the exact kitchen layout, lighting, and atmosphere from the scene description
+    - Keep all elements identical: wood cabinet texture and color, black window frames, sink placement, faucet style, plant positioning, fruit bowl, lighting conditions
+    - Only change the countertop material to match the stone description exactly
+    - Maintain the same perspective, angle, and composition
+    - Ensure realistic lighting and reflections on the new stone countertop
+    - The stone patterns should flow naturally across the countertop surface
+    - Professional photography quality with accurate color representation`;
 
     // Generate the image using DALL-E 3
     const response = await openai.images.generate({
@@ -70,7 +83,7 @@ export async function generateCountertopRender(request: RenderRequest): Promise<
 
 async function analyzeSlabImage(imageUrl: string): Promise<string | null> {
   try {
-    // Use GPT-4 Vision to analyze the slab image
+    // Use GPT-4o Vision to analyze the slab image
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
@@ -96,6 +109,43 @@ async function analyzeSlabImage(imageUrl: string): Promise<string | null> {
     return response.choices[0].message.content;
   } catch (error) {
     console.error('Error analyzing slab image:', error);
+    return null;
+  }
+}
+
+async function analyzeKitchenScene(): Promise<string | null> {
+  try {
+    // Convert the lifestyle kitchen image to base64
+    const imageBuffer = fs.readFileSync(LIFESTYLE_KITCHEN_PATH);
+    const base64Image = imageBuffer.toString('base64');
+    const imageUrl = `data:image/png;base64,${base64Image}`;
+
+    // Use GPT-4o Vision to analyze the kitchen scene
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze this kitchen scene in detail. Describe the exact layout, lighting, cabinet style and color, window frames, sink and faucet, any decorative elements, perspective angle, and overall atmosphere. Focus on recreating this exact scene but be very specific about all visual elements so it can be reproduced accurately. Do not mention the current countertop material as it will be replaced."
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 500
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('Error analyzing kitchen scene:', error);
     return null;
   }
 }
