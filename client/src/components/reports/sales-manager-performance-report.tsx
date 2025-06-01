@@ -125,8 +125,18 @@ export default function SalesManagerPerformanceReport() {
                   </Badge>
 
                   {/* Manager Avatar */}
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                    {getInitials(manager.firstName, manager.lastName)}
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    {manager.avatarUrl ? (
+                      <img 
+                        src={manager.avatarUrl} 
+                        alt={`${manager.firstName} ${manager.lastName}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+                        {getInitials(manager.firstName, manager.lastName)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Manager Details */}

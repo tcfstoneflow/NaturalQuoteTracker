@@ -500,6 +500,7 @@ export class DatabaseStorage implements IStorage {
           managerId: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
+          avatarUrl: users.avatarUrl,
           totalRevenue: sql<number>`COALESCE(SUM(
             (SELECT SUM(CAST(qli.total_price AS DECIMAL)) 
              FROM quote_line_items qli 
