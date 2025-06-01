@@ -68,6 +68,7 @@ interface ProductPerformanceData {
 export default function ProductDetailModal({ product, isOpen, onClose }: ProductDetailModalProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedChartType, setSelectedChartType] = useState<string | null>(null);
 
   const { data: performanceData, isLoading } = useQuery({
     queryKey: ['/api/dashboard/product-performance-detail', product?.productId, selectedPeriod],
@@ -137,10 +138,11 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
     return dateStr;
   };
 
-  const handleChartClick = (data: any) => {
+  const handleChartClick = (data: any, chartType: string) => {
     if (data && data.activePayload && data.activePayload[0]) {
       const clickedDate = data.activePayload[0].payload.date;
       setSelectedDate(clickedDate);
+      setSelectedChartType(chartType);
     }
   };
 

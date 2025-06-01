@@ -1274,25 +1274,37 @@ export class DatabaseStorage implements IStorage {
         )
         .orderBy(desc(quotes.createdAt));
 
-      // Transform the data to match the expected format
-      const transformedQuotes = quotesData.map((row: any) => ({
-        id: row.quotes.id,
-        quoteNumber: row.quotes.quoteNumber,
-        status: row.quotes.status,
-        total: parseFloat(row.quotes.total || '0'),
-        createdAt: row.quotes.createdAt,
-        validUntil: row.quotes.validUntil,
-        client: {
-          name: row.clients.name,
-          email: row.clients.email
-        },
-        lineItems: [{
+      // Group quotes by ID to handle multiple line items per quote
+      const quotesMap = new Map();
+      
+      quotesData.forEach((row: any) => {
+        const quoteId = row.quotes.id;
+        if (!quotesMap.has(quoteId)) {
+          quotesMap.set(quoteId, {
+            id: row.quotes.id,
+            quoteNumber: row.quotes.quoteNumber,
+            status: row.quotes.status,
+            total: parseFloat(row.quotes.total || '0'),
+            createdAt: row.quotes.createdAt,
+            validUntil: row.quotes.validUntil,
+            client: {
+              name: row.clients.name,
+              email: row.clients.email
+            },
+            lineItems: []
+          });
+        }
+        
+        // Add line item to the quote
+        quotesMap.get(quoteId).lineItems.push({
           quantity: row.quote_line_items.quantity,
-          unitPrice: row.quote_line_items.unitPrice,
-          totalPrice: row.quote_line_items.totalPrice,
-          product: { name: 'Product' } // Will be enriched if needed
-        }]
-      }));
+          unitPrice: parseFloat(row.quote_line_items.unitPrice || '0'),
+          totalPrice: parseFloat(row.quote_line_items.totalPrice || '0'),
+          product: { name: 'Product' }
+        });
+      });
+
+      const transformedQuotes = Array.from(quotesMap.values());
 
       return transformedQuotes;
     } catch (error) {
