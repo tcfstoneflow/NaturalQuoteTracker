@@ -1028,7 +1028,7 @@ export default function Clients() {
                   </div>
                   
                   {quoteLineItems.length > 0 ? (
-                    <div className="space-y-3 max-h-40 overflow-y-auto border rounded-lg p-3">
+                    <div className="space-y-3 border rounded-lg p-3">
                       {quoteLineItems.map((item: any) => (
                         <div key={item.id} className="flex gap-2 items-end">
                           <div className="flex-1 relative">
