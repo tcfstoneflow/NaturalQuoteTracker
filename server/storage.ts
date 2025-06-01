@@ -12,7 +12,7 @@ import {
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, sql, and, gte, count } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, gte, count } from "drizzle-orm";
 
 export interface IStorage {
   // Users

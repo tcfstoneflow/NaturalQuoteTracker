@@ -590,7 +590,7 @@ export default function Clients() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">No Sales Manager</SelectItem>
-                          {salesManagers?.map((manager: any) => (
+                          {Array.isArray(salesManagers) && salesManagers.map((manager: any) => (
                             <SelectItem key={manager.id} value={manager.id.toString()}>
                               {manager.firstName} {manager.lastName}
                             </SelectItem>
