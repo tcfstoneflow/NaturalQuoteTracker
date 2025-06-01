@@ -674,7 +674,7 @@ export default function Inventory() {
                         className="w-full"
                         onClick={async () => {
                           try {
-                            const response = await fetch(`/api/products/${editingProduct.id}/generate-render`, {
+                            const response = await fetch(`/api/products/${editingProduct.id}/generate-python-render`, {
                               method: 'POST',
                               headers: {
                                 'Content-Type': 'application/json',
@@ -683,21 +683,21 @@ export default function Inventory() {
                             
                             if (response.ok) {
                               toast({
-                                title: "AI Render Started",
-                                description: "Generating kitchen countertop render in background. Check gallery in a few moments.",
+                                title: "Render Started",
+                                description: "Generating kitchen countertop with your slab texture. Check gallery in a few moments.",
                               });
                             } else {
                               const error = await response.json();
                               toast({
-                                title: "AI Render Failed",
-                                description: error.error || "Failed to start AI render generation",
+                                title: "Render Failed",
+                                description: error.error || "Failed to generate kitchen render",
                                 variant: "destructive",
                               });
                             }
                           } catch (error) {
                             toast({
-                              title: "AI Render Failed",
-                              description: "Failed to start AI render generation",
+                              title: "Render Failed",
+                              description: "Failed to generate kitchen render",
                               variant: "destructive",
                             });
                           }
