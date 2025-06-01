@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DollarSign, FileText, TrendingUp, User } from "lucide-react";
+import { DollarSign, FileText, TrendingUp, User, X } from "lucide-react";
 
 interface SalesManager {
   managerId: number;
@@ -36,6 +37,8 @@ interface PerformanceData {
 
 export default function SalesManagerDetailModal({ manager, isOpen, onClose }: SalesManagerDetailModalProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedChartType, setSelectedChartType] = useState<string | null>(null);
 
   const { data: performanceData, isLoading } = useQuery({
     queryKey: ['/api/dashboard/sales-manager-performance-detail', manager?.managerId, selectedPeriod],
@@ -48,6 +51,20 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
       return response.json();
     },
     enabled: !!manager && isOpen
+  });
+
+  // Query for fetching quotes for a specific date
+  const { data: quotesForDate, isLoading: isLoadingQuotes } = useQuery({
+    queryKey: ['/api/dashboard/sales-manager-quotes', manager?.managerId, selectedDate],
+    queryFn: async () => {
+      if (!manager || !selectedDate) return null;
+      const response = await fetch(`/api/dashboard/sales-manager-quotes/${manager.managerId}?date=${selectedDate}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch quotes for date');
+      }
+      return response.json();
+    },
+    enabled: !!manager && !!selectedDate && isOpen
   });
 
   const formatCurrency = (amount: number) => {
@@ -111,6 +128,47 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
   };
 
   const { totalRevenue, totalQuotes, avgConversionRate } = calculateTotals();
+
+  const formatXAxisDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (selectedPeriod === "day") {
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    } else if (selectedPeriod === "week") {
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    } else if (selectedPeriod === "month") {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short' });
+    }
+  };
+
+  const formatTooltipDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (selectedPeriod === "day") {
+      return date.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+    }
+  };
+
+  const handleChartClick = (data: any, chartType: string) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const clickedDate = data.activePayload[0].payload.date;
+      setSelectedDate(clickedDate);
+      setSelectedChartType(chartType);
+    }
+  };
+
+  if (!manager) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

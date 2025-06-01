@@ -784,6 +784,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get sales manager quotes by date
+  app.get("/api/dashboard/sales-manager-quotes/:managerId", async (req, res) => {
+    try {
+      const managerId = parseInt(req.params.managerId);
+      const { date } = req.query;
+      
+      if (!date || typeof date !== 'string') {
+        return res.status(400).json({ error: "Date parameter is required" });
+      }
+      
+      const quotes = await storage.getSalesManagerQuotesByDate(managerId, date);
+      res.json(quotes);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // AI SQL Query Translation
   app.post("/api/ai/translate-query", async (req, res) => {
     try {
