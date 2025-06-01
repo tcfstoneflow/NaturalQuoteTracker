@@ -58,8 +58,10 @@ export default function Clients() {
     projectName: "",
     description: "",
     status: "pending",
-    lineItems: []
+    lineItems: [] as any[]
   });
+
+  const [quoteLineItems, setQuoteLineItems] = useState<any[]>([]);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -141,10 +143,19 @@ export default function Clients() {
 
   const createQuoteMutation = useMutation({
     mutationFn: async (quoteData: any) => {
+      const dataWithLineItems = {
+        ...quoteData,
+        lineItems: quoteLineItems.map(item => ({
+          productId: parseInt(item.productId) || null,
+          quantity: item.quantity,
+          unitPrice: parseFloat(item.unitPrice) || 0,
+          notes: item.notes || null
+        }))
+      };
       const response = await fetch('/api/quotes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(quoteData),
+        body: JSON.stringify(dataWithLineItems),
       });
       if (!response.ok) throw new Error('Failed to create quote');
       return response.json();
@@ -160,6 +171,7 @@ export default function Clients() {
         status: "pending",
         lineItems: []
       });
+      setQuoteLineItems([]);
       toast({
         title: "Success",
         description: "Quote created successfully",
@@ -230,7 +242,29 @@ export default function Clients() {
       status: "pending",
       lineItems: []
     });
+    setQuoteLineItems([]);
     setIsNewQuoteModalOpen(true);
+  };
+
+  const handleAddLineItem = () => {
+    const newItem = {
+      id: Date.now(),
+      productId: "",
+      quantity: 1,
+      unitPrice: 0,
+      notes: ""
+    };
+    setQuoteLineItems(prev => [...prev, newItem]);
+  };
+
+  const handleUpdateLineItem = (itemId: number, field: string, value: any) => {
+    setQuoteLineItems(prev => prev.map(item => 
+      item.id === itemId ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const handleRemoveLineItem = (itemId: number) => {
+    setQuoteLineItems(prev => prev.filter(item => item.id !== itemId));
   };
 
   const handleCloseViewModal = () => {
@@ -952,6 +986,89 @@ export default function Clients() {
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
                   </select>
+                </div>
+
+                {/* Line Items */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <Label>Quote Items</Label>
+                    <Button
+                      type="button"
+                      onClick={handleAddLineItem}
+                      className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1"
+                    >
+                      Add Item
+                    </Button>
+                  </div>
+                  
+                  {quoteLineItems.length > 0 ? (
+                    <div className="space-y-3 max-h-40 overflow-y-auto border rounded-lg p-3">
+                      {quoteLineItems.map((item: any) => (
+                        <div key={item.id} className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <Label className="text-xs">Product</Label>
+                            <select
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              value={item.productId}
+                              onChange={(e) => handleUpdateLineItem(item.id, 'productId', e.target.value)}
+                            >
+                              <option value="">Select Product</option>
+                              {products?.map((product: any) => (
+                                <option key={product.id} value={product.id}>
+                                  {product.name} - {product.bundleId}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="w-20">
+                            <Label className="text-xs">Qty</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateLineItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
+                              className="text-sm h-8"
+                            />
+                          </div>
+                          <div className="w-24">
+                            <Label className="text-xs">Price</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.unitPrice}
+                              onChange={(e) => handleUpdateLineItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              className="text-sm h-8"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveLineItem(item.id)}
+                            className="text-red-600 hover:text-red-800 h-8 w-8 p-0"
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                      <p className="text-sm text-gray-500">No items added yet</p>
+                      <p className="text-xs text-gray-400">Click "Add Item" to get started</p>
+                    </div>
+                  )}
+                  
+                  {quoteLineItems.length > 0 && (
+                    <div className="flex justify-end mt-2">
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          Total: ${quoteLineItems.reduce((total, item) => total + (item.quantity * item.unitPrice), 0).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
