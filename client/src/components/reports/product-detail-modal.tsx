@@ -97,6 +97,28 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
     return labels[period];
   };
 
+  const formatXAxisDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (selectedPeriod === "day") {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } else if (selectedPeriod === "week" || selectedPeriod === "month") {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } else if (selectedPeriod === "year") {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+    return dateStr;
+  };
+
   if (!product) return null;
 
   // Calculate dynamic totals from performance data
@@ -233,6 +255,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                         angle={-45}
                         textAnchor="end"
                         height={60}
+                        tickFormatter={formatXAxisDate}
                       />
                       <YAxis tick={{ fontSize: 12 }} />
                       <Tooltip 
@@ -269,6 +292,7 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                         angle={-45}
                         textAnchor="end"
                         height={60}
+                        tickFormatter={formatXAxisDate}
                       />
                       <YAxis tick={{ fontSize: 12 }} />
                       <Tooltip 
