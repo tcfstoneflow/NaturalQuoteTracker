@@ -90,10 +90,21 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
       };
     }
 
-    const totalRevenue = performanceData.reduce((sum, item) => sum + (item.revenue || 0), 0);
-    const totalQuotes = performanceData.reduce((sum, item) => sum + (item.quotes || 0), 0);
+    const totalRevenue = performanceData.reduce((sum, item) => {
+      const revenue = typeof item.revenue === 'string' ? parseFloat(item.revenue) : item.revenue;
+      return sum + (revenue || 0);
+    }, 0);
+    
+    const totalQuotes = performanceData.reduce((sum, item) => {
+      const quotes = typeof item.quotes === 'string' ? parseInt(item.quotes) : item.quotes;
+      return sum + (quotes || 0);
+    }, 0);
+    
     const avgConversionRate = performanceData.length > 0 
-      ? performanceData.reduce((sum, item) => sum + (item.conversionRate || 0), 0) / performanceData.length
+      ? performanceData.reduce((sum, item) => {
+          const rate = typeof item.conversionRate === 'string' ? parseFloat(item.conversionRate) : item.conversionRate;
+          return sum + (rate || 0);
+        }, 0) / performanceData.length
       : 0;
 
     return { totalRevenue, totalQuotes, avgConversionRate };
