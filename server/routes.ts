@@ -8,6 +8,7 @@ import { sendQuoteEmail } from "./email";
 import { login, register, logout, getCurrentUser, requireAuth, requireRole, requireInventoryAccess, requirePricingAccess } from "./auth";
 import { analyzeClientPurchases } from "./client-analysis";
 import { processSlabUpload } from "./ai-rendering";
+import { generatePythonCountertopRender, uploadRenderingAsset } from "./python-rendering";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form - place at top to avoid conflicts
@@ -461,6 +462,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: 'AI render generation started in background' });
     } catch (error) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Python-based render generation for existing products
+  app.post("/api/products/:id/generate-python-render", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const product = await storage.getProduct(id);
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      if (!product.imageUrl) {
+        return res.status(400).json({ error: 'Product must have an image to generate Python render' });
+      }
+      
+      // Generate Python-based render
+      const renderUrl = await generatePythonCountertopRender({
+        productId: id,
+        slabImageUrl: product.imageUrl,
+        productName: product.name
+      });
+      
+      if (renderUrl) {
+        res.json({ renderUrl, message: 'Python render generated successfully' });
+      } else {
+        res.status(500).json({ error: 'Failed to generate Python render' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   });
 
