@@ -62,6 +62,7 @@ export default function Clients() {
   });
 
   const [quoteLineItems, setQuoteLineItems] = useState<any[]>([]);
+  const [productSearchTerms, setProductSearchTerms] = useState<{[key: number]: string}>({});
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -250,11 +251,13 @@ export default function Clients() {
     const newItem = {
       id: Date.now(),
       productId: "",
+      productName: "",
       quantity: 1,
       unitPrice: 0,
       notes: ""
     };
     setQuoteLineItems(prev => [...prev, newItem]);
+    setProductSearchTerms(prev => ({ ...prev, [newItem.id]: "" }));
   };
 
   const handleUpdateLineItem = (itemId: number, field: string, value: any) => {
@@ -265,6 +268,29 @@ export default function Clients() {
 
   const handleRemoveLineItem = (itemId: number) => {
     setQuoteLineItems(prev => prev.filter(item => item.id !== itemId));
+    setProductSearchTerms(prev => {
+      const newTerms = { ...prev };
+      delete newTerms[itemId];
+      return newTerms;
+    });
+  };
+
+  const handleProductSearch = (itemId: number, searchTerm: string) => {
+    setProductSearchTerms(prev => ({ ...prev, [itemId]: searchTerm }));
+  };
+
+  const handleSelectProduct = (itemId: number, product: any) => {
+    handleUpdateLineItem(itemId, 'productId', product.id);
+    handleUpdateLineItem(itemId, 'productName', `${product.name} - ${product.bundleId}`);
+    setProductSearchTerms(prev => ({ ...prev, [itemId]: `${product.name} - ${product.bundleId}` }));
+  };
+
+  const getFilteredProducts = (searchTerm: string) => {
+    if (!searchTerm || !products) return [];
+    return products.filter((product: any) => 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.bundleId.toLowerCase().includes(searchTerm.toLowerCase())
+    ).slice(0, 10); // Limit to 10 results
   };
 
   const handleCloseViewModal = () => {
@@ -1005,20 +1031,29 @@ export default function Clients() {
                     <div className="space-y-3 max-h-40 overflow-y-auto border rounded-lg p-3">
                       {quoteLineItems.map((item: any) => (
                         <div key={item.id} className="flex gap-2 items-end">
-                          <div className="flex-1">
+                          <div className="flex-1 relative">
                             <Label className="text-xs">Product</Label>
-                            <select
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                              value={item.productId}
-                              onChange={(e) => handleUpdateLineItem(item.id, 'productId', e.target.value)}
-                            >
-                              <option value="">Select Product</option>
-                              {products?.map((product: any) => (
-                                <option key={product.id} value={product.id}>
-                                  {product.name} - {product.bundleId}
-                                </option>
-                              ))}
-                            </select>
+                            <Input
+                              type="text"
+                              placeholder="Search products..."
+                              value={productSearchTerms[item.id] || ""}
+                              onChange={(e) => handleProductSearch(item.id, e.target.value)}
+                              className="text-sm h-8"
+                            />
+                            {productSearchTerms[item.id] && getFilteredProducts(productSearchTerms[item.id]).length > 0 && (
+                              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto mt-1">
+                                {getFilteredProducts(productSearchTerms[item.id]).map((product: any) => (
+                                  <div
+                                    key={product.id}
+                                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                    onClick={() => handleSelectProduct(item.id, product)}
+                                  >
+                                    <div className="font-medium">{product.name}</div>
+                                    <div className="text-gray-500 text-xs">{product.bundleId}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <div className="w-20">
                             <Label className="text-xs">Qty</Label>
