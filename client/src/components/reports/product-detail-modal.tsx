@@ -372,10 +372,9 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </div>
 
-            {selectedDate && (
-              <div className="mt-6">
+              {selectedDate && (
+                <div className="mt-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -449,8 +448,9 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                     )}
                   </CardContent>
                 </Card>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </DialogContent>
