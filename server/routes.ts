@@ -1173,6 +1173,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Top selling products by time period
+  app.get("/api/dashboard/top-selling-products", async (req, res) => {
+    try {
+      const { period = 'month' } = req.query;
+      
+      // Calculate date range based on period
+      const now = new Date();
+      let startDate = new Date();
+      
+      switch (period) {
+        case 'day':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setMonth(now.getMonth() - 1);
+      }
+      
+      const topProducts = await storage.getTopSellingProducts(startDate, now);
+      res.json(topProducts);
+    } catch (error: any) {
+      console.error("Top selling products error:", error);
+      res.status(500).json({ error: "Failed to fetch top selling products" });
+    }
+  });
+
 
 
   // Generate barcodes for existing slabs

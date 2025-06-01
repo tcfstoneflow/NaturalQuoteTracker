@@ -445,6 +445,40 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
+  async getTopSellingProducts(startDate: Date, endDate: Date, limit: number = 5): Promise<any[]> {
+    try {
+      const result = await db
+        .select({
+          productId: quoteLineItems.productId,
+          productName: products.name,
+          bundleId: products.bundleId,
+          category: products.category,
+          imageUrl: products.imageUrl,
+          totalQuantitySold: sql<number>`SUM(CAST(${quoteLineItems.quantity} AS DECIMAL))`,
+          totalRevenue: sql<number>`SUM(CAST(${quoteLineItems.totalPrice} AS DECIMAL))`,
+          numberOfSales: sql<number>`COUNT(${quoteLineItems.id})`
+        })
+        .from(quoteLineItems)
+        .innerJoin(quotes, eq(quoteLineItems.quoteId, quotes.id))
+        .innerJoin(products, eq(quoteLineItems.productId, products.id))
+        .where(
+          and(
+            eq(quotes.status, 'approved'),
+            gte(quotes.createdAt, startDate),
+            lte(quotes.createdAt, endDate)
+          )
+        )
+        .groupBy(quoteLineItems.productId, products.name, products.bundleId, products.category, products.imageUrl)
+        .orderBy(sql`SUM(CAST(${quoteLineItems.totalPrice} AS DECIMAL)) DESC`)
+        .limit(limit);
+
+      return result;
+    } catch (error) {
+      console.error('Error getting top selling products:', error);
+      return [];
+    }
+  }
+
   async getLowStockProducts(): Promise<Product[]> {
     return await db
       .select()
