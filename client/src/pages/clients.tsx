@@ -947,10 +947,21 @@ export default function Clients() {
                           </table>
                         </div>
                         <div className="flex justify-end">
-                          <div className="text-right">
-                            <p className="text-lg font-semibold">
-                              Total: ${parseFloat(viewingQuote.subtotal || 0).toLocaleString()}
-                            </p>
+                          <div className="text-right space-y-2 bg-gray-50 p-4 rounded-lg min-w-[250px]">
+                            <div className="flex justify-between text-sm">
+                              <span>Subtotal:</span>
+                              <span>${parseFloat(viewingQuote.subtotal || 0).toLocaleString()}</span>
+                            </div>
+                            {viewingQuote.taxAmount && parseFloat(viewingQuote.taxAmount) > 0 && (
+                              <div className="flex justify-between text-sm">
+                                <span>Tax ({parseFloat(viewingQuote.taxRate || 0) * 100}%):</span>
+                                <span>${parseFloat(viewingQuote.taxAmount).toLocaleString()}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-lg font-semibold border-t pt-2">
+                              <span>Total:</span>
+                              <span>${parseFloat(viewingQuote.totalAmount || viewingQuote.subtotal || 0).toLocaleString()}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
