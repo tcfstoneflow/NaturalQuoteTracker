@@ -809,10 +809,47 @@ export default function Inventory() {
                   ))}
                   
                   {galleryImages.length === 0 && (
-                    <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <div 
+                      className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                      onClick={() => setGalleryImages([...galleryImages, { 
+                        url: '', 
+                        title: '', 
+                        description: '', 
+                        installationType: 'kitchen', 
+                        isAiGenerated: false 
+                      }])}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const files = Array.from(e.dataTransfer.files);
+                        files.forEach((file) => {
+                          if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                              const result = e.target?.result as string;
+                              setGalleryImages(prev => [...prev, {
+                                url: result,
+                                title: `Gallery Image ${prev.length + 1}`,
+                                description: '',
+                                installationType: 'kitchen',
+                                isAiGenerated: false
+                              }]);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        });
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                      }}
+                    >
                       <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                       <p className="text-gray-500">No gallery images added yet</p>
-                      <p className="text-sm text-gray-400">Click "Add Gallery Image" to showcase this stone in real installations</p>
+                      <p className="text-sm text-gray-400">Click here or drag & drop images to showcase this stone in real installations</p>
                     </div>
                   )}
                 </div>
