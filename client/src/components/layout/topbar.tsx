@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Search, Bell, Plus, LogOut, User } from "lucide-react";
+import { Search, Bell, Plus, LogOut, User, Settings } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Link } from "wouter";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -159,16 +160,16 @@ export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
                   {user?.user?.role === 'admin' ? 'Admin' : 'Sales Rep'}
                 </span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => logoutMutation.mutate()}
-                disabled={logoutMutation.isPending}
-                className="text-secondary-custom hover:text-error-red"
-              >
-                <LogOut size={16} className="mr-1" />
-                {logoutMutation.isPending ? "Signing out..." : "Logout"}
-              </Button>
+              <Link href="/settings">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-secondary-custom hover:text-primary"
+                >
+                  <Settings size={16} className="mr-1" />
+                  Settings
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
