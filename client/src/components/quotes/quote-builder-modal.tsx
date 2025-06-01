@@ -43,6 +43,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [additionalMessage, setAdditionalMessage] = useState("");
+  const [ccProcessingFee, setCcProcessingFee] = useState(false);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -83,6 +84,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         setProjectName("");
         setNotes("");
         setLineItems([]);
+        setCcProcessingFee(false);
         const defaultDate = new Date();
         defaultDate.setDate(defaultDate.getDate() + 30);
         setValidUntil(defaultDate.toISOString().split('T')[0]);
@@ -195,12 +197,14 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
 
   const calculateTotals = () => {
     const subtotal = lineItems.reduce((sum, item) => sum + parseFloat(item.totalPrice || "0"), 0);
+    const processingFee = ccProcessingFee ? subtotal * 0.035 : 0;
     const taxRate = 0.085; // 8.5%
     const taxAmount = subtotal * taxRate;
-    const total = subtotal + taxAmount;
+    const total = subtotal + processingFee + taxAmount;
 
     return {
       subtotal: subtotal.toFixed(2),
+      processingFee: processingFee.toFixed(2),
       taxRate: taxRate.toFixed(4),
       taxAmount: taxAmount.toFixed(2),
       total: total.toFixed(2),
@@ -275,6 +279,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     setNotes("");
     setLineItems([]);
     setAdditionalMessage("");
+    setCcProcessingFee(false);
     onClose();
   };
 
@@ -399,6 +404,27 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
             ))}
           </div>
 
+          {/* Credit Card Processing Fee Toggle */}
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="ccProcessingFee"
+                checked={ccProcessingFee}
+                onChange={(e) => setCcProcessingFee(e.target.checked)}
+                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <Label htmlFor="ccProcessingFee" className="text-sm font-medium cursor-pointer">
+                Credit Card Processing Fee (3.5%)
+              </Label>
+            </div>
+            {ccProcessingFee && (
+              <span className="text-sm text-gray-600">
+                +${totals.processingFee}
+              </span>
+            )}
+          </div>
+
           {/* Quote Summary */}
           <Card className="bg-neutral-50-custom">
             <CardContent className="pt-4">
@@ -407,6 +433,12 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
                   <span>Subtotal:</span>
                   <span>${totals.subtotal}</span>
                 </div>
+                {ccProcessingFee && (
+                  <div className="flex justify-between text-secondary-custom">
+                    <span>Processing Fee (3.5%):</span>
+                    <span>${totals.processingFee}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-secondary-custom">
                   <span>Tax (8.5%):</span>
                   <span>${totals.taxAmount}</span>
