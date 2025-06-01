@@ -106,7 +106,30 @@ export default function Inventory() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (newProduct) => {
+      // Handle gallery images separately for new products
+      if (galleryImages.length > 0) {
+        for (const image of galleryImages) {
+          if (image.url && image.url.startsWith('data:')) {
+            try {
+              await fetch(`/api/products/${newProduct.id}/gallery`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  url: image.url,
+                  title: image.title || 'Gallery Image',
+                  description: image.description || null,
+                  installationType: image.installationType || 'general',
+                  isAiGenerated: image.isAiGenerated || false
+                })
+              });
+            } catch (error) {
+              console.error('Failed to save gallery image:', error);
+            }
+          }
+        }
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({ title: "Bundle created successfully" });
       handleCloseModal();
@@ -131,8 +154,32 @@ export default function Inventory() {
       if (!response.ok) throw new Error("Failed to update bundle");
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (updatedProduct) => {
+      // Handle gallery images separately
+      if (galleryImages.length > 0) {
+        for (const image of galleryImages) {
+          if (image.url && image.url.startsWith('data:')) {
+            try {
+              await fetch(`/api/products/${updatedProduct.id}/gallery`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  url: image.url,
+                  title: image.title || 'Gallery Image',
+                  description: image.description || null,
+                  installationType: image.installationType || 'general',
+                  isAiGenerated: image.isAiGenerated || false
+                })
+              });
+            } catch (error) {
+              console.error('Failed to save gallery image:', error);
+            }
+          }
+        }
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/public/products/${updatedProduct.id}/gallery`] });
       toast({ title: "Bundle updated successfully" });
       handleCloseModal();
     },
@@ -192,7 +239,7 @@ export default function Inventory() {
     }
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     setFormData({
       bundleId: product.bundleId,
@@ -211,8 +258,25 @@ export default function Inventory() {
       imageUrl: product.imageUrl || ""
     });
     
-    // Reset gallery images for now - will be populated from API later
-    setGalleryImages([]);
+    // Load existing gallery images
+    try {
+      const response = await fetch(`/api/public/products/${product.id}/gallery`);
+      if (response.ok) {
+        const existingImages = await response.json();
+        setGalleryImages(existingImages.map((img: any) => ({
+          url: img.imageUrl,
+          title: img.title || '',
+          description: img.description || '',
+          installationType: img.installationType || 'general',
+          isAiGenerated: img.isAiGenerated || false
+        })));
+      } else {
+        setGalleryImages([]);
+      }
+    } catch (error) {
+      console.error('Failed to load gallery images:', error);
+      setGalleryImages([]);
+    }
     
     setIsOpen(true);
   };
