@@ -466,7 +466,7 @@ export default function Clients() {
                       onClick={() => {
                         setLocation(`/quotes?client=${viewingClient.id}`);
                       }}
-                      className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2"
+                      className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2 ml-[25px] mr-[25px] mt-[5px] mb-[5px]"
                     >
                       <span className="text-lg">+</span>
                       New Quote
