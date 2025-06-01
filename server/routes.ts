@@ -9,6 +9,9 @@ import { login, register, logout, getCurrentUser, requireAuth, requireRole, requ
 import { analyzeClientPurchases } from "./client-analysis";
 import { processSlabUpload } from "./ai-rendering";
 import { generatePythonCountertopRender, uploadRenderingAsset } from "./python-rendering";
+import fs from "fs";
+import path from "path";
+import multer from "multer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form - place at top to avoid conflicts
@@ -1424,12 +1427,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Avatar upload endpoint
   app.post("/api/upload/avatar", requireAuth, async (req: any, res) => {
     try {
-      const fs = require('fs');
-      const path = require('path');
-      const multer = require('multer');
-      
       // Set up multer for file upload
-      const storage = multer.diskStorage({
+      const uploadStorage = multer.diskStorage({
         destination: (req: any, file: any, cb: any) => {
           const uploadDir = './upload/avatars';
           if (!fs.existsSync(uploadDir)) {
@@ -1444,7 +1443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const upload = multer({ 
-        storage,
+        storage: uploadStorage,
         limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
         fileFilter: (req: any, file: any, cb: any) => {
           if (file.mimetype.startsWith('image/')) {
