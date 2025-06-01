@@ -1329,6 +1329,15 @@ export default function Clients() {
                         )}
                       </TableCell>
                       <TableCell>
+                        {client.salesManager ? (
+                          <span className="text-sm">
+                            {client.salesManager.firstName} {client.salesManager.lastName}
+                          </span>
+                        ) : (
+                          <span className="text-secondary-custom">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex space-x-2">
                           <Button
                             variant="ghost"
