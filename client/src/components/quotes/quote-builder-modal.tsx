@@ -78,6 +78,9 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
           product: item.product
         })) || [];
         setLineItems(existingLineItems);
+        
+        // Set processing fee checkbox based on existing quote data
+        setCcProcessingFee(editQuote.processingFee && parseFloat(editQuote.processingFee) > 0);
       } else {
         // Reset form for new quote
         setClientId("");
@@ -114,8 +117,9 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
 
   const updateQuoteMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) => quotesApi.update(id, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/recent-quotes'] });
       toast({
         title: "Quote Updated",

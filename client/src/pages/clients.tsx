@@ -188,6 +188,7 @@ export default function Clients() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
       setIsNewQuoteModalOpen(false);
       setQuoteFormData({
         clientId: "",
