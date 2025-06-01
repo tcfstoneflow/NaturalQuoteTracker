@@ -756,15 +756,27 @@ export default function Inventory() {
                       {image.url && !image.url.startsWith('data:') ? (
                         <div>
                           <Label>Current Image</Label>
-                          <img 
-                            src={image.url} 
-                            alt={image.title || `Gallery Image ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-md mt-2 border"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                            }}
-                          />
+                          <div className="relative">
+                            <img 
+                              src={image.url} 
+                              alt={image.title || `Gallery Image ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-md mt-2 border"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `
+                                    <div class="w-full h-32 bg-gray-100 border border-gray-300 rounded-md mt-2 flex items-center justify-center">
+                                      <div class="text-center text-gray-500">
+                                        <p class="text-sm">Image no longer available</p>
+                                        <p class="text-xs">${image.title || 'Gallery image'}</p>
+                                      </div>
+                                    </div>
+                                  `;
+                                }
+                              }}
+                            />
+                          </div>
                           <Button
                             type="button"
                             variant="outline"

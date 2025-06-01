@@ -558,6 +558,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clean up expired gallery images
+  app.post("/api/gallery/cleanup-expired", requireAuth, async (req, res) => {
+    try {
+      const { cleanupExpiredGalleryImages } = await import("./cleanup-expired-images");
+      await cleanupExpiredGalleryImages();
+      res.json({ message: "Expired images cleaned up successfully" });
+    } catch (error: any) {
+      console.error("Cleanup error:", error);
+      res.status(500).json({ error: "Failed to cleanup expired images" });
+    }
+  });
+
   // Quotes
   app.get("/api/quotes", async (req, res) => {
     try {
