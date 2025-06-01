@@ -1278,6 +1278,7 @@ export default function Clients() {
                     <TableHead>Contact</TableHead>
                     <TableHead>Company</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead>Sales Manager</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>

@@ -48,6 +48,7 @@ export const clients = pgTable("clients", {
   state: text("state"),
   zipCode: text("zip_code"),
   notes: text("notes"),
+  salesManagerId: integer("sales_manager_id").references(() => users.id),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -159,8 +160,16 @@ export const productGalleryImages = pgTable("product_gallery_images", {
 });
 
 // Relations
-export const clientsRelations = relations(clients, ({ many }) => ({
+export const clientsRelations = relations(clients, ({ one, many }) => ({
   quotes: many(quotes),
+  salesManager: one(users, {
+    fields: [clients.salesManagerId],
+    references: [users.id],
+  }),
+  createdByUser: one(users, {
+    fields: [clients.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const quotesRelations = relations(quotes, ({ one, many }) => ({
