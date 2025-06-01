@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import TopBar from "@/components/layout/topbar";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +79,11 @@ export default function Quotes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [location] = useLocation();
+
+  // Get URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const highlightId = urlParams.get('highlight');
 
   // Check if user has permission for a specific action based on role templates
   const hasPermission = (module: string, action: string) => {
@@ -144,6 +150,20 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     queryKey: ['/api/users'],
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
+
+  // Handle URL parameters to auto-open specific quotes
+  useEffect(() => {
+    if (highlightId && quotes) {
+      const quoteToHighlight = quotes.find((q: any) => q.id === parseInt(highlightId));
+      if (quoteToHighlight) {
+        setSelectedQuote(quoteToHighlight);
+        setIsViewModalOpen(true);
+        // Clear the URL parameter after opening
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [highlightId, quotes]);
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) => 
