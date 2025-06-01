@@ -44,6 +44,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [additionalMessage, setAdditionalMessage] = useState("");
   const [ccProcessingFee, setCcProcessingFee] = useState(false);
+  const [salesRepId, setSalesRepId] = useState("");
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -57,6 +58,11 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: productsApi.getAll,
+  });
+
+  const { data: users } = useQuery({
+    queryKey: ['/api/users'],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Set default valid until date (30 days from now) or populate with edit data
@@ -81,6 +87,9 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         
         // Set processing fee checkbox based on existing quote data
         setCcProcessingFee(editQuote.processingFee && parseFloat(editQuote.processingFee) > 0);
+        
+        // Set sales rep assignment
+        setSalesRepId(editQuote.salesRepId?.toString() || "");
       } else {
         // Reset form for new quote
         setClientId("");
@@ -88,6 +97,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         setNotes("");
         setLineItems([]);
         setCcProcessingFee(false);
+        setSalesRepId("");
         const defaultDate = new Date();
         defaultDate.setDate(defaultDate.getDate() + 30);
         setValidUntil(defaultDate.toISOString().split('T')[0]);
@@ -336,6 +346,23 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="salesRep">Assigned Sales Rep</Label>
+            <Select value={salesRepId} onValueChange={setSalesRepId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select sales representative..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No assignment</SelectItem>
+                {users?.filter((u: any) => u.role === 'sales_rep' || u.role === 'admin').map((user: any) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.username} ({user.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Line Items */}

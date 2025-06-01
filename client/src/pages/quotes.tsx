@@ -168,7 +168,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
   const updateSalesRepMutation = useMutation({
     mutationFn: ({ id, salesRepId }: { id: number; salesRepId: number | null }) => 
       quotesApi.update(id, { salesRepId }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
       toast({
         title: "Success",
@@ -176,7 +176,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
       });
       // Update the selected quote to reflect the change
       if (selectedQuote) {
-        setSelectedQuote({ ...selectedQuote, salesRepId: selectedQuote.salesRepId });
+        setSelectedQuote({ ...selectedQuote, salesRepId: variables.salesRepId });
       }
     },
     onError: (error: any) => {
