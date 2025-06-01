@@ -80,22 +80,31 @@ export async function generatePythonCountertopRender(request: PythonRenderReques
  */
 async function downloadImage(imageUrl: string, filename: string): Promise<string | null> {
   try {
-    // If it's already a local file path, just return it
+    const tempPath = path.join(process.cwd(), 'upload', filename);
+    
+    // Ensure upload directory exists
+    await fs.mkdir(path.dirname(tempPath), { recursive: true });
+
+    // Handle base64 data URLs
+    if (imageUrl.startsWith('data:')) {
+      const base64Data = imageUrl.split(',')[1];
+      const buffer = Buffer.from(base64Data, 'base64');
+      await fs.writeFile(tempPath, buffer);
+      return tempPath;
+    }
+    
+    // Handle regular file paths
     if (!imageUrl.startsWith('http')) {
       return imageUrl;
     }
 
+    // Handle HTTP URLs
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
 
     const buffer = await response.arrayBuffer();
-    const tempPath = path.join(process.cwd(), 'upload', filename);
-    
-    // Ensure upload directory exists
-    await fs.mkdir(path.dirname(tempPath), { recursive: true });
-    
     await fs.writeFile(tempPath, Buffer.from(buffer));
     return tempPath;
     
