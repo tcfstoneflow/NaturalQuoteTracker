@@ -44,13 +44,22 @@ export default function ShowroomVisits() {
   const [selectedVisit, setSelectedVisit] = useState<ShowroomVisit | null>(null);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("");
-  const [assignedSalesMember, setAssignedSalesMember] = useState("");
+  const [assignedToUserId, setAssignedToUserId] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: visits = [], isLoading } = useQuery({
     queryKey: ["/api/showroom-visits"],
   });
+
+  // Fetch sales managers for the dropdown
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+  });
+
+  const salesManagers = users.filter((user: any) => 
+    user.role === 'sales_manager' || user.role === 'admin'
+  );
 
   const updateVisitMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
@@ -87,7 +96,7 @@ export default function ShowroomVisits() {
       updates: {
         status: status || selectedVisit.status,
         notes: notes || selectedVisit.notes,
-        assignedSalesMember: assignedSalesMember || selectedVisit.assignedSalesMember,
+        assignedToUserId: assignedToUserId ? parseInt(assignedToUserId) : null,
       },
     });
   };
@@ -96,7 +105,7 @@ export default function ShowroomVisits() {
     setSelectedVisit(visit);
     setStatus(visit.status);
     setNotes(visit.notes || "");
-    setAssignedSalesMember(visit.assignedSalesMember || "");
+    setAssignedToUserId(visit.assignedToUserId?.toString() || "");
   };
 
   if (isLoading) {
@@ -238,12 +247,20 @@ export default function ShowroomVisits() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Assign Sales member</label>
-                      <Input
-                        value={assignedSalesMember}
-                        onChange={(e) => setAssignedSalesMember(e.target.value)}
-                        placeholder="Enter sales member name..."
-                      />
+                      <label className="text-sm font-medium">Assign Sales Member</label>
+                      <Select value={assignedToUserId} onValueChange={setAssignedToUserId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a sales manager..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No assignment</SelectItem>
+                          {salesManagers.map((manager: any) => (
+                            <SelectItem key={manager.id} value={manager.id.toString()}>
+                              {manager.firstName} {manager.lastName} ({manager.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Notes</label>
