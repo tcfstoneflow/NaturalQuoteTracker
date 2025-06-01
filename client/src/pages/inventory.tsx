@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -636,6 +636,47 @@ export default function Inventory() {
                       onChange={(value) => setFormData({ ...formData, imageUrl: value })}
                       className="mt-2"
                     />
+                    {editingProduct && formData.imageUrl && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`/api/products/${editingProduct.id}/generate-render`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                            });
+                            
+                            if (response.ok) {
+                              toast({
+                                title: "AI Render Started",
+                                description: "Generating kitchen countertop render in background. Check gallery in a few moments.",
+                              });
+                            } else {
+                              const error = await response.json();
+                              toast({
+                                title: "AI Render Failed",
+                                description: error.error || "Failed to start AI render generation",
+                                variant: "destructive",
+                              });
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "AI Render Failed",
+                              description: "Failed to start AI render generation",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Generate AI Kitchen Render
+                      </Button>
+                    )}
                   </div>
                 </div>
 

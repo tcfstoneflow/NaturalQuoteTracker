@@ -32,7 +32,7 @@ export async function generateCountertopRender(request: RenderRequest): Promise<
       style: "natural"
     });
 
-    const generatedImageUrl = response.data[0]?.url;
+    const generatedImageUrl = response.data?.[0]?.url;
     
     if (generatedImageUrl) {
       // Save the generated render to the product gallery
