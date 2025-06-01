@@ -30,8 +30,36 @@ def slab_to_countertop_replacement(kitchen_path, slab_path, mask_path, output_pa
         slab = Image.open(slab_path).convert("RGBA")
         mask = Image.open(mask_path).convert("L")  # Grayscale mask
         
-        # Resize slab to match kitchen image dimensions
-        slab_resized = slab.resize(kitchen.size)
+        # Instead of stretching the slab, tile it to maintain natural texture scale
+        # Calculate how many times the slab pattern should repeat
+        slab_aspect = slab.width / slab.height
+        kitchen_aspect = kitchen.width / kitchen.height
+        
+        # Scale slab to maintain realistic proportions (assume slab is roughly 10 feet wide in real life)
+        # Kitchen counter is typically 2-3 feet deep, so scale accordingly
+        target_slab_width = min(kitchen.width // 2, slab.width)
+        target_slab_height = int(target_slab_width / slab_aspect)
+        
+        # Create a tiled version of the slab that covers the kitchen area
+        slab_scaled = slab.resize((target_slab_width, target_slab_height), Image.Resampling.LANCZOS)
+        
+        # Create a larger canvas by tiling the slab
+        tiles_x = (kitchen.width // target_slab_width) + 2
+        tiles_y = (kitchen.height // target_slab_height) + 2
+        
+        tiled_width = tiles_x * target_slab_width
+        tiled_height = tiles_y * target_slab_height
+        
+        slab_tiled = Image.new("RGBA", (tiled_width, tiled_height))
+        
+        for x in range(tiles_x):
+            for y in range(tiles_y):
+                slab_tiled.paste(slab_scaled, (x * target_slab_width, y * target_slab_height))
+        
+        # Crop to kitchen size (with some offset for natural variation)
+        crop_x = (tiled_width - kitchen.width) // 2
+        crop_y = (tiled_height - kitchen.height) // 2
+        slab_resized = slab_tiled.crop((crop_x, crop_y, crop_x + kitchen.width, crop_y + kitchen.height))
         
         # Resize mask to match kitchen image dimensions
         mask_resized = mask.resize(kitchen.size)
