@@ -1403,6 +1403,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Product quotes by date endpoint
+  app.get("/api/dashboard/product-quotes/:productId", async (req, res) => {
+    try {
+      const { productId } = req.params;
+      const { date } = req.query;
+      
+      if (!date) {
+        return res.status(400).json({ error: "Date parameter is required" });
+      }
+      
+      const quotes = await storage.getProductQuotesByDate(
+        parseInt(productId), 
+        date as string
+      );
+      res.json(quotes);
+    } catch (error: any) {
+      console.error("Product quotes by date error:", error);
+      res.status(500).json({ error: "Failed to fetch product quotes for date" });
+    }
+  });
+
   // Top clients by time period
   app.get("/api/dashboard/top-clients", async (req, res) => {
     try {

@@ -31,6 +31,9 @@ import {
   TrendingUp,
   ShoppingCart,
   BarChart3,
+  FileText,
+  User,
+  Clock,
 } from "lucide-react";
 
 interface Product {

@@ -112,6 +112,7 @@ export interface IStorage {
   
   // Reports
   getTopSellingProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
+  getProductQuotesByDate(productId: number, date: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1247,6 +1248,43 @@ export class DatabaseStorage implements IStorage {
   async deleteGalleryImage(id: number): Promise<boolean> {
     const result = await db.delete(productGalleryImages).where(eq(productGalleryImages.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async getProductQuotesByDate(productId: number, date: string): Promise<any[]> {
+    // Parse the date to get the start and end of the day
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const quotesWithDetails = await db
+      .select({
+        id: quotes.id,
+        quoteNumber: quotes.quoteNumber,
+        clientName: clients.name,
+        clientEmail: clients.email,
+        status: quotes.status,
+        total: quotes.total,
+        createdAt: quotes.createdAt,
+        validUntil: quotes.validUntil,
+        quantity: quoteLineItems.quantity,
+        unitPrice: quoteLineItems.unitPrice,
+        totalPrice: quoteLineItems.totalPrice
+      })
+      .from(quotes)
+      .innerJoin(clients, eq(quotes.clientId, clients.id))
+      .innerJoin(quoteLineItems, eq(quotes.id, quoteLineItems.quoteId))
+      .where(
+        and(
+          eq(quoteLineItems.productId, productId),
+          gte(quotes.createdAt, startOfDay),
+          lte(quotes.createdAt, endOfDay)
+        )
+      )
+      .orderBy(desc(quotes.createdAt));
+
+    return quotesWithDetails;
   }
 }
 
