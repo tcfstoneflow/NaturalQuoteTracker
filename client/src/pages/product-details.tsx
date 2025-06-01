@@ -209,7 +209,7 @@ export default function ProductDetails() {
                 <div 
                   key={image.id}
                   className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                  onClick={() => openLightbox(image.imageUrl, image.title)}
+                  onClick={() => openLightbox(image.imageUrl)}
                 >
                   <img 
                     src={image.imageUrl} 
