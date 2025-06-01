@@ -127,7 +127,7 @@ export default function Settings() {
       const formData = new FormData();
       formData.append("avatar", file);
       
-      const response = await fetch("/api/user/avatar", {
+      const response = await fetch("/api/upload/avatar", {
         method: "POST",
         body: formData,
       });
@@ -140,6 +140,7 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setSelectedFile(null);
       setPreviewUrl(null);
       toast({

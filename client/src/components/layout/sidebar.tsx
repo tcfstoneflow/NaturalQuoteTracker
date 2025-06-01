@@ -153,13 +153,21 @@ export default function Sidebar() {
       {/* User Profile */}
       <div className="p-4 border-t border-neutral-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-medium">
-              {user?.user?.firstName && user?.user?.lastName 
-                ? `${user.user.firstName.charAt(0)}${user.user.lastName.charAt(0)}`
-                : user?.user?.username?.charAt(0)?.toUpperCase() || 'U'
-              }
-            </span>
+          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+            {user?.user?.avatarUrl ? (
+              <img 
+                src={user.user.avatarUrl} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-white text-sm font-medium">
+                {user?.user?.firstName && user?.user?.lastName 
+                  ? `${user.user.firstName.charAt(0)}${user.user.lastName.charAt(0)}`
+                  : user?.user?.username?.charAt(0)?.toUpperCase() || 'U'
+                }
+              </span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-primary-custom truncate">
