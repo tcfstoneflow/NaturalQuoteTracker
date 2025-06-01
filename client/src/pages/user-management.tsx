@@ -1012,9 +1012,9 @@ export default function UserManagement() {
                   <TabsContent value="avatar" className="space-y-4">
                     <div className="flex flex-col items-center space-y-4">
                       <div className="relative">
-                        {selectedUser.profileImageUrl ? (
+                        {selectedUser.avatarUrl ? (
                           <img
-                            src={selectedUser.profileImageUrl}
+                            src={selectedUser.avatarUrl}
                             alt={`${selectedUser.firstName} ${selectedUser.lastName}`}
                             className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
                           />

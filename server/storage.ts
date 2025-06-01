@@ -270,7 +270,7 @@ export class DatabaseStorage implements IStorage {
   async updateUserAvatar(id: number, avatarUrl: string): Promise<User> {
     const [updatedUser] = await db
       .update(users)
-      .set({ profileImageUrl: avatarUrl })
+      .set({ avatarUrl: avatarUrl })
       .where(eq(users.id, id))
       .returning();
     
