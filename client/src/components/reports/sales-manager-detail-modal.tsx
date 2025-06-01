@@ -378,7 +378,8 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                           {quotesForDate.map((quote: any) => (
                             <div
                               key={quote.id}
-                              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer hover:border-blue-300"
+                              onClick={() => window.open(`/quotes?highlight=${quote.id}`, '_blank')}
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
