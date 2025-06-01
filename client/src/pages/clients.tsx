@@ -57,6 +57,7 @@ export default function Clients() {
     clientId: "",
     projectName: "",
     description: "",
+    validUntil: "",
     status: "pending",
     lineItems: [] as any[]
   });
@@ -145,19 +146,37 @@ export default function Clients() {
 
   const createQuoteMutation = useMutation({
     mutationFn: async (quoteData: any) => {
-      const dataWithLineItems = {
-        ...quoteData,
+      const subtotal = calculateSubtotal();
+      const processingFee = calculateProcessingFee(subtotal);
+      const taxRate = 0.085;
+      const taxAmount = subtotal * taxRate;
+      const total = subtotal + processingFee + taxAmount;
+
+      const formattedData = {
+        quote: {
+          clientId: parseInt(quoteData.clientId),
+          projectName: quoteData.projectName,
+          description: quoteData.description,
+          validUntil: quoteData.validUntil,
+          status: quoteData.status,
+          subtotal: subtotal.toFixed(2),
+          taxRate: taxRate.toFixed(4),
+          taxAmount: taxAmount.toFixed(2),
+          totalAmount: total.toFixed(2),
+          notes: quoteData.description
+        },
         lineItems: quoteLineItems.map(item => ({
           productId: parseInt(item.productId) || null,
           quantity: item.quantity,
           unitPrice: parseFloat(item.unitPrice) || 0,
-          notes: item.notes || null
+          totalPrice: (item.quantity * parseFloat(item.unitPrice) || 0).toFixed(2)
         }))
       };
+      
       const response = await fetch('/api/quotes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataWithLineItems),
+        body: JSON.stringify(formattedData),
       });
       if (!response.ok) throw new Error('Failed to create quote');
       return response.json();
@@ -170,6 +189,7 @@ export default function Clients() {
         clientId: "",
         projectName: "",
         description: "",
+        validUntil: "",
         status: "pending",
         lineItems: []
       });
@@ -237,10 +257,14 @@ export default function Clients() {
   };
 
   const handleOpenNewQuoteModal = (client: any) => {
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 30);
+    
     setQuoteFormData({
       clientId: client.id,
       projectName: "",
       description: "",
+      validUntil: defaultDate.toISOString().split('T')[0],
       status: "pending",
       lineItems: []
     });
@@ -1009,6 +1033,21 @@ export default function Clients() {
                       description: e.target.value
                     }))}
                     placeholder="Enter project description"
+                  />
+                </div>
+
+                {/* Valid Until */}
+                <div>
+                  <Label htmlFor="validUntil">Quote Valid Until *</Label>
+                  <Input
+                    id="validUntil"
+                    type="date"
+                    value={quoteFormData.validUntil || ""}
+                    onChange={(e) => setQuoteFormData(prev => ({
+                      ...prev,
+                      validUntil: e.target.value
+                    }))}
+                    required
                   />
                 </div>
 
