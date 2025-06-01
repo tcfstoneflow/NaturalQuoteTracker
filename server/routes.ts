@@ -5,7 +5,7 @@ import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuote
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";
-import { login, register, logout, getCurrentUser, requireAuth, requireRole, requireInventoryAccess, requirePricingAccess } from "./auth";
+import { login, register, logout, getCurrentUser, requireAuth, requireRole, requireInventoryAccess, requirePricingAccess, hashPassword, verifyPassword } from "./auth";
 import { analyzeClientPurchases } from "./client-analysis";
 import { processSlabUpload } from "./ai-rendering";
 import { generatePythonCountertopRender, uploadRenderingAsset } from "./python-rendering";
@@ -1391,14 +1391,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const isValidPassword = await verifyPassword(currentPassword, user.password);
+      const isValidPassword = await verifyPassword(currentPassword, user.passwordHash);
       if (!isValidPassword) {
         return res.status(400).json({ error: "Current password is incorrect" });
       }
 
       // Hash new password and update
       const hashedPassword = await hashPassword(newPassword);
-      await storage.updateUser(req.user!.id, { password: hashedPassword });
+      await storage.updatePassword(req.user!.id, hashedPassword);
 
       res.json({ message: "Password updated successfully" });
     } catch (error: any) {
