@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -653,12 +653,25 @@ export default function Inventory() {
                       onChange={(value) => setFormData({ ...formData, imageUrl: value })}
                       className="mt-2"
                     />
-                    {editingProduct && formData.imageUrl && (
+
+                  </div>
+                </div>
+
+                {/* Visualization Tools Section */}
+                {formData.imageUrl && (
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Visualization Tools
+                    </Label>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-3">
+                        Generate realistic countertop visualizations using this slab
+                      </p>
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
-                        className="mt-2"
+                        className="w-full"
                         onClick={async () => {
                           try {
                             const response = await fetch(`/api/products/${editingProduct.id}/generate-render`, {
@@ -691,11 +704,11 @@ export default function Inventory() {
                         }}
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
-                        Generate AI Kitchen Render
+                        Generate Kitchen Render
                       </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Gallery Images Section */}
                 <div className="space-y-4">
