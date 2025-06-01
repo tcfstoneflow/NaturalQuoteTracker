@@ -188,7 +188,7 @@ export default function Settings() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <Settings className="mx-auto h-8 w-8 animate-spin text-primary mb-4" size={32} />
+          <SettingsIcon className="mx-auto h-8 w-8 animate-spin text-primary mb-4" />
           <p>Loading settings...</p>
         </div>
       </div>
