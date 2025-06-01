@@ -63,6 +63,7 @@ export default function Clients() {
 
   const [quoteLineItems, setQuoteLineItems] = useState<any[]>([]);
   const [productSearchTerms, setProductSearchTerms] = useState<{[key: number]: string}>({});
+  const [ccProcessingFee, setCcProcessingFee] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -244,6 +245,7 @@ export default function Clients() {
       lineItems: []
     });
     setQuoteLineItems([]);
+    setCcProcessingFee(false);
     setIsNewQuoteModalOpen(true);
   };
 
@@ -291,6 +293,20 @@ export default function Clients() {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.bundleId.toLowerCase().includes(searchTerm.toLowerCase())
     ).slice(0, 10); // Limit to 10 results
+  };
+
+  const calculateSubtotal = () => {
+    return quoteLineItems.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
+  };
+
+  const calculateProcessingFee = (subtotal: number) => {
+    return ccProcessingFee ? subtotal * 0.035 : 0;
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const processingFee = calculateProcessingFee(subtotal);
+    return subtotal + processingFee;
   };
 
   const handleCloseViewModal = () => {
@@ -1096,11 +1112,44 @@ export default function Clients() {
                   )}
                   
                   {quoteLineItems.length > 0 && (
-                    <div className="flex justify-end mt-2">
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
-                          Total: ${quoteLineItems.reduce((total, item) => total + (item.quantity * item.unitPrice), 0).toFixed(2)}
-                        </p>
+                    <div className="mt-4 space-y-3">
+                      {/* Credit Card Processing Fee Toggle */}
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="ccProcessingFee"
+                            checked={ccProcessingFee}
+                            onChange={(e) => setCcProcessingFee(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                          />
+                          <Label htmlFor="ccProcessingFee" className="text-sm font-medium cursor-pointer">
+                            Credit Card Processing Fee (3.5%)
+                          </Label>
+                        </div>
+                        {ccProcessingFee && (
+                          <span className="text-sm text-gray-600">
+                            +${calculateProcessingFee(calculateSubtotal()).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Total Calculation */}
+                      <div className="border-t pt-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Subtotal:</span>
+                          <span>${calculateSubtotal().toFixed(2)}</span>
+                        </div>
+                        {ccProcessingFee && (
+                          <div className="flex justify-between text-sm text-gray-600">
+                            <span>Processing Fee (3.5%):</span>
+                            <span>${calculateProcessingFee(calculateSubtotal()).toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-lg font-semibold mt-2 pt-2 border-t">
+                          <span>Total:</span>
+                          <span>${calculateTotal().toFixed(2)}</span>
+                        </div>
                       </div>
                     </div>
                   )}
