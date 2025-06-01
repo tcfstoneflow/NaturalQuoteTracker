@@ -52,12 +52,12 @@ export default function ShowroomVisits() {
     queryKey: ["/api/showroom-visits"],
   });
 
-  // Fetch sales staff for the dropdown (managers, reps, and admins)
+  // Fetch sales managers for the dropdown (includes both managers and reps, all labeled as sales_manager)
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
   });
 
-  const salesStaff = users.filter((user: any) => 
+  const salesManagers = users.filter((user: any) => 
     user.role === 'sales_manager' || user.role === 'sales_rep' || user.role === 'admin'
   );
 
@@ -250,13 +250,13 @@ export default function ShowroomVisits() {
                       <label className="text-sm font-medium">Assign Sales Member</label>
                       <Select value={assignedToUserId} onValueChange={setAssignedToUserId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select sales staff..." />
+                          <SelectValue placeholder="Select sales manager..." />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No assignment</SelectItem>
-                          {salesStaff.map((staff: any) => (
-                            <SelectItem key={staff.id} value={staff.id.toString()}>
-                              {staff.firstName} {staff.lastName} ({staff.role})
+                          {salesManagers.map((manager: any) => (
+                            <SelectItem key={manager.id} value={manager.id.toString()}>
+                              {manager.firstName} {manager.lastName} ({manager.role === 'sales_rep' ? 'sales_manager' : manager.role})
                             </SelectItem>
                           ))}
                         </SelectContent>
