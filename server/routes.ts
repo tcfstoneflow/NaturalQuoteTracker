@@ -633,6 +633,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public Product Gallery Endpoint
+  app.get("/api/public/products/:id/gallery", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const galleryImages = await storage.getProductGalleryImages(id);
+      res.json(galleryImages);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch gallery images", details: error.message });
+    }
+  });
+
   // Slab Management Routes
   app.get("/api/slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {

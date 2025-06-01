@@ -1,5 +1,5 @@
 import { 
-  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits,
+  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -8,6 +8,7 @@ import {
   type Activity, type InsertActivity,
   type Slab, type InsertSlab, type ProductWithSlabs,
   type ShowroomVisit, type InsertShowroomVisit,
+  type ProductGalleryImage, type InsertProductGalleryImage,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -98,6 +99,9 @@ export interface IStorage {
   updateShowroomVisit(id: number, visit: Partial<InsertShowroomVisit>): Promise<ShowroomVisit>;
   deleteShowroomVisit(id: number): Promise<boolean>;
   getPendingShowroomVisits(): Promise<ShowroomVisit[]>;
+
+  // Product Gallery
+  getProductGalleryImages(productId: number): Promise<ProductGalleryImage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -827,6 +831,15 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(showroomVisits)
       .where(eq(showroomVisits.status, "pending"))
       .orderBy(desc(showroomVisits.createdAt));
+  }
+
+  async getProductGalleryImages(productId: number): Promise<ProductGalleryImage[]> {
+    return await db.select().from(productGalleryImages)
+      .where(and(
+        eq(productGalleryImages.productId, productId),
+        eq(productGalleryImages.isActive, true)
+      ))
+      .orderBy(asc(productGalleryImages.sortOrder));
   }
 }
 
