@@ -301,6 +301,12 @@ export default function Clients() {
     setIsNewQuoteModalOpen(true);
   };
 
+  const handleGenerateAISummary = (client: any) => {
+    setIsGeneratingAI(true);
+    setAiSummary("");
+    generateAISummaryMutation.mutate(client.id);
+  };
+
   const handleAddLineItem = () => {
     const newItem = {
       id: Date.now(),
@@ -730,6 +736,30 @@ export default function Clients() {
                     <div>
                       <h3 className="text-lg font-semibold text-primary-custom mb-2">Notes</h3>
                       <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{viewingClient.notes}</p>
+                    </div>
+                  )}
+
+                  {/* AI Summary Section */}
+                  {clientQuotes && clientQuotes.length > 0 && (
+                    <div className="border rounded-lg p-4 bg-blue-50">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-lg font-semibold text-primary-custom">AI Purchase Summary</h3>
+                        <Button 
+                          onClick={() => handleGenerateAISummary(viewingClient)}
+                          disabled={isGeneratingAI}
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                        >
+                          {isGeneratingAI ? 'Generating...' : 'Generate AI Summary'}
+                        </Button>
+                      </div>
+                      {aiSummary && (
+                        <div className="bg-white rounded p-3 border">
+                          <p className="text-sm text-gray-700">{aiSummary}</p>
+                        </div>
+                      )}
+                      {!aiSummary && !isGeneratingAI && (
+                        <p className="text-sm text-gray-600 italic">Click "Generate AI Summary" to analyze this client's purchase patterns and preferences.</p>
+                      )}
                     </div>
                   )}
 
