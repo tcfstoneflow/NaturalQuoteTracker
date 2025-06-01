@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -256,10 +263,15 @@ export default function Clients() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const submitData = {
+      ...formData,
+      salesManagerId: formData.salesManagerId ? parseInt(formData.salesManagerId) : null,
+    };
+    
     if (editingClient) {
-      updateMutation.mutate({ id: editingClient.id, data: formData });
+      updateMutation.mutate({ id: editingClient.id, data: submitData });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(submitData);
     }
   };
 
@@ -566,6 +578,25 @@ export default function Clients() {
                         value={formData.company}
                         onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       />
+                    </div>
+                    <div>
+                      <Label htmlFor="salesManagerId">Sales Manager</Label>
+                      <Select 
+                        value={formData.salesManagerId} 
+                        onValueChange={(value) => setFormData({ ...formData, salesManagerId: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a sales manager" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No Sales Manager</SelectItem>
+                          {salesManagers?.map((manager: any) => (
+                            <SelectItem key={manager.id} value={manager.id.toString()}>
+                              {manager.firstName} {manager.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="address">Address</Label>
