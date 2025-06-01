@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lightbox } from "@/components/ui/lightbox";
 
 export default function ProductDetails() {
@@ -30,6 +30,20 @@ export default function ProductDetails() {
     queryFn: () => fetch(`/api/public/products/${id}/gallery`).then(res => res.json()),
     enabled: !!id,
   });
+
+  // Set page title when product loads
+  useEffect(() => {
+    if (product?.name) {
+      document.title = `${product.name} - ${product.category} | TCF Supply`;
+    } else {
+      document.title = "Product Details | TCF Supply";
+    }
+    
+    // Cleanup: restore default title when component unmounts
+    return () => {
+      document.title = "TCF Supply";
+    };
+  }, [product]);
 
   // Fetch similar products (same category)
   const { data: allProducts = [] } = useQuery({
