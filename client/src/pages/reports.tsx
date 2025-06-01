@@ -8,6 +8,8 @@ import { TrendingUp, DollarSign, Users, Package, FileText, Calendar } from "luci
 import { Skeleton } from "@/components/ui/skeleton";
 import TopSellingProductsReport from "@/components/reports/top-selling-products-report";
 import SalesManagerPerformanceReport from "@/components/reports/sales-manager-performance-report";
+import TopClientsReport from "@/components/reports/top-clients-report";
+import InventoryCategoryReport from "@/components/reports/inventory-category-report";
 
 export default function Reports() {
 
@@ -210,91 +212,8 @@ export default function Reports() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Top Clients */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users size={20} />
-                <span>Top Clients by Revenue</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {metrics?.topClients.length > 0 ? (
-                <div className="space-y-4">
-                  {metrics.topClients.map((client: any, index: number) => (
-                    <div key={client.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium text-primary-custom">
-                            {client.company || client.name}
-                          </p>
-                          <p className="text-sm text-secondary-custom">
-                            {client.quoteCount} quote{client.quoteCount !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-primary-custom">
-                          ${client.totalSpent.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500">No client revenue data available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Inventory by Category */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Package size={20} />
-                <span>Inventory by Category</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {metrics?.categoryStats && Object.keys(metrics.categoryStats).length > 0 ? (
-                <div className="space-y-4">
-                  {Object.entries(metrics.categoryStats).map(([category, stats]: [string, any]) => (
-                    <div key={category} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-primary-custom capitalize">{category}</p>
-                        <p className="text-sm text-secondary-custom">
-                          {stats.count} product{stats.count !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-primary-custom">
-                          {stats.totalValue > 0 
-                            ? `$${stats.totalValue.toLocaleString()}`
-                            : `${stats.totalSlabs} slabs`}
-                        </p>
-                        <p className="text-sm text-secondary-custom">
-                          {stats.totalValue > 0 
-                            ? `${stats.totalSlabs} slabs • ${stats.totalSquareFeet.toFixed(0)} sq ft`
-                            : 'dimensions needed for value'}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500">No inventory data available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TopClientsReport />
+          <InventoryCategoryReport />
         </div>
 
         {/* Advanced Reports Section */}

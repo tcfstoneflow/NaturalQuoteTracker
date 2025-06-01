@@ -1241,6 +1241,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Top clients by time period
+  app.get("/api/dashboard/top-clients", async (req, res) => {
+    try {
+      const { period = 'month' } = req.query;
+      
+      // Calculate date range based on period
+      const now = new Date();
+      let startDate = new Date();
+      
+      switch (period) {
+        case 'day':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setMonth(now.getMonth() - 1);
+      }
+      
+      const topClients = await storage.getTopClients(startDate, now);
+      res.json(topClients);
+    } catch (error: any) {
+      console.error("Top clients error:", error);
+      res.status(500).json({ error: "Failed to fetch top clients" });
+    }
+  });
+
+  // Inventory by category
+  app.get("/api/dashboard/inventory-by-category", async (req, res) => {
+    try {
+      const { period = 'month' } = req.query;
+      
+      // Calculate date range based on period
+      const now = new Date();
+      let startDate = new Date();
+      
+      switch (period) {
+        case 'day':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setMonth(now.getMonth() - 1);
+      }
+      
+      const inventoryByCategory = await storage.getInventoryByCategory(startDate, now);
+      res.json(inventoryByCategory);
+    } catch (error: any) {
+      console.error("Inventory by category error:", error);
+      res.status(500).json({ error: "Failed to fetch inventory by category" });
+    }
+  });
+
 
 
   // Generate barcodes for existing slabs

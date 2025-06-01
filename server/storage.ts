@@ -530,6 +530,72 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getTopClients(startDate: Date, endDate: Date, limit: number = 10): Promise<any[]> {
+    try {
+      const result = await db
+        .select({
+          clientId: clients.id,
+          name: clients.name,
+          company: clients.company,
+          totalRevenue: sql<number>`COALESCE(SUM(
+            (SELECT SUM(CAST(qli.total_price AS DECIMAL)) 
+             FROM quote_line_items qli 
+             WHERE qli.quote_id = quotes.id)
+          ), 0)`,
+          quoteCount: sql<number>`COUNT(${quotes.id})`
+        })
+        .from(clients)
+        .leftJoin(quotes, and(
+          eq(quotes.clientId, clients.id),
+          eq(quotes.status, 'approved'),
+          gte(quotes.createdAt, startDate),
+          lte(quotes.createdAt, endDate)
+        ))
+        .groupBy(clients.id, clients.name, clients.company)
+        .having(sql`COUNT(${quotes.id}) > 0`)
+        .orderBy(sql`COALESCE(SUM(
+          (SELECT SUM(CAST(qli.total_price AS DECIMAL)) 
+           FROM quote_line_items qli 
+           WHERE qli.quote_id = quotes.id)
+        ), 0) DESC`)
+        .limit(limit);
+
+      return result;
+    } catch (error) {
+      console.error('Error getting top clients:', error);
+      return [];
+    }
+  }
+
+  async getInventoryByCategory(startDate: Date, endDate: Date): Promise<any[]> {
+    try {
+      const result = await db
+        .select({
+          category: products.category,
+          productCount: sql<number>`COUNT(DISTINCT ${products.id})`,
+          slabCount: sql<number>`COALESCE(COUNT(${slabs.id}), 0)`,
+          totalSquareFeet: sql<number>`COALESCE(SUM(
+            CASE 
+              WHEN ${slabs.length} IS NOT NULL AND ${slabs.width} IS NOT NULL 
+              THEN CAST(${slabs.length} AS DECIMAL) * CAST(${slabs.width} AS DECIMAL) / 144
+              ELSE 0 
+            END
+          ), 0)`,
+          totalValue: sql<number>`COALESCE(SUM(CAST(${products.price} AS DECIMAL) * ${products.stockQuantity}), 0)`
+        })
+        .from(products)
+        .leftJoin(slabs, eq(slabs.bundleId, products.bundleId))
+        .where(eq(products.isActive, true))
+        .groupBy(products.category)
+        .orderBy(sql`COALESCE(SUM(CAST(${products.price} AS DECIMAL) * ${products.stockQuantity}), 0) DESC`);
+
+      return result;
+    } catch (error) {
+      console.error('Error getting inventory by category:', error);
+      return [];
+    }
+  }
+
   async getLowStockProducts(): Promise<Product[]> {
     return await db
       .select()
