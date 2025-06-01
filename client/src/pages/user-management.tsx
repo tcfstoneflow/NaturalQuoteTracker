@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Calendar, Activity, Users, Shield, Clock, AlertTriangle, Settings, Lock, Unlock } from "lucide-react";
+import { Plus, Edit, Trash2, UserCheck, UserX, Key, Eye, EyeOff, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Calendar, Activity, Users, Shield, Clock, AlertTriangle, Settings, Lock, Unlock, Upload, User, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -24,7 +24,7 @@ type UserForm = z.infer<typeof insertUserSchema>;
 export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [userSettingsDialogOpen, setUserSettingsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -612,12 +612,12 @@ export default function UserManagement() {
                       variant="outline"
                       onClick={() => {
                         setSelectedUser(user);
-                        setPasswordDialogOpen(true);
+                        setUserSettingsDialogOpen(true);
                       }}
                       className="text-xs h-8"
                     >
-                      <Key size={12} className="mr-1" />
-                      Password
+                      <Settings size={12} className="mr-1" />
+                      Settings
                     </Button>
                     <Button
                       size="sm"
@@ -722,10 +722,10 @@ export default function UserManagement() {
                               variant="outline"
                               onClick={() => {
                                 setSelectedUser(user);
-                                setPasswordDialogOpen(true);
+                                setUserSettingsDialogOpen(true);
                               }}
                             >
-                              <Key className="h-4 w-4" />
+                              <Settings className="h-4 w-4" />
                             </Button>
                             <Button
                               size="sm"
