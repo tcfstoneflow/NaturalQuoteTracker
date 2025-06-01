@@ -717,7 +717,7 @@ export default function Clients() {
                         <div className="text-right">
                           <p className="text-sm text-gray-600">Total Amount</p>
                           <p className="text-lg font-semibold text-primary-custom">
-                            ${clientQuotes.reduce((total: number, quote: any) => total + parseFloat(quote.subtotal || 0), 0).toLocaleString()}
+                            ${clientQuotes.reduce((total: number, quote: any) => total + parseFloat(quote.totalAmount || quote.subtotal || 0), 0).toLocaleString()}
                           </p>
                         </div>
                       )}
@@ -754,7 +754,7 @@ export default function Clients() {
                               </div>
                               <div className="flex justify-between items-center text-sm text-gray-600">
                                 <span>Created: {new Date(quote.createdAt).toLocaleDateString()}</span>
-                                <span className="font-medium">${parseFloat(quote.subtotal || 0).toLocaleString()}</span>
+                                <span className="font-medium">${parseFloat(quote.totalAmount || quote.subtotal || 0).toLocaleString()}</span>
                               </div>
                             </div>
                             
