@@ -34,6 +34,7 @@ import {
   FileText,
   User,
   Clock,
+  X,
 } from "lucide-react";
 
 interface Product {
@@ -372,6 +373,84 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
                 </CardContent>
               </Card>
             </div>
+
+            {selectedDate && (
+              <div className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      Quotes for {new Date(selectedDate).toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                      <button
+                        onClick={() => setSelectedDate(null)}
+                        className="ml-auto text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isLoadingQuotes ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    ) : quotesForDate && quotesForDate.length > 0 ? (
+                      <div className="space-y-4">
+                        {quotesForDate.map((quote: any) => (
+                          <div
+                            key={quote.id}
+                            className="border rounded-lg p-4 hover:bg-gray-50"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">
+                                  Quote #{quote.quoteNumber}
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                  Client: {quote.client?.name || 'Unknown'}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Status: <span className="capitalize">{quote.status}</span>
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-lg">
+                                  {formatCurrency(quote.total || 0)}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Created: {new Date(quote.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            {quote.lineItems && quote.lineItems.length > 0 && (
+                              <div className="mt-3 pt-3 border-t">
+                                <p className="text-sm font-medium text-gray-700 mb-2">Items:</p>
+                                <div className="space-y-1">
+                                  {quote.lineItems.map((item: any, index: number) => (
+                                    <div key={index} className="flex justify-between text-sm text-gray-600">
+                                      <span>{item.product?.name || 'Unknown Product'} (Qty: {item.quantity})</span>
+                                      <span>{formatCurrency(parseFloat(item.totalPrice || '0'))}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        No quotes found for this date
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           )}
         </div>
       </DialogContent>
