@@ -511,9 +511,6 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
               <Button variant="outline" onClick={() => setSelectedQuote(null)}>
                 Close
               </Button>
-              <Button onClick={() => window.open(`/quotes?highlight=${selectedQuote.id}`, '_blank')}>
-                View Full Quote
-              </Button>
             </div>
           </div>
         </DialogContent>
