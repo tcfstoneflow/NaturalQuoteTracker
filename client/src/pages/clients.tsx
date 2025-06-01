@@ -24,6 +24,7 @@ import {
 import { clientsApi } from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Mail, Phone, Building, Download, Eye } from "lucide-react";
+import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -37,6 +38,8 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState<any>(null);
   const [viewingClient, setViewingClient] = useState<any>(null);
   const [viewingQuote, setViewingQuote] = useState<any>(null);
+  const [editingQuote, setEditingQuote] = useState<any>(null);
+  const [isEditQuoteModalOpen, setIsEditQuoteModalOpen] = useState(false);
   const [quoteToDelete, setQuoteToDelete] = useState<{id: number, name: string} | null>(null);
   const [aiSummary, setAiSummary] = useState<string>("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -392,8 +395,20 @@ export default function Clients() {
   });
 
   // Quote action handlers
-  const handleEditQuote = (quoteId: number) => {
-    setLocation(`/quotes?edit=${quoteId}`);
+  const handleEditQuote = async (quoteId: number) => {
+    try {
+      const response = await fetch(`/api/quotes/${quoteId}`);
+      if (!response.ok) throw new Error('Failed to fetch quote');
+      const quote = await response.json();
+      setEditingQuote(quote);
+      setIsEditQuoteModalOpen(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load quote for editing",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadQuote = async (quoteId: number) => {
@@ -1215,6 +1230,13 @@ export default function Clients() {
               </form>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Quote Modal */}
+          <QuoteBuilderModal 
+            isOpen={isEditQuoteModalOpen}
+            onClose={() => setIsEditQuoteModalOpen(false)}
+            editQuote={editingQuote}
+          />
           
           <CardContent>
             {isLoading ? (
