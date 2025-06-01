@@ -360,11 +360,7 @@ export default function Reports() {
           </CardContent>
         </Card>
 
-        {/* Top Products Modal */}
-        <TopProductsModal 
-          open={showTopProductsModal}
-          onOpenChange={setShowTopProductsModal}
-        />
+
       </div>
     </div>
   );

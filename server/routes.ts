@@ -1207,6 +1207,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sales manager performance by time period
+  app.get("/api/dashboard/sales-manager-performance", async (req, res) => {
+    try {
+      const { period = 'month' } = req.query;
+      
+      // Calculate date range based on period
+      const now = new Date();
+      let startDate = new Date();
+      
+      switch (period) {
+        case 'day':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setMonth(now.getMonth() - 1);
+      }
+      
+      const salesManagerPerformance = await storage.getSalesManagerPerformance(startDate, now);
+      res.json(salesManagerPerformance);
+    } catch (error: any) {
+      console.error("Sales manager performance error:", error);
+      res.status(500).json({ error: "Failed to fetch sales manager performance" });
+    }
+  });
+
 
 
   // Generate barcodes for existing slabs

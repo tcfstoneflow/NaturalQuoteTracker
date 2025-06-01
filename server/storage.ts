@@ -482,6 +482,54 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getSalesManagerPerformance(startDate: Date, endDate: Date, limit: number = 10): Promise<any[]> {
+    try {
+      const result = await db
+        .select({
+          managerId: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          totalRevenue: sql<number>`COALESCE(SUM(
+            (SELECT SUM(CAST(qli.total_price AS DECIMAL)) 
+             FROM quote_line_items qli 
+             WHERE qli.quote_id = quotes.id)
+          ), 0)`,
+          quotesCreated: sql<number>`COUNT(${quotes.id})`,
+          clientCount: sql<number>`COUNT(DISTINCT ${clients.id})`,
+          conversionRate: sql<number>`
+            CASE 
+              WHEN COUNT(${quotes.id}) > 0 
+              THEN ROUND(
+                (COUNT(CASE WHEN ${quotes.status} = 'approved' THEN 1 END) * 100.0) / COUNT(${quotes.id}), 
+                1
+              )
+              ELSE 0 
+            END
+          `
+        })
+        .from(users)
+        .leftJoin(quotes, and(
+          eq(quotes.createdBy, users.id),
+          gte(quotes.createdAt, startDate),
+          lte(quotes.createdAt, endDate)
+        ))
+        .leftJoin(clients, eq(clients.salesManagerId, users.id))
+        .where(eq(users.role, 'sales_manager'))
+        .groupBy(users.id, users.firstName, users.lastName)
+        .orderBy(sql`COALESCE(SUM(
+          (SELECT SUM(CAST(qli.total_price AS DECIMAL)) 
+           FROM quote_line_items qli 
+           WHERE qli.quote_id = quotes.id)
+        ), 0) DESC`)
+        .limit(limit);
+
+      return result;
+    } catch (error) {
+      console.error('Error getting sales manager performance:', error);
+      return [];
+    }
+  }
+
   async getLowStockProducts(): Promise<Product[]> {
     return await db
       .select()
