@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -80,6 +80,14 @@ export default function Inventory() {
     location: "",
     imageUrl: ""
   });
+
+  const [galleryImages, setGalleryImages] = useState<Array<{
+    url: string;
+    title: string;
+    description: string;
+    installationType: string;
+    isAiGenerated: boolean;
+  }>>([]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
@@ -202,6 +210,10 @@ export default function Inventory() {
       location: product.location || "",
       imageUrl: product.imageUrl || ""
     });
+    
+    // Reset gallery images for now - will be populated from API later
+    setGalleryImages([]);
+    
     setIsOpen(true);
   };
 
@@ -224,6 +236,7 @@ export default function Inventory() {
       location: "",
       imageUrl: ""
     });
+    setGalleryImages([]);
   };
 
   // Get unique values for dynamic filters
@@ -560,6 +573,144 @@ export default function Inventory() {
                       className="mt-2"
                     />
                   </div>
+                </div>
+
+                {/* Gallery Images Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Gallery Images</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setGalleryImages([...galleryImages, { 
+                        url: '', 
+                        title: '', 
+                        description: '', 
+                        installationType: 'kitchen', 
+                        isAiGenerated: false 
+                      }])}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Gallery Image
+                    </Button>
+                  </div>
+                  
+                  {galleryImages.map((image, index) => (
+                    <div key={index} className="border rounded-lg p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Gallery Image {index + 1}</h4>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setGalleryImages(galleryImages.filter((_, i) => i !== index))}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Image URL</Label>
+                          <Input
+                            value={image.url}
+                            onChange={(e) => {
+                              const newImages = [...galleryImages];
+                              newImages[index].url = e.target.value;
+                              setGalleryImages(newImages);
+                            }}
+                            placeholder="https://..."
+                          />
+                        </div>
+                        <div>
+                          <Label>Title</Label>
+                          <Input
+                            value={image.title}
+                            onChange={(e) => {
+                              const newImages = [...galleryImages];
+                              newImages[index].title = e.target.value;
+                              setGalleryImages(newImages);
+                            }}
+                            placeholder="e.g. Modern Kitchen Installation"
+                          />
+                        </div>
+                        <div>
+                          <Label>Installation Type</Label>
+                          <Select 
+                            value={image.installationType} 
+                            onValueChange={(value) => {
+                              const newImages = [...galleryImages];
+                              newImages[index].installationType = value;
+                              setGalleryImages(newImages);
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="kitchen">Kitchen</SelectItem>
+                              <SelectItem value="bathroom">Bathroom</SelectItem>
+                              <SelectItem value="backsplash">Backsplash</SelectItem>
+                              <SelectItem value="general">General</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`ai-generated-${index}`}
+                            checked={image.isAiGenerated}
+                            onChange={(e) => {
+                              const newImages = [...galleryImages];
+                              newImages[index].isAiGenerated = e.target.checked;
+                              setGalleryImages(newImages);
+                            }}
+                            className="rounded"
+                          />
+                          <Label htmlFor={`ai-generated-${index}`} className="text-sm">
+                            AI Generated Render
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label>Description</Label>
+                        <Input
+                          value={image.description}
+                          onChange={(e) => {
+                            const newImages = [...galleryImages];
+                            newImages[index].description = e.target.value;
+                            setGalleryImages(newImages);
+                          }}
+                          placeholder="Brief description of the installation"
+                        />
+                      </div>
+
+                      {image.url && (
+                        <div>
+                          <Label>Preview</Label>
+                          <img 
+                            src={image.url} 
+                            alt={image.title}
+                            className="w-full h-32 object-cover rounded-md mt-2"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {galleryImages.length === 0 && (
+                    <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-500">No gallery images added yet</p>
+                      <p className="text-sm text-gray-400">Click "Add Gallery Image" to showcase this stone in real installations</p>
+                    </div>
+                  )}
                 </div>
                 
                 <div>
