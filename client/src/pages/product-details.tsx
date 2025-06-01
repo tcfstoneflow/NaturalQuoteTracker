@@ -16,6 +16,7 @@ export default function ProductDetails() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxTitle, setLightboxTitle] = useState("");
+  const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["/api/public/products", id],
@@ -40,7 +41,29 @@ export default function ProductDetails() {
     .filter((p: any) => p.category === product?.category && p.id !== product?.id)
     .slice(0, 3);
 
-
+  // Python-based render mutation
+  const pythonRenderMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/products/${id}/generate-python-render`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Python Render Generated",
+        description: "Your countertop visualization has been created successfully!",
+      });
+      if (data.renderUrl) {
+        openLightbox(data.renderUrl, `${product.name} - Python Render`);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Render Failed",
+        description: error.message || "Failed to generate Python render",
+        variant: "destructive",
+      });
+    },
+  });
 
   const openLightbox = (imageSrc: string, title: string) => {
     setLightboxImage(imageSrc);
@@ -191,6 +214,43 @@ export default function ProductDetails() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700">{product.description}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Visualization Tools */}
+            {product.imageUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    Visualization Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      Generate realistic countertop visualizations using this slab
+                    </p>
+                    <Button
+                      onClick={() => pythonRenderMutation.mutate()}
+                      disabled={pythonRenderMutation.isPending}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      {pythonRenderMutation.isPending ? (
+                        <>
+                          <Wand2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generating Render...
+                        </>
+                      ) : (
+                        <>
+                          <Palette className="h-4 w-4 mr-2" />
+                          Generate Kitchen Render
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
