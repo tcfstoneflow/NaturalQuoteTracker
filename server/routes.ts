@@ -426,7 +426,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/quotes/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertQuoteSchema.partial().parse(req.body);
+      
+      // Handle both direct quote data and nested structure from quote builder
+      const quoteData = req.body.quote || req.body;
+      const validatedData = insertQuoteSchema.partial().parse(quoteData);
       const quote = await storage.updateQuote(id, validatedData);
       res.json(quote);
     } catch (error) {
