@@ -247,6 +247,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       taxAmount: totals.taxAmount,
       processingFee: totals.processingFee,
       totalAmount: totals.total,
+      salesRepId: salesRepId === "none" || !salesRepId ? null : parseInt(salesRepId),
     };
 
     const quoteLineItems = lineItems.map(item => ({
