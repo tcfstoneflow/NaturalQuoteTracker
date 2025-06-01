@@ -203,59 +203,25 @@ export default function ProductDetails() {
         {/* Installation Gallery */}
         {galleryImages.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">See {product.name} in Real Homes</h2>
+            <h2 className="text-2xl font-bold mb-6">See {product.name}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {galleryImages.map((image: any) => {
-                const getInstallationIcon = (type: string) => {
-                  switch (type) {
-                    case 'kitchen': return <ChefHat className="h-4 w-4" />;
-                    case 'bathroom': return <Bath className="h-4 w-4" />;
-                    default: return <Home className="h-4 w-4" />;
-                  }
-                };
-
-                return (
-                  <Card 
-                    key={image.id}
-                    className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-                    onClick={() => openLightbox(image.imageUrl, image.title)}
-                  >
-                    <div className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 relative">
-                      <img 
-                        src={image.imageUrl} 
-                        alt={image.title}
-                        className="w-full h-full object-cover"
-                      />
-                      
-                      <div className="absolute top-3 left-3">
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          {getInstallationIcon(image.installationType)}
-                          <span className="capitalize">{image.installationType}</span>
-                        </Badge>
-                      </div>
-
-                      {image.isAiGenerated && (
-                        <div className="absolute top-3 right-3">
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                            AI Render
-                          </Badge>
-                        </div>
-                      )}
-
-                      <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                        <Eye className="h-8 w-8 text-white opacity-0 hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg mb-2">{image.title}</h3>
-                      {image.description && (
-                        <p className="text-sm text-gray-600">{image.description}</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+              {galleryImages.map((image: any) => (
+                <div 
+                  key={image.id}
+                  className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-300"
+                  onClick={() => openLightbox(image.imageUrl, image.title)}
+                >
+                  <img 
+                    src={image.imageUrl} 
+                    alt={image.title}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                    <Eye className="h-8 w-8 text-white opacity-0 hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              ))}
             </div>
             
             <div className="text-center mt-6">
