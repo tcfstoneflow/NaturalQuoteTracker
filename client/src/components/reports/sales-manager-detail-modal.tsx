@@ -258,17 +258,16 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                       Revenue Over Time
                     </h3>
                     <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={performanceData}>
+                      <LineChart 
+                        data={performanceData}
+                        onClick={(data) => handleChartClick(data, 'revenue')}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           dataKey="date" 
                           fontSize={12}
-                          tickFormatter={(value) => {
-                            const date = new Date(value);
-                            if (selectedPeriod === 'day') return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            if (selectedPeriod === 'week' || selectedPeriod === 'month') return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                            return date.toLocaleDateString([], { year: 'numeric', month: 'short' });
-                          }}
+                          tickFormatter={formatXAxisDate}
                         />
                         <YAxis 
                           fontSize={12}
@@ -276,7 +275,7 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                         />
                         <Tooltip 
                           formatter={(value: number) => [formatCurrency(value), 'Revenue']}
-                          labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                          labelFormatter={formatTooltipDate}
                         />
                         <Line 
                           type="monotone" 
@@ -297,22 +296,21 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                       Quotes Generated Over Time
                     </h3>
                     <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={performanceData}>
+                      <LineChart 
+                        data={performanceData}
+                        onClick={(data) => handleChartClick(data, 'quotes')}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           dataKey="date" 
                           fontSize={12}
-                          tickFormatter={(value) => {
-                            const date = new Date(value);
-                            if (selectedPeriod === 'day') return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            if (selectedPeriod === 'week' || selectedPeriod === 'month') return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                            return date.toLocaleDateString([], { year: 'numeric', month: 'short' });
-                          }}
+                          tickFormatter={formatXAxisDate}
                         />
                         <YAxis fontSize={12} />
                         <Tooltip 
                           formatter={(value: number) => [value, 'Quotes']}
-                          labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                          labelFormatter={formatTooltipDate}
                         />
                         <Line 
                           type="monotone" 
@@ -333,17 +331,16 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                       Conversion Rate Over Time
                     </h3>
                     <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={performanceData}>
+                      <LineChart 
+                        data={performanceData}
+                        onClick={(data) => handleChartClick(data, 'conversion')}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           dataKey="date" 
                           fontSize={12}
-                          tickFormatter={(value) => {
-                            const date = new Date(value);
-                            if (selectedPeriod === 'day') return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            if (selectedPeriod === 'week' || selectedPeriod === 'month') return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                            return date.toLocaleDateString([], { year: 'numeric', month: 'short' });
-                          }}
+                          tickFormatter={formatXAxisDate}
                         />
                         <YAxis 
                           fontSize={12}
@@ -351,7 +348,7 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                         />
                         <Tooltip 
                           formatter={(value: number) => [`${value.toFixed(1)}%`, 'Conversion Rate']}
-                          labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                          labelFormatter={formatTooltipDate}
                         />
                         <Line 
                           type="monotone" 
@@ -364,6 +361,88 @@ export default function SalesManagerDetailModal({ manager, isOpen, onClose }: Sa
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
+
+                  {/* Quotes Display Section */}
+                  {selectedDate && selectedChartType && (
+                    <div className="mt-8 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          Quotes for {formatTooltipDate(selectedDate)}
+                          {selectedChartType && (
+                            <span className="text-sm text-gray-500 ml-2">
+                              (from {selectedChartType} chart)
+                            </span>
+                          )}
+                        </h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedDate(null);
+                            setSelectedChartType(null);
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Clear
+                        </Button>
+                      </div>
+
+                      {isLoadingQuotes ? (
+                        <div className="space-y-3">
+                          {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="h-16 w-full" />
+                          ))}
+                        </div>
+                      ) : quotesForDate && quotesForDate.length > 0 ? (
+                        <div className="space-y-3">
+                          {quotesForDate.map((quote: any) => (
+                            <div
+                              key={quote.id}
+                              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-semibold text-blue-600">
+                                    #{quote.quoteNumber}
+                                  </span>
+                                  <Badge
+                                    variant={
+                                      quote.status === 'approved' ? 'default' :
+                                      quote.status === 'pending' ? 'secondary' :
+                                      quote.status === 'rejected' ? 'destructive' : 'outline'
+                                    }
+                                  >
+                                    {quote.status}
+                                  </Badge>
+                                </div>
+                                <span className="font-semibold text-green-600">
+                                  {formatCurrency(quote.total)}
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                <div className="flex items-center gap-4">
+                                  <span>
+                                    <strong>Client:</strong> {quote.client.name}
+                                  </span>
+                                  <span>
+                                    <strong>Email:</strong> {quote.client.email}
+                                  </span>
+                                  <span>
+                                    <strong>Date:</strong> {new Date(quote.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No quotes found for this date</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">

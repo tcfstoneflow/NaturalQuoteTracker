@@ -113,6 +113,7 @@ export interface IStorage {
   // Reports
   getTopSellingProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
   getProductQuotesByDate(productId: number, date: string): Promise<any[]>;
+  getSalesManagerQuotesByDate(managerId: number, date: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1309,6 +1310,50 @@ export class DatabaseStorage implements IStorage {
       return transformedQuotes;
     } catch (error) {
       console.error('Product quotes by date error:', error);
+      return [];
+    }
+  }
+
+  async getSalesManagerQuotesByDate(managerId: number, date: string): Promise<any[]> {
+    try {
+      // Parse the date to get the start and end of the day
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Get quotes for clients managed by this sales manager
+      const quotesData = await db
+        .select()
+        .from(quotes)
+        .innerJoin(clients, eq(quotes.clientId, clients.id))
+        .where(
+          and(
+            eq(clients.salesManagerId, managerId),
+            gte(quotes.createdAt, startOfDay),
+            lte(quotes.createdAt, endOfDay)
+          )
+        )
+        .orderBy(desc(quotes.createdAt));
+
+      // Transform the data to match the expected format
+      const transformedQuotes = quotesData.map((row: any) => ({
+        id: row.quotes.id,
+        quoteNumber: row.quotes.quoteNumber,
+        status: row.quotes.status,
+        total: parseFloat(row.quotes.totalAmount || '0'),
+        createdAt: row.quotes.createdAt,
+        validUntil: row.quotes.validUntil,
+        client: {
+          name: row.clients.name,
+          email: row.clients.email
+        }
+      }));
+
+      return transformedQuotes;
+    } catch (error) {
+      console.error('Sales manager quotes by date error:', error);
       return [];
     }
   }
