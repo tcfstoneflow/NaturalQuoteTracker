@@ -1311,6 +1311,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Detailed sales manager performance over time
+  app.get("/api/dashboard/sales-manager-performance-detail/:managerId", async (req, res) => {
+    try {
+      const { managerId } = req.params;
+      const { period = 'month' } = req.query;
+      
+      // Calculate date range and interval based on period
+      const now = new Date();
+      let startDate = new Date();
+      let intervalFormat = 'day';
+      
+      switch (period) {
+        case 'day':
+          startDate.setDate(now.getDate() - 1);
+          intervalFormat = 'hour';
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          intervalFormat = 'day';
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          intervalFormat = 'day';
+          break;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          intervalFormat = 'month';
+          break;
+        default:
+          startDate.setMonth(now.getMonth() - 1);
+          intervalFormat = 'day';
+      }
+      
+      const performanceData = await storage.getSalesManagerPerformanceDetail(
+        parseInt(managerId), 
+        startDate, 
+        now, 
+        intervalFormat
+      );
+      res.json(performanceData);
+    } catch (error: any) {
+      console.error("Sales manager performance detail error:", error);
+      res.status(500).json({ error: "Failed to fetch detailed performance data" });
+    }
+  });
+
   // Top clients by time period
   app.get("/api/dashboard/top-clients", async (req, res) => {
     try {

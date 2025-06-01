@@ -5,11 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Users, DollarSign, FileText, TrendingUp } from "lucide-react";
+import SalesManagerDetailModal from "./sales-manager-detail-modal";
 
 type TimePeriod = "day" | "week" | "month" | "year";
 
 export default function SalesManagerPerformanceReport() {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("month");
+  const [selectedManager, setSelectedManager] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: salesManagers, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard/sales-manager-performance', selectedPeriod],
@@ -114,7 +117,20 @@ export default function SalesManagerPerformanceReport() {
               salesManagers.map((manager: any, index: number) => (
                 <div 
                   key={manager.managerId} 
-                  className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedManager({
+                      managerId: manager.managerId,
+                      firstName: manager.firstName,
+                      lastName: manager.lastName,
+                      avatarUrl: manager.avatarUrl,
+                      totalRevenue: manager.totalRevenue,
+                      totalQuotes: manager.totalQuotes,
+                      conversionRate: manager.conversionRate,
+                      clientsManaged: manager.clientsManaged
+                    });
+                    setIsModalOpen(true);
+                  }}
                 >
                   {/* Rank Badge */}
                   <Badge 
@@ -192,6 +208,15 @@ export default function SalesManagerPerformanceReport() {
           </div>
         )}
       </CardContent>
+      
+      <SalesManagerDetailModal
+        manager={selectedManager}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedManager(null);
+        }}
+      />
     </Card>
   );
 }
