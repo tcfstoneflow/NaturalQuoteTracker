@@ -11,16 +11,27 @@ interface RenderRequest {
 
 export async function generateCountertopRender(request: RenderRequest): Promise<string | null> {
   try {
-    // Create a detailed prompt for rendering the slab material in a kitchen setting
-    const prompt = `Create a photorealistic kitchen countertop installation image using the uploaded slab material. The kitchen should have:
+    // First, analyze the slab image to get detailed characteristics
+    const slabAnalysis = await analyzeSlabImage(request.slabImageUrl);
+    
+    if (!slabAnalysis) {
+      console.error('Failed to analyze slab image');
+      return null;
+    }
+
+    // Create a detailed prompt based on the actual slab characteristics
+    const prompt = `Create a photorealistic kitchen countertop installation using this exact stone material: ${slabAnalysis}
+
+    Kitchen specifications:
     - Modern design with warm wood cabinets and black window frames
-    - Natural lighting from large windows
+    - Natural lighting from large windows showing the stone's true colors
     - Black undermount sink with matte black faucet
-    - The uploaded stone material as the countertop surface
+    - The stone material as described above as the countertop surface
     - Clean, minimalist styling with plants and natural elements
-    - Professional photography quality
-    - Show the natural patterns and texture of the ${request.productName} stone material clearly
-    - Maintain realistic lighting and shadows on the countertop surface`;
+    - Professional photography quality with accurate color representation
+    - Show the exact patterns, veining, and texture of the stone material
+    - Maintain realistic lighting that highlights the stone's natural beauty
+    - Ensure the stone patterns flow naturally across the countertop surface`;
 
     // Generate the image using DALL-E 3
     const response = await openai.images.generate({
@@ -53,6 +64,38 @@ export async function generateCountertopRender(request: RenderRequest): Promise<
     return null;
   } catch (error) {
     console.error('AI rendering error:', error);
+    return null;
+  }
+}
+
+async function analyzeSlabImage(imageUrl: string): Promise<string | null> {
+  try {
+    // Use GPT-4 Vision to analyze the slab image
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze this stone slab image in detail. Describe the exact colors, patterns, veining, texture, and any unique characteristics. Focus on: base color, secondary colors, veining patterns (direction, thickness, color), overall texture (polished, honed, etc.), any special features like crystals or fossils, and the stone's general appearance. Be very specific about colors and patterns as this will be used to create an accurate kitchen render."
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 500
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('Error analyzing slab image:', error);
     return null;
   }
 }
