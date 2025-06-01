@@ -221,11 +221,11 @@ export default function Settings() {
               <div className="flex flex-col items-center space-y-4">
                 <Avatar className="w-24 h-24">
                   <AvatarImage 
-                    src={previewUrl || user?.avatarUrl || ""} 
-                    alt={`${user?.firstName} ${user?.lastName}`}
+                    src={previewUrl || (user as any)?.avatarUrl || ""} 
+                    alt={`${(user as any)?.firstName} ${(user as any)?.lastName}`}
                   />
                   <AvatarFallback className="bg-primary text-white text-xl">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    {(user as any)?.firstName?.[0]}{(user as any)?.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 

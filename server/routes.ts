@@ -1342,6 +1342,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile management endpoints
+  app.put("/api/profile", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { firstName, lastName, email, phoneNumber } = req.body;
+      
+      const updatedUser = await storage.updateUserProfile(req.user!.id, {
+        firstName,
+        lastName,
+        email,
+        phoneNumber
+      });
+
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      res.status(500).json({ error: "Failed to update profile", details: error.message });
+    }
+  });
+
+  // Avatar upload endpoint
+  app.post("/api/upload/avatar", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const multer = require('multer');
+      
+      // Set up multer for file upload
+      const storage = multer.diskStorage({
+        destination: (req: any, file: any, cb: any) => {
+          const uploadDir = './upload/avatars';
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+          cb(null, uploadDir);
+        },
+        filename: (req: any, file: any, cb: any) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+          cb(null, `avatar-${req.user.id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+        }
+      });
+
+      const upload = multer({ 
+        storage,
+        limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+        fileFilter: (req: any, file: any, cb: any) => {
+          if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+          } else {
+            cb(new Error('Only image files are allowed'));
+          }
+        }
+      }).single('avatar');
+
+      upload(req, res, async (err: any) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        }
+
+        if (!req.file) {
+          return res.status(400).json({ error: "No file uploaded" });
+        }
+
+        const avatarUrl = `/upload/avatars/${req.file.filename}`;
+        
+        const updatedUser = await storage.updateUserProfile(req.user!.id, { avatarUrl });
+        
+        res.json({ avatarUrl, user: updatedUser });
+      });
+    } catch (error: any) {
+      console.error('Avatar upload error:', error);
+      res.status(500).json({ error: "Failed to upload avatar", details: error.message });
+    }
+  });
+
+  // Password change endpoint
+  app.put("/api/profile/password", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      // Get user with password hash for verification
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Verify current password
+      const { verifyPassword } = require('./auth');
+      const isCurrentPasswordValid = await verifyPassword(currentPassword, user.passwordHash);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Hash new password and update
+      const { hashPassword } = require('./auth');
+      const hashedNewPassword = await hashPassword(newPassword);
+      
+      await storage.updatePassword(req.user!.id, hashedNewPassword);
+      
+      res.json({ message: "Password updated successfully" });
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      res.status(500).json({ error: "Failed to change password", details: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
