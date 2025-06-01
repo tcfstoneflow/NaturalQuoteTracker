@@ -32,19 +32,12 @@ export async function generateCountertopRender(request: RenderRequest): Promise<
       return null;
     }
 
-    // Create a detailed prompt that combines both analyses
-    const prompt = `Create a photorealistic kitchen countertop installation that recreates this exact scene: ${kitchenAnalysis}
+    // Create a concise prompt that combines both analyses
+    const prompt = `Kitchen scene: ${kitchenAnalysis.substring(0, 1500)}
 
-    Replace ONLY the countertop surfaces with this stone material: ${slabAnalysis}
+Stone material: ${slabAnalysis.substring(0, 1500)}
 
-    Critical requirements:
-    - Recreate the exact kitchen layout, lighting, and atmosphere from the scene description
-    - Keep all elements identical: wood cabinet texture and color, black window frames, sink placement, faucet style, plant positioning, fruit bowl, lighting conditions
-    - Only change the countertop material to match the stone description exactly
-    - Maintain the same perspective, angle, and composition
-    - Ensure realistic lighting and reflections on the new stone countertop
-    - The stone patterns should flow naturally across the countertop surface
-    - Professional photography quality with accurate color representation`;
+Create this exact kitchen but replace only the countertops with the stone material described. Keep all other elements identical: cabinets, windows, sink, faucet, plants, lighting. Photorealistic quality.`;
 
     // Generate the image using DALL-E 3
     const response = await openai.images.generate({
