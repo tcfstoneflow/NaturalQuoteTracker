@@ -33,6 +33,7 @@ export default function Clients() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isQuoteViewModalOpen, setIsQuoteViewModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isNewQuoteModalOpen, setIsNewQuoteModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [viewingClient, setViewingClient] = useState<any>(null);
   const [viewingQuote, setViewingQuote] = useState<any>(null);
@@ -52,6 +53,14 @@ export default function Clients() {
     notes: "",
   });
 
+  const [quoteFormData, setQuoteFormData] = useState({
+    clientId: "",
+    projectName: "",
+    description: "",
+    status: "pending",
+    lineItems: []
+  });
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -66,6 +75,12 @@ export default function Clients() {
     queryFn: () => 
       viewingClient ? fetch(`/api/quotes?clientId=${viewingClient.id}`).then(res => res.json()) : [],
     enabled: !!viewingClient,
+  });
+
+  // Fetch products for the quote creation modal
+  const { data: products } = useQuery({
+    queryKey: ['/api/products'],
+    queryFn: () => fetch('/api/products').then(res => res.json()),
   });
 
   const createMutation = useMutation({
@@ -124,6 +139,41 @@ export default function Clients() {
     },
   });
 
+  const createQuoteMutation = useMutation({
+    mutationFn: async (quoteData: any) => {
+      const response = await fetch('/api/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quoteData),
+      });
+      if (!response.ok) throw new Error('Failed to create quote');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+      setIsNewQuoteModalOpen(false);
+      setQuoteFormData({
+        clientId: "",
+        projectName: "",
+        description: "",
+        status: "pending",
+        lineItems: []
+      });
+      toast({
+        title: "Success",
+        description: "Quote created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleOpenCreateModal = () => {
     setEditingClient(null);
     setFormData({
@@ -170,6 +220,17 @@ export default function Clients() {
   const handleViewClient = (client: any) => {
     setViewingClient(client);
     setIsViewModalOpen(true);
+  };
+
+  const handleOpenNewQuoteModal = (client: any) => {
+    setQuoteFormData({
+      clientId: client.id,
+      projectName: "",
+      description: "",
+      status: "pending",
+      lineItems: []
+    });
+    setIsNewQuoteModalOpen(true);
   };
 
   const handleCloseViewModal = () => {
