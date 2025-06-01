@@ -18,6 +18,7 @@ import ProductDetails from "@/pages/product-details";
 import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
+import Settings from "@/pages/settings";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -55,6 +56,7 @@ function Router() {
                   <Route path="/user-management" component={UserManagement} />
                   <Route path="/showroom-visits" component={ShowroomVisits} />
                   <Route path="/slab-management/:productId" component={SlabManagement} />
+                  <Route path="/settings" component={Settings} />
                   <Route component={NotFound} />
                 </Switch>
               </main>

@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("sales_rep"), // "admin", "sales_rep", "inventory_specialist"
   isActive: boolean("is_active").default(true).notNull(),
   lastLogin: timestamp("last_login"),
+  avatarUrl: text("avatar_url"), // Profile photo URL
   // Enhanced security fields
   failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
   accountLockedUntil: timestamp("account_locked_until"),
