@@ -159,6 +159,7 @@ export default function Settings() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log("File selected:", file);
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast({
@@ -178,6 +179,7 @@ export default function Settings() {
         return;
       }
       
+      console.log("Setting file and preview:", file.name);
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
