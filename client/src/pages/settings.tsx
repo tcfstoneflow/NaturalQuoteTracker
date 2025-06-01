@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,12 +47,24 @@ export default function Settings() {
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: (user as any)?.firstName || "",
-      lastName: (user as any)?.lastName || "",
-      email: (user as any)?.email || "",
-      phoneNumber: (user as any)?.phoneNumber || "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phoneNumber: "",
     },
   });
+
+  // Update form when user data loads
+  useEffect(() => {
+    if (user) {
+      profileForm.reset({
+        firstName: (user as any)?.firstName || "",
+        lastName: (user as any)?.lastName || "",
+        email: (user as any)?.email || "",
+        phoneNumber: (user as any)?.phoneNumber || "",
+      });
+    }
+  }, [user, profileForm]);
 
   // Password form
   const passwordForm = useForm<PasswordFormData>({
@@ -72,6 +84,7 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
