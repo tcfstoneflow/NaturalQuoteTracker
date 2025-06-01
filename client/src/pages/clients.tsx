@@ -54,6 +54,7 @@ export default function Clients() {
     state: "",
     zipCode: "",
     notes: "",
+    salesManagerId: "",
   });
 
   const [quoteFormData, setQuoteFormData] = useState({
@@ -89,6 +90,12 @@ export default function Clients() {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: () => fetch('/api/products').then(res => res.json()),
+  });
+
+  // Fetch sales managers for client assignment
+  const { data: salesManagers } = useQuery({
+    queryKey: ['/api/users/sales-managers'],
+    queryFn: () => fetch('/api/users/sales-managers').then(res => res.json()),
   });
 
   const createMutation = useMutation({
@@ -227,13 +234,17 @@ export default function Clients() {
       state: "",
       zipCode: "",
       notes: "",
+      salesManagerId: "",
     });
     setIsCreateModalOpen(true);
   };
 
   const handleOpenEditModal = (client: any) => {
     setEditingClient(client);
-    setFormData(client);
+    setFormData({
+      ...client,
+      salesManagerId: client.salesManagerId ? client.salesManagerId.toString() : "",
+    });
     setIsCreateModalOpen(true);
   };
 

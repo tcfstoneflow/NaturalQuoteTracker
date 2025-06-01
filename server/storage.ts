@@ -144,6 +144,26 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
+  async getSalesManagers(): Promise<{ id: number; firstName: string; lastName: string; }[]> {
+    return await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(users)
+      .where(
+        and(
+          eq(users.isActive, true),
+          or(
+            eq(users.role, 'admin'),
+            eq(users.role, 'sales_rep')
+          )
+        )
+      )
+      .orderBy(users.firstName, users.lastName);
+  }
+
   async toggleUserStatus(id: number, isActive: boolean): Promise<User> {
     const [user] = await db
       .update(users)

@@ -65,6 +65,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get sales managers for client assignment
+  app.get("/api/users/sales-managers", requireAuth, async (req, res) => {
+    try {
+      const salesManagers = await storage.getSalesManagers();
+      res.json(salesManagers);
+    } catch (error: any) {
+      console.error('Get sales managers error:', error);
+      res.status(500).json({ error: 'Failed to fetch sales managers' });
+    }
+  });
+
   app.patch("/api/users/:id/toggle", requireAuth, requireRole(['admin']), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
