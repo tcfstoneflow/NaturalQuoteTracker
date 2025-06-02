@@ -17,6 +17,7 @@ interface ShowroomVisit {
   email: string;
   phone: string;
   preferredDate: string;
+  preferredTime: string | null;
   message: string | null;
   status: string;
   assignedToUserId: number | null;
@@ -49,6 +50,7 @@ export default function ShowroomVisits() {
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editVisitDate, setEditVisitDate] = useState("");
+  const [editVisitTime, setEditVisitTime] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [newVisit, setNewVisit] = useState({
@@ -56,6 +58,7 @@ export default function ShowroomVisits() {
     email: "",
     phone: "",
     visitDate: "",
+    visitTime: "",
     message: "",
     assignedToUserId: "",
   });
@@ -124,6 +127,7 @@ export default function ShowroomVisits() {
         email: "",
         phone: "",
         visitDate: "",
+        visitTime: "",
         message: "",
         assignedToUserId: "",
       });
@@ -193,6 +197,7 @@ export default function ShowroomVisits() {
     setEditEmail(visit.email);
     setEditPhone(visit.phone || "");
     setEditVisitDate(visit.preferredDate);
+    setEditVisitTime(visit.preferredTime || "");
   };
 
   if (isLoading) {
@@ -283,7 +288,7 @@ export default function ShowroomVisits() {
             return (
               <div
                 key={day.toISOString()}
-                className={`h-20 p-1 border rounded text-xs ${
+                className={`min-h-16 h-auto p-1 border rounded text-xs ${
                   isCurrentDay ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
                 }`}
               >
