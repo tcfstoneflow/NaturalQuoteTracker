@@ -19,6 +19,7 @@ import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
 import Settings from "@/pages/settings";
+import SystemHealth from "@/pages/system-health";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -57,6 +58,7 @@ function Router() {
                   <Route path="/showroom-visits" component={ShowroomVisits} />
                   <Route path="/slab-management/:productId" component={SlabManagement} />
                   <Route path="/settings" component={Settings} />
+                  <Route path="/system-health" component={SystemHealth} />
                   <Route component={NotFound} />
                 </Switch>
               </main>

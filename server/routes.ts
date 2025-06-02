@@ -2068,6 +2068,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database maintenance routes (admin only)
+  app.post("/api/admin/validate-database", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const { validateProductData } = await import('./database-maintenance');
+      const result = await validateProductData();
+      res.json(result);
+    } catch (error: any) {
+      console.error('Database validation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/optimize-quotes", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const { optimizeQuoteCalculations } = await import('./database-maintenance');
+      await optimizeQuoteCalculations();
+      res.json({ message: 'Quote calculations optimized successfully' });
+    } catch (error: any) {
+      console.error('Quote optimization error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/cleanup-data", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const { cleanupExpiredData } = await import('./database-maintenance');
+      await cleanupExpiredData();
+      res.json({ message: 'Expired data cleaned up successfully' });
+    } catch (error: any) {
+      console.error('Data cleanup error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/admin/health-report", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const { generateHealthReport } = await import('./database-maintenance');
+      const report = await generateHealthReport();
+      res.json(report);
+    } catch (error: any) {
+      console.error('Health report error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

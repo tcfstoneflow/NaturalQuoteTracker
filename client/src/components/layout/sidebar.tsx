@@ -12,7 +12,8 @@ import {
   UserCog,
   ExternalLink,
   Calendar,
-  Target
+  Target,
+  Activity
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,6 +30,7 @@ const navigation = [
 
 const adminNavigation = [
   { name: "User Management", href: "/user-management", icon: UserCog },
+  { name: "System Health", href: "/system-health", icon: Activity },
 ];
 
 export default function Sidebar() {
