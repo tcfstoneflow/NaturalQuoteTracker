@@ -499,7 +499,7 @@ export default function Inventory() {
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          Showing {filteredAndSortedProducts?.length || 0} of {products?.length || 0} bundles
+          Showing {filteredAndSortedProducts?.length || 0} of {(products as Product[])?.length || 0} bundles
         </div>
         <div className="flex space-x-2">
           <Button asChild variant="outline">
