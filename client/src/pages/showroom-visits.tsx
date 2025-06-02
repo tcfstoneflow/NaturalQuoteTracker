@@ -45,6 +45,10 @@ export default function ShowroomVisits() {
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("");
   const [assignedToUserId, setAssignedToUserId] = useState<string>("");
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editVisitDate, setEditVisitDate] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newVisit, setNewVisit] = useState({
     name: "",
@@ -135,12 +139,22 @@ export default function ShowroomVisits() {
   const handleUpdateVisit = () => {
     if (!selectedVisit) return;
     
+    // Find the assigned sales member name if a user is assigned
+    const assignedSalesMember = assignedToUserId && assignedToUserId !== "none" 
+      ? salesManagers.find(sm => sm.id === parseInt(assignedToUserId))?.firstName + " " + salesManagers.find(sm => sm.id === parseInt(assignedToUserId))?.lastName
+      : null;
+    
     updateVisitMutation.mutate({
       id: selectedVisit.id,
       updates: {
+        name: editName,
+        email: editEmail,
+        phone: editPhone,
+        preferredDate: editVisitDate,
         status: status || selectedVisit.status,
         notes: notes || selectedVisit.notes,
         assignedToUserId: assignedToUserId && assignedToUserId !== "none" ? parseInt(assignedToUserId) : null,
+        assignedSalesMember,
       },
     });
   };
@@ -174,6 +188,10 @@ export default function ShowroomVisits() {
     setStatus(visit.status);
     setNotes(visit.notes || "");
     setAssignedToUserId(visit.assignedToUserId?.toString() || "none");
+    setEditName(visit.name);
+    setEditEmail(visit.email);
+    setEditPhone(visit.phone || "");
+    setEditVisitDate(visit.preferredDate);
   };
 
   if (isLoading) {
@@ -379,7 +397,7 @@ export default function ShowroomVisits() {
                     className="w-full mt-3"
                     onClick={() => openUpdateDialog(visit)}
                   >
-                    Update Status
+                    Edit Appointment
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
@@ -387,6 +405,39 @@ export default function ShowroomVisits() {
                     <DialogTitle>Update Visit: {visit.name}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Customer Name</label>
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Enter customer name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Email</label>
+                      <Input
+                        type="email"
+                        value={editEmail}
+                        onChange={(e) => setEditEmail(e.target.value)}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Phone</label>
+                      <Input
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Showroom Visit Date</label>
+                      <Input
+                        type="date"
+                        value={editVisitDate}
+                        onChange={(e) => setEditVisitDate(e.target.value)}
+                      />
+                    </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Status</label>
                       <Select value={status} onValueChange={setStatus}>
