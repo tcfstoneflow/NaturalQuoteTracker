@@ -16,6 +16,7 @@ import { Search, Filter, Package, Ruler, MapPin, Eye, Calendar, Phone, Mail } fr
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { Lightbox } from "@/components/ui/lightbox";
+import { ShareButton } from "@/components/ui/share-button";
 
 // Contact form schema
 const contactSchema = z.object({
@@ -345,6 +346,14 @@ export default function PublicInventory() {
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </Button>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <ShareButton
+                        url={`${window.location.origin}/product/${product.id}`}
+                        title={product.name}
+                        description={`${product.category} from ${product.supplier} - ${product.grade} grade with ${product.finish} finish`}
+                        price={`$${product.price}`}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
