@@ -3,17 +3,87 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Calendar, BarChart3 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { TrendingUp, TrendingDown, Calendar, BarChart3, LineChart, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, PieChart, Pie, Cell } from "recharts";
 
 export default function RevenueTrendsReport() {
   const [timeframe, setTimeframe] = useState("monthly");
+  const [chartModalOpen, setChartModalOpen] = useState(false);
+  const { toast } = useToast();
   
   const { data: revenueData, isLoading } = useQuery({
     queryKey: ["/api/reports/revenue-trends", timeframe],
     queryFn: () => fetch(`/api/reports/revenue-trends?timeframe=${timeframe}`).then(res => res.json()),
   });
+
+  const exportRevenueReport = () => {
+    if (!revenueData?.periods) {
+      toast({
+        title: "Export Failed",
+        description: "No revenue data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = [
+      'Period',
+      'Revenue',
+      'Growth %',
+      'Sales Count',
+      'Quotes Generated',
+      'Material Revenue',
+      'Labor Revenue',
+      'Other Revenue',
+      'Top Categories'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...revenueData.periods.map((period: any) => [
+        `"${period.name}"`,
+        period.revenue,
+        period.growth,
+        period.salesCount,
+        period.quotesGenerated,
+        period.materialRevenue || 0,
+        period.laborRevenue || 0,
+        period.otherRevenue || 0,
+        `"${period.topCategories?.join('; ') || 'N/A'}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `revenue-trends-${timeframe}-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export Successful",
+      description: `Revenue trends report has been downloaded as CSV`,
+    });
+  };
+
+  const chartData = revenueData?.periods?.map((period: any) => ({
+    name: period.name,
+    revenue: period.revenue,
+    materialRevenue: period.materialRevenue || 0,
+    laborRevenue: period.laborRevenue || 0,
+    otherRevenue: period.otherRevenue || 0,
+  })) || [];
+
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 
   if (isLoading) {
     return (
@@ -182,12 +252,142 @@ export default function RevenueTrendsReport() {
           )}
 
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1" onClick={exportRevenueReport}>
+              <Download className="h-4 w-4 mr-2" />
               Export Revenue Report
             </Button>
-            <Button variant="outline" className="flex-1">
-              View Detailed Chart
-            </Button>
+            <Dialog open={chartModalOpen} onOpenChange={setChartModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex-1">
+                  <LineChart className="h-4 w-4 mr-2" />
+                  View Detailed Chart
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Detailed Revenue Analysis - {timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} View
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-6 py-4">
+                  {/* Revenue Trend Line Chart */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Revenue Trend Over Time</h3>
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsLineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                          <Tooltip formatter={(value: any) => [`$${value.toLocaleString()}`, 'Revenue']} />
+                          <Line 
+                            type="monotone" 
+                            dataKey="revenue" 
+                            stroke="#8884d8" 
+                            strokeWidth={3}
+                            dot={{ fill: '#8884d8', strokeWidth: 2, r: 6 }}
+                          />
+                        </RechartsLineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Revenue Breakdown Bar Chart */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Revenue Breakdown by Category</h3>
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsBarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                          <Tooltip formatter={(value: any, name) => [`$${value.toLocaleString()}`, name]} />
+                          <Bar dataKey="materialRevenue" stackId="a" fill="#8884d8" name="Materials" />
+                          <Bar dataKey="laborRevenue" stackId="a" fill="#82ca9d" name="Labor" />
+                          <Bar dataKey="otherRevenue" stackId="a" fill="#ffc658" name="Other" />
+                        </RechartsBarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Key Performance Indicators */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Key Performance Indicators</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg border">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {formatCurrency(revenueData?.currentPeriodRevenue || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Current Period Revenue</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg border">
+                        <div className="text-2xl font-bold text-green-600">
+                          {revenueData?.growthRate > 0 ? '+' : ''}{revenueData?.growthRate || 0}%
+                        </div>
+                        <div className="text-sm text-gray-600">Growth Rate</div>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg border">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {formatCurrency(revenueData?.averageRevenue || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Average Revenue</div>
+                      </div>
+                      <div className="text-center p-4 bg-orange-50 rounded-lg border">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {formatCurrency(revenueData?.projectedRevenue || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Projected Next Period</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Revenue Composition Pie Chart */}
+                  {chartData.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Total Revenue Composition</h3>
+                      <div className="h-80 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Materials', value: chartData.reduce((sum, item) => sum + item.materialRevenue, 0) },
+                                { name: 'Labor', value: chartData.reduce((sum, item) => sum + item.laborRevenue, 0) },
+                                { name: 'Other', value: chartData.reduce((sum, item) => sum + item.otherRevenue, 0) }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, value }) => `${name}: $${value.toLocaleString()}`}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {chartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value: any) => `$${value.toLocaleString()}`} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button onClick={exportRevenueReport} className="flex-1">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Detailed Report
+                    </Button>
+                    <Button variant="outline" onClick={() => setChartModalOpen(false)} className="flex-1">
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </CardContent>
