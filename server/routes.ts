@@ -1492,6 +1492,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // E-commerce endpoints for counter fixtures
+  app.get("/api/ecommerce/products", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      // Filter to only show e-commerce enabled products
+      const ecommerceProducts = products.filter((product: any) => 
+        product.category === 'counter_fixtures' && 
+        product.isEcommerceEnabled && 
+        product.displayOnline &&
+        product.stockQuantity > 0
+      );
+      
+      res.json(ecommerceProducts);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/ecommerce/cart/add", async (req, res) => {
+    try {
+      const { sessionId, customerEmail, productId, quantity } = req.body;
+      
+      // Validate product exists and is available for e-commerce
+      const product = await storage.getProduct(productId);
+      if (!product || !product.isEcommerceEnabled || !product.displayOnline) {
+        return res.status(400).json({ error: "Product not available for online purchase" });
+      }
+      
+      if (product.stockQuantity < quantity) {
+        return res.status(400).json({ error: "Insufficient stock" });
+      }
+      
+      // Add to cart (implementation would need to be added to storage)
+      const cartItem = await storage.addToCart({
+        sessionId,
+        customerEmail,
+        productId,
+        quantity
+      });
+      
+      res.json(cartItem);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/ecommerce/orders", async (req, res) => {
+    try {
+      const orderData = req.body;
+      
+      // Generate order number
+      const orderNumber = `CF-${Date.now()}`;
+      
+      // Create order (implementation would need to be added to storage)
+      const order = await storage.createEcommerceOrder({
+        ...orderData,
+        orderNumber,
+        paymentStatus: 'pending',
+        orderStatus: 'pending'
+      });
+      
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/ecommerce/orders", requireAuth, async (req, res) => {
+    try {
+      // Get all e-commerce orders (implementation would need to be added to storage)
+      const orders = await storage.getEcommerceOrders();
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/ecommerce/orders/:id", requireAuth, async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedOrder = await storage.updateEcommerceOrder(orderId, updates);
+      res.json(updatedOrder);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Quotes
   app.get("/api/quotes", async (req, res) => {
     try {
