@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -64,6 +64,7 @@ export default function Inventory() {
   const [stockFilter, setStockFilter] = useState<string>("all");
   const [priceRangeFilter, setPriceRangeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   
   const [formData, setFormData] = useState({
     bundleId: "",
@@ -321,6 +322,22 @@ export default function Inventory() {
     setGalleryImages([]);
   };
 
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (column: string) => {
+    if (sortBy !== column) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    return sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
+  };
+
   // Get unique values for dynamic filters
   const uniqueSuppliers = Array.from(new Set((products as Product[])?.map((p: Product) => p.supplier) || []));
   const uniqueGrades = Array.from(new Set((products as Product[])?.map((p: Product) => p.grade) || []));
@@ -358,23 +375,30 @@ export default function Inventory() {
 
     return matchesSearch && matchesCategory && matchesGrade && matchesSupplier && matchesStock && matchesPriceRange;
   }).sort((a: Product, b: Product) => {
+    let result = 0;
     switch (sortBy) {
       case "location":
         const locationA = a.location || "";
         const locationB = b.location || "";
-        return locationA.localeCompare(locationB);
+        result = locationA.localeCompare(locationB);
+        break;
       case "price":
         const priceA = parseFloat(a.price) || 0;
         const priceB = parseFloat(b.price) || 0;
-        return priceA - priceB;
+        result = priceA - priceB;
+        break;
       case "stockQuantity":
-        return a.stockQuantity - b.stockQuantity;
+        result = a.stockQuantity - b.stockQuantity;
+        break;
       case "finish":
-        return a.finish.localeCompare(b.finish);
+        result = a.finish.localeCompare(b.finish);
+        break;
       case "name":
       default:
-        return a.name.localeCompare(b.name);
+        result = a.name.localeCompare(b.name);
+        break;
     }
+    return sortDirection === "desc" ? -result : result;
   });
 
   return (
@@ -490,6 +514,7 @@ export default function Inventory() {
               setStockFilter("all");
               setPriceRangeFilter("all");
               setSortBy("name");
+              setSortDirection("asc");
             }}
           >
             Clear Filters
@@ -937,15 +962,55 @@ export default function Inventory() {
                 <TableRow>
                   <TableHead>Image</TableHead>
                   <TableHead>Bundle ID</TableHead>
-                  <TableHead>Bundle Name</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-gray-50 select-none"
+                    onClick={() => handleSort("name")}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Bundle Name</span>
+                      {getSortIcon("name")}
+                    </div>
+                  </TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Grade</TableHead>
-                  <TableHead>Finish</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-gray-50 select-none"
+                    onClick={() => handleSort("finish")}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Finish</span>
+                      {getSortIcon("finish")}
+                    </div>
+                  </TableHead>
                   <TableHead>Thickness</TableHead>
-                  <TableHead>Price/{" "}Unit</TableHead>
-                  <TableHead>Slab Count</TableHead>
-                  <TableHead>Location</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-gray-50 select-none"
+                    onClick={() => handleSort("price")}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Price/Unit</span>
+                      {getSortIcon("price")}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-gray-50 select-none"
+                    onClick={() => handleSort("stockQuantity")}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Slab Count</span>
+                      {getSortIcon("stockQuantity")}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-gray-50 select-none"
+                    onClick={() => handleSort("location")}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Location</span>
+                      {getSortIcon("location")}
+                    </div>
+                  </TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
