@@ -24,6 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 export default function Reports() {
   const [showSeasonalTrends, setShowSeasonalTrends] = useState(false);
+  const [showCostAnalysis, setShowCostAnalysis] = useState(false);
   // Report generation state
   const [reportType, setReportType] = useState("sales_managers");
   const [startDate, setStartDate] = useState("");
@@ -465,7 +466,7 @@ export default function Reports() {
           {/* On-Demand Analysis */}
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">On-Demand Analysis</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -482,6 +483,28 @@ export default function Reports() {
                     size="sm" 
                     className="w-full"
                     onClick={() => setShowSeasonalTrends(true)}
+                  >
+                    Generate Report
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-red-600" />
+                    Cost Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Analyze material costs vs selling prices to optimize pricing strategies and identify cost savings.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => setShowCostAnalysis(true)}
                   >
                     Generate Report
                   </Button>
@@ -548,7 +571,7 @@ export default function Reports() {
             <h2 className="text-xl font-semibold text-gray-900">Financial Analytics</h2>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {/* Profit Margin Analysis */}
             <ProfitMarginAnalysis />
             
@@ -557,9 +580,6 @@ export default function Reports() {
             
             {/* Payment Status Tracking */}
             <PaymentStatusReport />
-            
-            {/* Cost Analysis */}
-            <CostAnalysisReport />
           </div>
         </div>
 
@@ -573,6 +593,18 @@ export default function Reports() {
             </DialogHeader>
             <div className="mt-4">
               <SeasonalTrendsReport />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Cost Analysis Modal */}
+        <Dialog open={showCostAnalysis} onOpenChange={setShowCostAnalysis}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Cost Analysis Report</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <CostAnalysisReport />
             </div>
           </DialogContent>
         </Dialog>
