@@ -478,6 +478,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/products/low-stock", requireAuth, async (req, res) => {
+    try {
+      const lowStockProducts = await storage.getLowStockProducts();
+      res.json(lowStockProducts);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/products/with-slabs", async (req, res) => {
     try {
       const products = await storage.getProducts();
