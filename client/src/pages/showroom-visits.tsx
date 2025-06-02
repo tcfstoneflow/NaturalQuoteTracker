@@ -162,8 +162,8 @@ export default function ShowroomVisits() {
       preferredDate: newVisit.visitDate,
       message: newVisit.message || null,
       status: "scheduled",
-      assignedToUserId: newVisit.assignedToUserId ? parseInt(newVisit.assignedToUserId) : null,
-      assignedSalesMember: newVisit.assignedToUserId 
+      assignedToUserId: (newVisit.assignedToUserId && newVisit.assignedToUserId !== "unassigned") ? parseInt(newVisit.assignedToUserId) : null,
+      assignedSalesMember: (newVisit.assignedToUserId && newVisit.assignedToUserId !== "unassigned")
         ? salesManagers.find(sm => sm.id === parseInt(newVisit.assignedToUserId))?.firstName 
         : null
     });
@@ -251,7 +251,7 @@ export default function ShowroomVisits() {
                     <SelectValue placeholder="Select sales member" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {salesManagers.map((manager) => (
                       <SelectItem key={manager.id} value={manager.id.toString()}>
                         {manager.firstName} {manager.lastName}
