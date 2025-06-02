@@ -575,6 +575,17 @@ export default function Reports() {
           </CardContent>
         </Card>
 
+        {/* Seasonal Trends Modal */}
+        <Dialog open={showSeasonalTrends} onOpenChange={setShowSeasonalTrends}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Seasonal Trends Analysis</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <SeasonalTrendsReport />
+            </div>
+          </DialogContent>
+        </Dialog>
 
       </div>
     </div>
