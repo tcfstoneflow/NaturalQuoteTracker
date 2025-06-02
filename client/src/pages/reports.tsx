@@ -16,6 +16,10 @@ import InventoryCategoryReport from "@/components/reports/inventory-category-rep
 import InventoryTurnoverReport from "@/components/reports/inventory-turnover-report";
 import SupplierPerformanceReport from "@/components/reports/supplier-performance-report";
 import SeasonalTrendsReport from "@/components/reports/seasonal-trends-report";
+import ProfitMarginAnalysis from "@/components/reports/profit-margin-analysis";
+import RevenueTrendsReport from "@/components/reports/revenue-trends-report";
+import PaymentStatusReport from "@/components/reports/payment-status-report";
+import CostAnalysisReport from "@/components/reports/cost-analysis-report";
 
 export default function Reports() {
   // Report generation state
@@ -422,6 +426,28 @@ export default function Reports() {
             
             {/* Seasonal Trends */}
             <SeasonalTrendsReport />
+          </div>
+        </div>
+
+        {/* Financial Analytics Section */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-6">
+            <DollarSign size={20} className="text-green-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Financial Analytics</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Profit Margin Analysis */}
+            <ProfitMarginAnalysis />
+            
+            {/* Revenue Trends */}
+            <RevenueTrendsReport />
+            
+            {/* Payment Status Tracking */}
+            <PaymentStatusReport />
+            
+            {/* Cost Analysis */}
+            <CostAnalysisReport />
           </div>
         </div>
 
