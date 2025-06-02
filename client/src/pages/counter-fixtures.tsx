@@ -246,7 +246,7 @@ export default function CounterFixtures() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <TopBar title="Counter Fixtures" subtitle="Manage counter fixtures with e-commerce capabilities" />
+        <TopBar title="Counter Fixtures" subtitle="Manage counter fixtures with e-commerce capabilities" hideNewQuoteButton={true} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Package className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
