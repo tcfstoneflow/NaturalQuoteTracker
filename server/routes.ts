@@ -12,6 +12,7 @@ import { generatePythonCountertopRender, uploadRenderingAsset } from "./python-r
 import fs from "fs";
 import path from "path";
 import multer from "multer";
+import nodemailer from "nodemailer";
 
 // Email function for appointment notifications
 async function sendAppointmentEmail(visit: any, type: 'confirmation' | 'update' | 'cancellation') {
@@ -20,8 +21,6 @@ async function sendAppointmentEmail(visit: any, type: 'confirmation' | 'update' 
     return;
   }
 
-  const nodemailer = require('nodemailer');
-  
   const transporter = nodemailer.createTransporter({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '587'),
@@ -341,6 +340,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updates = req.body;
       
       const updatedVisit = await storage.updateShowroomVisit(id, updates);
+
+      // Send update email if status changed to scheduled or if other details changed
+      try {
+        if (updates.status === 'scheduled' || updates.preferredDate || updates.preferredTime) {
+          await sendAppointmentEmail(updatedVisit, 'update');
+        } else if (updates.status === 'cancelled') {
+          await sendAppointmentEmail(updatedVisit, 'cancellation');
+        }
+      } catch (emailError) {
+        console.log("Email notification failed:", emailError);
+        // Don't fail the update if email fails
+      }
+      
       res.json(updatedVisit);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to update visit" });
