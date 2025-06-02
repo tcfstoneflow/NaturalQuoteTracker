@@ -352,9 +352,9 @@ export default function RevenueTrendsReport() {
                           <PieChart>
                             <Pie
                               data={[
-                                { name: 'Materials', value: chartData.reduce((sum, item) => sum + item.materialRevenue, 0) },
-                                { name: 'Labor', value: chartData.reduce((sum, item) => sum + item.laborRevenue, 0) },
-                                { name: 'Other', value: chartData.reduce((sum, item) => sum + item.otherRevenue, 0) }
+                                { name: 'Materials', value: chartData.reduce((sum: number, item: any) => sum + item.materialRevenue, 0) },
+                                { name: 'Labor', value: chartData.reduce((sum: number, item: any) => sum + item.laborRevenue, 0) },
+                                { name: 'Other', value: chartData.reduce((sum: number, item: any) => sum + item.otherRevenue, 0) }
                               ]}
                               cx="50%"
                               cy="50%"
@@ -364,8 +364,8 @@ export default function RevenueTrendsReport() {
                               fill="#8884d8"
                               dataKey="value"
                             >
-                              {chartData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              {COLORS.map((color, index) => (
+                                <Cell key={`cell-${index}`} fill={color} />
                               ))}
                             </Pie>
                             <Tooltip formatter={(value: any) => `$${value.toLocaleString()}`} />

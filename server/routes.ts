@@ -1085,38 +1085,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const timeframe = req.query.timeframe as string || 'monthly';
       const quotes = await storage.getQuotes();
+      const products = await storage.getProducts();
       
-      // Filter approved quotes and calculate revenue by period
-      const approvedQuotes = quotes.filter((quote: any) => quote.status === 'approved');
+      // Process all quotes to get comprehensive revenue data
       const revenueByPeriod = new Map();
       
-      approvedQuotes.forEach((quote: any) => {
+      quotes.forEach((quote: any) => {
         const date = new Date(quote.createdAt);
         let periodKey = '';
+        let periodName = '';
         
         if (timeframe === 'monthly') {
           periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          periodName = new Date(date.getFullYear(), date.getMonth()).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long' 
+          });
         } else if (timeframe === 'quarterly') {
           const quarter = Math.floor(date.getMonth() / 3) + 1;
           periodKey = `${date.getFullYear()}-Q${quarter}`;
+          periodName = `${date.getFullYear()} Q${quarter}`;
         } else {
           periodKey = date.getFullYear().toString();
+          periodName = date.getFullYear().toString();
         }
         
         if (!revenueByPeriod.has(periodKey)) {
           revenueByPeriod.set(periodKey, {
+            name: periodName,
             revenue: 0,
+            materialRevenue: 0,
+            laborRevenue: 0,
+            otherRevenue: 0,
             salesCount: 0,
-            quotesGenerated: 0
+            quotesGenerated: 0,
+            categories: new Set()
           });
         }
         
         const periodData = revenueByPeriod.get(periodKey);
-        if (quote.lineItems) {
-          const quoteTotal = quote.lineItems.reduce((sum: number, item: any) => 
-            sum + (item.quantity * item.price), 0);
-          periodData.revenue += quoteTotal;
-          periodData.salesCount += 1;
+        periodData.quotesGenerated += 1;
+        
+        // Only count revenue for approved or completed quotes
+        if (quote.status === 'approved' || quote.status === 'completed') {
+          if (quote.lineItems) {
+            const quoteTotal = quote.lineItems.reduce((sum: number, item: any) => {
+              const itemTotal = item.quantity * item.price;
+              
+              // Find product to categorize revenue
+              const product = products.find((p: any) => p.id === item.productId);
+              if (product) {
+                periodData.categories.add(product.category);
+                
+                // Categorize revenue based on product type
+                if (product.category?.toLowerCase().includes('slab') || 
+                    product.category?.toLowerCase().includes('stone') ||
+                    product.category?.toLowerCase().includes('granite') ||
+                    product.category?.toLowerCase().includes('marble') ||
+                    product.category?.toLowerCase().includes('quartz')) {
+                  periodData.materialRevenue += itemTotal;
+                } else if (product.category?.toLowerCase().includes('installation') ||
+                          product.category?.toLowerCase().includes('labor')) {
+                  periodData.laborRevenue += itemTotal;
+                } else {
+                  periodData.otherRevenue += itemTotal;
+                }
+              } else {
+                // Default to material if product not found
+                periodData.materialRevenue += itemTotal;
+              }
+              
+              return sum + itemTotal;
+            }, 0);
+            
+            periodData.revenue += quoteTotal;
+            periodData.salesCount += 1;
+          }
         }
       });
 
@@ -1130,15 +1174,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             : 0;
           
           return {
-            name: name,
+            name: data.name,
             revenue: Math.round(data.revenue),
+            materialRevenue: Math.round(data.materialRevenue),
+            laborRevenue: Math.round(data.laborRevenue),
+            otherRevenue: Math.round(data.otherRevenue),
             salesCount: data.salesCount,
-            quotesGenerated: data.salesCount + Math.floor(Math.random() * 5), // Add some quote data
+            quotesGenerated: data.quotesGenerated,
             growth,
-            materialRevenue: Math.round(data.revenue * 0.7),
-            laborRevenue: Math.round(data.revenue * 0.2),
-            otherRevenue: Math.round(data.revenue * 0.1),
-            topCategories: ['Granite', 'Quartz', 'Marble'].slice(0, Math.floor(Math.random() * 3) + 1)
+            topCategories: Array.from(data.categories).slice(0, 5) // Top 5 categories
           };
         });
 
