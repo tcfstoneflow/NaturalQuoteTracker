@@ -1020,6 +1020,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public Quote Request Endpoint
+  app.post("/api/public/quote-request", async (req, res) => {
+    try {
+      const { name, email, phone, message, productId, productName } = req.body;
+      
+      // Basic validation
+      if (!name || !email || !phone || !message) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+      
+      // Send notification email to sales team
+      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+        const transporter = nodemailer.createTransporter({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: false,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        const emailContent = `
+          <h2>New Quote Request</h2>
+          <p><strong>Customer Information:</strong></p>
+          <ul>
+            <li>Name: ${name}</li>
+            <li>Email: ${email}</li>
+            <li>Phone: ${phone}</li>
+          </ul>
+          
+          ${productName ? `<p><strong>Product:</strong> ${productName} (ID: ${productId})</p>` : ''}
+          
+          <p><strong>Message:</strong></p>
+          <p>${message}</p>
+        `;
+
+        await transporter.sendMail({
+          from: process.env.SMTP_USER,
+          to: process.env.SMTP_USER, // Send to company email
+          subject: `New Quote Request from ${name}`,
+          html: emailContent
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Quote request received successfully" 
+      });
+    } catch (error: any) {
+      console.error('Quote request error:', error);
+      res.status(500).json({ error: "Failed to send quote request" });
+    }
+  });
+
   // Slab Management Routes
   app.get("/api/slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {

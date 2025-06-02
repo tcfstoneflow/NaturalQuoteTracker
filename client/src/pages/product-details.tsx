@@ -1,15 +1,31 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Package, Ruler, MapPin, Calendar, Eye, Home, Bath, ChefHat, Wand2, Palette } from "lucide-react";
+import { ArrowLeft, Package, Ruler, MapPin, Calendar, Eye, Home, Bath, ChefHat, Wand2, Palette, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Lightbox } from "@/components/ui/lightbox";
 import { SocialShare } from "@/components/ui/social-share";
+
+const quoteRequestSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(1, "Phone is required"),
+  message: z.string().min(1, "Message is required"),
+});
+
+type QuoteRequestData = z.infer<typeof quoteRequestSchema>;
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -17,6 +33,7 @@ export default function ProductDetails() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxTitle, setLightboxTitle] = useState("");
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery({
@@ -83,6 +100,47 @@ export default function ProductDetails() {
       });
     },
   });
+
+  // Quote request form
+  const quoteForm = useForm<QuoteRequestData>({
+    resolver: zodResolver(quoteRequestSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      message: `I'm interested in getting a quote for ${product?.name || 'this product'}. Please provide pricing and availability information.`,
+    },
+  });
+
+  const quoteRequestMutation = useMutation({
+    mutationFn: async (data: QuoteRequestData) => {
+      const response = await apiRequest("POST", "/api/public/quote-request", {
+        ...data,
+        productId: id,
+        productName: product?.name,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Quote Request Sent",
+        description: "We'll get back to you within 24 hours with pricing information.",
+      });
+      setQuoteDialogOpen(false);
+      quoteForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Send Request",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onQuoteSubmit = (data: QuoteRequestData) => {
+    quoteRequestMutation.mutate(data);
+  };
 
   const openLightbox = (imageSrc: string, title: string) => {
     setLightboxImage(imageSrc);
@@ -247,9 +305,99 @@ export default function ProductDetails() {
             />
 
             {/* Action Button */}
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
-              Request Quote for {product.name}
-            </Button>
+            <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
+                  <Mail className="h-5 w-5 mr-2" />
+                  Request Quote for {product.name}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Request Quote</DialogTitle>
+                </DialogHeader>
+                <Form {...quoteForm}>
+                  <form onSubmit={quoteForm.handleSubmit(onQuoteSubmit)} className="space-y-4">
+                    <FormField
+                      control={quoteForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your full name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={quoteForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="your.email@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={quoteForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={quoteForm.control}
+                      name="message"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Message</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Tell us about your project..."
+                              className="min-h-[100px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end space-x-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setQuoteDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={quoteRequestMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {quoteRequestMutation.isPending ? "Sending..." : "Send Request"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
