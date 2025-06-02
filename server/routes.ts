@@ -1821,10 +1821,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   async function generatePDFReport(data: any[], reportType: string, startDate: string, endDate: string) {
-    // Create a simple text-based report format
-    const reportContent = `${reportType.replace('_', ' ').toUpperCase()} REPORT\n\nDate Range: ${startDate} to ${endDate}\nGenerated on: ${new Date().toLocaleDateString()}\n\n${JSON.stringify(data, null, 2)}`;
+    const PDFDocument = (await import('pdfkit')).default;
     
-    return Buffer.from(reportContent, 'utf8');
+    return new Promise<Buffer>((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50 });
+      const chunks: Buffer[] = [];
+      
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+      
+      // Header
+      doc.fontSize(20).text(`${reportType.replace('_', ' ').toUpperCase()} REPORT`, 50, 50);
+      doc.fontSize(12)
+         .text(`Date Range: ${startDate} to ${endDate}`, 50, 80)
+         .text(`Generated on: ${new Date().toLocaleDateString()}`, 50, 95);
+      
+      let yPosition = 130;
+      
+      if (data.length === 0) {
+        doc.text('No data available for the selected date range.', 50, yPosition);
+      } else {
+        // Create a formatted table
+        const headers = Object.keys(data[0]);
+        const columnWidth = 500 / headers.length;
+        
+        // Table headers
+        doc.fontSize(10).fillColor('black');
+        headers.forEach((header, index) => {
+          doc.text(header.toUpperCase(), 50 + (index * columnWidth), yPosition, {
+            width: columnWidth - 5,
+            ellipsis: true
+          });
+        });
+        
+        yPosition += 20;
+        doc.moveTo(50, yPosition).lineTo(550, yPosition).stroke();
+        yPosition += 10;
+        
+        // Table data
+        data.forEach((row: any) => {
+          if (yPosition > 700) {
+            doc.addPage();
+            yPosition = 50;
+          }
+          
+          headers.forEach((header, index) => {
+            const value = row[header]?.toString() || '';
+            doc.fontSize(9).text(value, 50 + (index * columnWidth), yPosition, {
+              width: columnWidth - 5,
+              ellipsis: true
+            });
+          });
+          
+          yPosition += 20;
+        });
+      }
+      
+      doc.end();
+    });
   }
 
   // Report generation endpoint
