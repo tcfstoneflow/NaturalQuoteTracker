@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/table";
 import { clientsApi } from "@/lib/api";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Mail, Phone, Building, Download, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Mail, Phone, Building, Download, Eye, Upload, FileText } from "lucide-react";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -38,6 +38,7 @@ import { useLocation } from "wouter";
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isQuoteViewModalOpen, setIsQuoteViewModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -76,6 +77,9 @@ export default function Clients() {
   const [quoteLineItems, setQuoteLineItems] = useState<any[]>([]);
   const [productSearchTerms, setProductSearchTerms] = useState<{[key: number]: string}>({});
   const [ccProcessingFee, setCcProcessingFee] = useState(false);
+  const [bulkImportFile, setBulkImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [isProcessingImport, setIsProcessingImport] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -155,6 +159,31 @@ export default function Clients() {
     onError: (error: any) => {
       toast({
         title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkImportMutation = useMutation({
+    mutationFn: async (clients: any[]) => {
+      const formData = new FormData();
+      formData.append('clients', JSON.stringify(clients));
+      
+      const response = await apiRequest('POST', '/api/clients/bulk-import', formData);
+      return response.json();
+    },
+    onSuccess: (result: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+      toast({
+        title: "Import Successful",
+        description: `Successfully imported ${result.imported} clients. ${result.errors || 0} errors.`,
+      });
+      handleCloseBulkImport();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Import Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -517,6 +546,139 @@ export default function Clients() {
     }
   };
 
+  // Bulk import helper functions
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      toast({
+        title: "Invalid File",
+        description: "Please upload a CSV file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setBulkImportFile(file);
+    parseCSVFile(file);
+  };
+
+  const parseCSVFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast({
+          title: "Invalid CSV",
+          description: "CSV file must have at least a header row and one data row",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      const rows = lines.slice(1);
+      
+      const parsedData = rows.map((row, index) => {
+        const values = row.split(',').map(v => v.trim().replace(/"/g, ''));
+        const client: any = { rowNumber: index + 2 };
+        
+        headers.forEach((header, i) => {
+          const normalizedHeader = header.toLowerCase().replace(/\s+/g, '');
+          switch (normalizedHeader) {
+            case 'name':
+            case 'clientname':
+            case 'fullname':
+              client.name = values[i] || '';
+              break;
+            case 'email':
+            case 'emailaddress':
+              client.email = values[i] || '';
+              break;
+            case 'phone':
+            case 'phonenumber':
+            case 'tel':
+              client.phone = values[i] || '';
+              break;
+            case 'company':
+            case 'companyname':
+            case 'organization':
+              client.company = values[i] || '';
+              break;
+            case 'address':
+            case 'streetaddress':
+              client.address = values[i] || '';
+              break;
+            case 'city':
+              client.city = values[i] || '';
+              break;
+            case 'state':
+            case 'province':
+              client.state = values[i] || '';
+              break;
+            case 'zip':
+            case 'zipcode':
+            case 'postalcode':
+              client.zipCode = values[i] || '';
+              break;
+            case 'notes':
+            case 'comments':
+              client.notes = values[i] || '';
+              break;
+            default:
+              break;
+          }
+        });
+        
+        return client;
+      });
+
+      setImportPreview(parsedData);
+    };
+    
+    reader.readAsText(file);
+  };
+
+  const handleBulkImport = () => {
+    if (importPreview.length === 0) {
+      toast({
+        title: "No Data",
+        description: "Please upload and preview data before importing",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessingImport(true);
+    bulkImportMutation.mutate(importPreview);
+  };
+
+  const handleCloseBulkImport = () => {
+    setIsBulkImportModalOpen(false);
+    setBulkImportFile(null);
+    setImportPreview([]);
+    setIsProcessingImport(false);
+  };
+
+  const downloadSampleCSV = () => {
+    const sampleData = [
+      'Name,Email,Phone,Company,Address,City,State,Zip,Notes',
+      'John Smith,john@example.com,555-0123,Acme Corp,123 Main St,Austin,TX,73301,VIP Client',
+      'Jane Doe,jane@business.com,555-0456,Business Inc,456 Oak Ave,Dallas,TX,75201,Referred by partner'
+    ].join('\n');
+
+    const blob = new Blob([sampleData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'client-import-sample.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <TopBar 
@@ -529,13 +691,123 @@ export default function Clients() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Client Directory</CardTitle>
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={handleOpenCreateModal} className="bg-primary hover:bg-primary-dark">
-                  <Plus size={16} className="mr-2" />
-                  Add Client
-                </Button>
-              </DialogTrigger>
+            <div className="flex gap-2">
+              <Dialog open={isBulkImportModalOpen} onOpenChange={setIsBulkImportModalOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Upload size={16} className="mr-2" />
+                    Bulk Import
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Bulk Client Import</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    {/* File Upload Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Upload CSV File</h3>
+                        <Button variant="outline" size="sm" onClick={downloadSampleCSV}>
+                          <FileText size={16} className="mr-2" />
+                          Download Sample
+                        </Button>
+                      </div>
+                      
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <input
+                          type="file"
+                          accept=".csv"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="csvUpload"
+                        />
+                        <label
+                          htmlFor="csvUpload"
+                          className="cursor-pointer flex flex-col items-center space-y-2"
+                        >
+                          <Upload size={48} className="text-gray-400" />
+                          <div className="text-sm text-gray-600">
+                            {bulkImportFile ? (
+                              <span className="text-green-600">
+                                File uploaded: {bulkImportFile.name}
+                              </span>
+                            ) : (
+                              <span>
+                                Click to upload CSV file or drag and drop
+                              </span>
+                            )}
+                          </div>
+                        </label>
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        <p><strong>Supported columns:</strong> Name, Email, Phone, Company, Address, City, State, Zip, Notes</p>
+                        <p>Column headers are case-insensitive and flexible (e.g., "Email Address" or "Phone Number" work too)</p>
+                      </div>
+                    </div>
+
+                    {/* Preview Section */}
+                    {importPreview.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Preview ({importPreview.length} clients)</h3>
+                        <div className="max-h-60 overflow-y-auto border rounded-lg">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Phone</TableHead>
+                                <TableHead>Company</TableHead>
+                                <TableHead>City</TableHead>
+                                <TableHead>State</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {importPreview.slice(0, 10).map((client, index) => (
+                                <TableRow key={index}>
+                                  <TableCell>{client.name || '-'}</TableCell>
+                                  <TableCell>{client.email || '-'}</TableCell>
+                                  <TableCell>{client.phone || '-'}</TableCell>
+                                  <TableCell>{client.company || '-'}</TableCell>
+                                  <TableCell>{client.city || '-'}</TableCell>
+                                  <TableCell>{client.state || '-'}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                          {importPreview.length > 10 && (
+                            <div className="p-2 text-center text-sm text-gray-500">
+                              ... and {importPreview.length - 10} more clients
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={handleCloseBulkImport}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleBulkImport} 
+                        disabled={importPreview.length === 0 || isProcessingImport}
+                      >
+                        {isProcessingImport ? 'Importing...' : `Import ${importPreview.length} Clients`}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={handleOpenCreateModal} className="bg-primary hover:bg-primary-dark">
+                    <Plus size={16} className="mr-2" />
+                    Add Client
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
@@ -659,6 +931,7 @@ export default function Clients() {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
           </CardHeader>
 
           {/* Client Detail Modal */}
