@@ -63,6 +63,7 @@ export default function Inventory() {
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<string>("all");
   const [priceRangeFilter, setPriceRangeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
   
   const [formData, setFormData] = useState({
     bundleId: "",
@@ -321,10 +322,10 @@ export default function Inventory() {
   };
 
   // Get unique values for dynamic filters
-  const uniqueSuppliers = Array.from(new Set(products?.map((p: Product) => p.supplier) || []));
-  const uniqueGrades = Array.from(new Set(products?.map((p: Product) => p.grade) || []));
+  const uniqueSuppliers = Array.from(new Set((products as Product[])?.map((p: Product) => p.supplier) || []));
+  const uniqueGrades = Array.from(new Set((products as Product[])?.map((p: Product) => p.grade) || []));
 
-  const filteredProducts = products?.filter((product: Product) => {
+  const filteredAndSortedProducts = (products as Product[])?.filter((product: Product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -356,6 +357,24 @@ export default function Inventory() {
     })();
 
     return matchesSearch && matchesCategory && matchesGrade && matchesSupplier && matchesStock && matchesPriceRange;
+  }).sort((a: Product, b: Product) => {
+    switch (sortBy) {
+      case "location":
+        const locationA = a.location || "";
+        const locationB = b.location || "";
+        return locationA.localeCompare(locationB);
+      case "price":
+        const priceA = parseFloat(a.price) || 0;
+        const priceB = parseFloat(b.price) || 0;
+        return priceA - priceB;
+      case "stockQuantity":
+        return a.stockQuantity - b.stockQuantity;
+      case "finish":
+        return a.finish.localeCompare(b.finish);
+      case "name":
+      default:
+        return a.name.localeCompare(b.name);
+    }
   });
 
   return (
@@ -447,6 +466,19 @@ export default function Inventory() {
             </SelectContent>
           </Select>
 
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="location">Location</SelectItem>
+              <SelectItem value="price">Price/Unit</SelectItem>
+              <SelectItem value="stockQuantity">Slab Count</SelectItem>
+              <SelectItem value="finish">Finish</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Button 
             variant="outline" 
             size="sm"
@@ -457,6 +489,7 @@ export default function Inventory() {
               setSupplierFilter("all");
               setStockFilter("all");
               setPriceRangeFilter("all");
+              setSortBy("name");
             }}
           >
             Clear Filters
@@ -466,7 +499,7 @@ export default function Inventory() {
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          Showing {filteredProducts?.length || 0} of {products?.length || 0} bundles
+          Showing {filteredAndSortedProducts?.length || 0} of {products?.length || 0} bundles
         </div>
         <div className="flex space-x-2">
           <Button asChild variant="outline">
@@ -888,7 +921,7 @@ export default function Inventory() {
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Loading bundles...</div>
-          ) : !filteredProducts || filteredProducts.length === 0 ? (
+          ) : !filteredAndSortedProducts || filteredAndSortedProducts.length === 0 ? (
             <div className="text-center py-8">
               <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No bundles found</h3>
@@ -917,7 +950,7 @@ export default function Inventory() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product: Product) => {
+                {filteredAndSortedProducts.map((product: Product) => {
                   const getProductImage = (category: string) => {
                     const images = {
                       marble: "https://images.unsplash.com/photo-1541123437800-1bb1317badc2?w=60&h=60&fit=crop",
