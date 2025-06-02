@@ -663,8 +663,8 @@ export default function Clients() {
 
           {/* Client Detail Modal */}
           <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-              <DialogHeader>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <div className="flex justify-between items-center">
                   <DialogTitle>Client Details</DialogTitle>
                   {viewingClient && (
@@ -681,8 +681,8 @@ export default function Clients() {
                 </div>
               </DialogHeader>
               {viewingClient && (
-                <div className="flex flex-col h-full">
-                  <div className="space-y-6 overflow-y-auto flex-1 pr-2">
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  <div className="space-y-6 overflow-y-auto flex-1 pr-2 pb-4">
                   {/* Client Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
