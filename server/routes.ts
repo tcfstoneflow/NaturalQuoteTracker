@@ -9,6 +9,7 @@ import { login, register, logout, getCurrentUser, requireAuth, requireRole, requ
 import { analyzeClientPurchases } from "./client-analysis";
 import { processSlabUpload } from "./ai-rendering";
 import { generatePythonCountertopRender, uploadRenderingAsset } from "./python-rendering";
+import { validateProductData, optimizeQuoteCalculations, cleanupExpiredData, generateHealthReport } from "./database-maintenance";
 import fs from "fs";
 import path from "path";
 import multer from "multer";

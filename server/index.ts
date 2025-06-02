@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
+import { taskScheduler } from "./scheduled-tasks";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
 
@@ -153,5 +154,11 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start scheduled maintenance tasks in development mode too for testing
+    setTimeout(() => {
+      taskScheduler.start();
+      log('Scheduled maintenance tasks started');
+    }, 5000); // Wait 5 seconds after server start
   });
 })();
