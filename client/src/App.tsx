@@ -42,9 +42,9 @@ function Router() {
       {isAuthenticated ? (
         <Route path="*">
           {() => (
-            <div className="flex h-screen overflow-hidden">
+            <div className="flex h-screen">
               <Sidebar />
-              <main className="flex-1 overflow-hidden">
+              <main className="flex-1 overflow-y-auto">
                 <Switch>
                   <Route path="/" component={Dashboard} />
                   <Route path="/sales-dashboard" component={SalesDashboard} />
