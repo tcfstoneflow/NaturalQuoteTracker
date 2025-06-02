@@ -7,8 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Phone, Mail, Clock, User, MessageSquare, CheckCircle, XCircle } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar, Phone, Mail, Clock, User, MessageSquare, CheckCircle, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday, addMonths, subMonths, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 interface ShowroomVisit {
@@ -50,6 +50,7 @@ export default function ShowroomVisits() {
   const [editPhone, setEditPhone] = useState("");
   const [editVisitDate, setEditVisitDate] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [newVisit, setNewVisit] = useState({
     name: "",
     email: "",
@@ -213,6 +214,111 @@ export default function ShowroomVisits() {
   const scheduledVisits = visits.filter((visit: ShowroomVisit) => visit.status === "scheduled");
   const completedVisits = visits.filter((visit: ShowroomVisit) => visit.status === "completed");
 
+  // Calendar helper functions
+  const monthStart = startOfMonth(currentCalendarDate);
+  const monthEnd = endOfMonth(currentCalendarDate);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  
+  // Get starting day of week (0 = Sunday, 1 = Monday, etc.)
+  const startDay = getDay(monthStart);
+  
+  // Create array of empty cells for days before month starts
+  const emptyDays = Array.from({ length: startDay }, (_, i) => i);
+  
+  // Filter visits for current month
+  const monthVisits = visits.filter((visit: ShowroomVisit) => {
+    const visitDate = parseISO(visit.preferredDate);
+    return visitDate >= monthStart && visitDate <= monthEnd;
+  });
+  
+  // Get visits for a specific day
+  const getVisitsForDay = (day: Date) => {
+    return monthVisits.filter((visit: ShowroomVisit) => {
+      const visitDate = parseISO(visit.preferredDate);
+      return isSameDay(visitDate, day);
+    });
+  };
+
+  const CalendarView = () => (
+    <Card className="mb-6">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl">
+            {format(currentCalendarDate, "MMMM yyyy")} Calendar
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentCalendarDate(subMonths(currentCalendarDate, 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentCalendarDate(addMonths(currentCalendarDate, 1))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
+              {day}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {emptyDays.map(i => (
+            <div key={`empty-${i}`} className="h-20"></div>
+          ))}
+          {monthDays.map(day => {
+            const dayVisits = getVisitsForDay(day);
+            const isCurrentDay = isToday(day);
+            
+            return (
+              <div
+                key={day.toISOString()}
+                className={`h-20 p-1 border rounded text-xs ${
+                  isCurrentDay ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
+                }`}
+              >
+                <div className={`font-medium mb-1 ${isCurrentDay ? 'text-blue-600' : 'text-gray-900'}`}>
+                  {format(day, 'd')}
+                </div>
+                <div className="space-y-1">
+                  {dayVisits.slice(0, 2).map((visit: ShowroomVisit) => (
+                    <div
+                      key={visit.id}
+                      className={`px-1 py-0.5 rounded text-xs truncate ${
+                        visit.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                        visit.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        visit.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}
+                      title={`${visit.name} - ${visit.status}`}
+                    >
+                      {visit.name}
+                    </div>
+                  ))}
+                  {dayVisits.length > 2 && (
+                    <div className="text-xs text-gray-500">
+                      +{dayVisits.length - 2} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="p-6">
       <div className="mb-6 flex justify-between items-center">
@@ -306,6 +412,9 @@ export default function ShowroomVisits() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Calendar View */}
+      <CalendarView />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
