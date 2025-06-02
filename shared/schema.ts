@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, decimal, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, decimal, timestamp, jsonb, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -73,7 +73,23 @@ export const products = pgTable("products", {
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  // High-performance indexes for large inventory (5000+ products)
+  categoryIdx: index("products_category_idx").on(table.category),
+  supplierIdx: index("products_supplier_idx").on(table.supplier),
+  gradeIdx: index("products_grade_idx").on(table.grade),
+  finishIdx: index("products_finish_idx").on(table.finish),
+  locationIdx: index("products_location_idx").on(table.location),
+  stockIdx: index("products_stock_idx").on(table.stockQuantity),
+  priceIdx: index("products_price_idx").on(table.price),
+  activeIdx: index("products_active_idx").on(table.isActive),
+  // Composite indexes for common filter combinations
+  categoryGradeIdx: index("products_category_grade_idx").on(table.category, table.grade),
+  supplierCategoryIdx: index("products_supplier_category_idx").on(table.supplier, table.category),
+  locationStockIdx: index("products_location_stock_idx").on(table.location, table.stockQuantity),
+  // Full-text search preparation
+  nameIdx: index("products_name_idx").on(table.name),
+}));
 
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),
