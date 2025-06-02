@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
 import { Lightbox } from "@/components/ui/lightbox";
+import { SocialShare } from "@/components/ui/social-share";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -236,7 +237,14 @@ export default function ProductDetails() {
               </Card>
             )}
 
-
+            {/* Social Sharing */}
+            <SocialShare
+              url={window.location.href}
+              title={product.name}
+              description={`${product.category} from ${product.supplier} - ${product.grade} grade with ${product.finish} finish`}
+              imageUrl={product.imageUrl || undefined}
+              price={`$${product.price}`}
+            />
 
             {/* Action Button */}
             <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
