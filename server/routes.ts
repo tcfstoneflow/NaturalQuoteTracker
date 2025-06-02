@@ -1707,23 +1707,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function generateSalesManagerReport(startDate: string, endDate: string) {
     const quotes = await storage.getQuotesByDateRange(startDate, endDate);
     const users = await storage.getAllUsers();
+    const allShowroomVisits = await storage.getShowroomVisits();
+    
+    // Filter showroom visits by date range
+    const showroomVisits = allShowroomVisits.filter((visit: any) => {
+      const visitDate = new Date(visit.visitDate);
+      return visitDate >= new Date(startDate) && visitDate <= new Date(endDate);
+    });
     
     const salesManagers = users.filter((u: any) => u.role === 'sales_manager' || u.role === 'sales_rep' || u.role === 'admin');
     
     return salesManagers.map((manager: any) => {
       const managerQuotes = quotes.filter((q: any) => q.salesManagerId === manager.id);
+      const managerVisits = showroomVisits.filter((v: any) => v.assignedToUserId === manager.id);
       const totalRevenue = managerQuotes
         .filter((q: any) => q.status === 'approved')
         .reduce((sum: number, quote: any) => sum + parseFloat(quote.totalAmount), 0);
       
       return {
-        name: `${manager.firstName} ${manager.lastName}`,
-        email: manager.email,
-        totalQuotes: managerQuotes.length,
-        approvedQuotes: managerQuotes.filter((q: any) => q.status === 'approved').length,
-        totalRevenue: totalRevenue.toFixed(2),
-        conversionRate: managerQuotes.length > 0 ? 
-          ((managerQuotes.filter((q: any) => q.status === 'approved').length / managerQuotes.length) * 100).toFixed(1) : '0'
+        'Sales Manager': `${manager.firstName} ${manager.lastName}`,
+        'Total Quotes': managerQuotes.length,
+        'Approved Quotes': managerQuotes.filter((q: any) => q.status === 'approved').length,
+        'Showroom Visits': managerVisits.length,
+        'Total Revenue': `$${totalRevenue.toFixed(2)}`,
+        'Conversion Rate': managerQuotes.length > 0 ? 
+          `${((managerQuotes.filter((q: any) => q.status === 'approved').length / managerQuotes.length) * 100).toFixed(1)}%` : '0%'
       };
     });
   }
