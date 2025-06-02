@@ -3,14 +3,75 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, DollarSign, Percent } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Percent, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfitMarginAnalysis() {
+  const { toast } = useToast();
   const { data: marginData, isLoading } = useQuery({
     queryKey: ["/api/reports/profit-margins"],
     queryFn: () => fetch("/api/reports/profit-margins").then(res => res.json()),
   });
+
+  const exportMarginAnalysis = () => {
+    if (!marginData?.categories) {
+      toast({
+        title: "Export Failed",
+        description: "No margin data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = [
+      'Category',
+      'Products',
+      'Total Revenue',
+      'Profit Margin %',
+      'Average Cost',
+      'Average Price',
+      'Markup %',
+      'Total Profit',
+      'Trend %',
+      'Recommendations'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...marginData.categories.map((category: any) => [
+        `"${category.name}"`,
+        category.productCount,
+        category.totalRevenue,
+        category.margin,
+        category.avgCost,
+        category.avgPrice,
+        category.markup,
+        category.profit,
+        category.trend,
+        `"${category.recommendations || 'N/A'}"`
+      ].join(','))
+    ].join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `profit-margin-analysis-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export Successful",
+      description: "Profit margin analysis has been downloaded as CSV",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -136,7 +197,12 @@ export default function ProfitMarginAnalysis() {
             </div>
           </div>
 
-          <Button variant="outline" className="w-full">
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={exportMarginAnalysis}
+          >
+            <Download className="h-4 w-4 mr-2" />
             Export Margin Analysis
           </Button>
         </div>
