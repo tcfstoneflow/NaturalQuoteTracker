@@ -351,7 +351,7 @@ export default function ShowroomVisits() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">Preferred: {visit.preferredDate}</span>
+                <span className="text-gray-600">Showroom Visit Date: {visit.preferredDate}</span>
               </div>
               {visit.assignedSalesMember && (
                 <div className="flex items-center gap-2 text-sm">
