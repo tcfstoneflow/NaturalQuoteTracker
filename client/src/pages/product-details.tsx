@@ -272,10 +272,6 @@ export default function ProductDetails() {
                     <div className="font-medium">{product.thickness}</div>
                   </div>
                   <div>
-                    <span className="text-gray-600">Price per sq ft:</span>
-                    <div className="font-medium">${product.price}</div>
-                  </div>
-                  <div>
                     <span className="text-gray-600">Location:</span>
                     <div className="font-medium">{product.location || 'N/A'}</div>
                   </div>

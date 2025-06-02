@@ -425,11 +425,7 @@ export default function PublicInventory() {
                         <span className="text-gray-600">Finish:</span>
                         <div className="font-medium">{product.finish}</div>
                       </div>
-                      <div>
-                        <span className="text-gray-600">Price per sq ft:</span>
-                        <div className="font-medium">${product.price}</div>
-                      </div>
-                      <div>
+                      <div className="col-span-2">
                         <span className="text-gray-600">Available Slabs:</span>
                         <div className="font-semibold">
                           {product.slabs?.filter((slab: any) => slab.status === 'available').length || product.stockQuantity || 0}
