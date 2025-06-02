@@ -39,18 +39,41 @@ export default function PublicInventory() {
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxTitle, setLightboxTitle] = useState("");
   
+  // Advanced filtering states
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [dimensionFilter, setDimensionFilter] = useState("all");
+  const [finishFilter, setFinishFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("all");
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  // Handle URL parameters for category filtering
+  // Handle URL parameters for category filtering and load recently viewed
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const categoryParam = urlParams.get('category');
     if (categoryParam) {
       setCategoryFilter(categoryParam);
+      setActiveTab(categoryParam);
+    }
+    
+    // Load recently viewed products from localStorage
+    const recentlyViewedData = localStorage.getItem('recentlyViewed');
+    if (recentlyViewedData) {
+      setRecentlyViewed(JSON.parse(recentlyViewedData));
     }
   }, []);
+
+  // Function to add product to recently viewed
+  const addToRecentlyViewed = (product: any) => {
+    const currentViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    const filtered = currentViewed.filter((p: any) => p.id !== product.id);
+    const updated = [product, ...filtered].slice(0, 6); // Keep only 6 most recent
+    localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+    setRecentlyViewed(updated);
+  };
 
   const contactForm = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -91,15 +114,27 @@ export default function PublicInventory() {
     return ((length * width) / 144).toFixed(1);
   };
 
-  // Filter and sort products
+  // Enhanced filtering with price range, dimensions, and finish
   const filteredProducts = productsWithSlabs.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.bundleId?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    const matchesCategory = activeTab === "all" || product.category === activeTab;
     
-    return matchesSearch && matchesCategory;
+    const price = parseFloat(product.price) || 0;
+    const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+    
+    const matchesDimension = dimensionFilter === "all" || 
+      (dimensionFilter === "2cm" && product.thickness === "2cm") ||
+      (dimensionFilter === "3cm" && product.thickness === "3cm") ||
+      (dimensionFilter === "large" && product.slabLength && parseFloat(product.slabLength) > 100) ||
+      (dimensionFilter === "medium" && product.slabLength && parseFloat(product.slabLength) <= 100 && parseFloat(product.slabLength) > 80) ||
+      (dimensionFilter === "small" && product.slabLength && parseFloat(product.slabLength) <= 80);
+    
+    const matchesFinish = finishFilter === "all" || product.finish === finishFilter;
+    
+    return matchesSearch && matchesCategory && matchesPrice && matchesDimension && matchesFinish;
   });
 
   const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
@@ -181,39 +216,119 @@ export default function PublicInventory() {
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search stones..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          {/* Search Bar */}
+          <div className="relative max-w-md mx-auto mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search stones..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Category Navigation Tabs */}
+          <div className="flex justify-center mb-6">
+            <div className="flex flex-wrap gap-2 p-1 bg-gray-100 rounded-lg">
+              <Button
+                variant={activeTab === "all" ? "default" : "ghost"}
+                onClick={() => setActiveTab("all")}
+                className={`px-4 py-2 ${activeTab === "all" ? "bg-white shadow-sm" : ""}`}
+              >
+                All Stones
+              </Button>
+              {categories.map((category: string) => (
+                <Button
+                  key={category}
+                  variant={activeTab === category ? "default" : "ghost"}
+                  onClick={() => setActiveTab(category)}
+                  className={`px-4 py-2 capitalize ${activeTab === category ? "bg-white shadow-sm" : ""}`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Advanced Filters */}
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <span className="font-medium text-gray-700">Advanced Filters</span>
             </div>
             
-            <div className="flex gap-3 items-center">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="All Categories" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Price Range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price Range ($/sqft)
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={priceRange[0]}
+                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                    className="w-20"
+                  />
+                  <span className="self-center">-</span>
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 1000])}
+                    className="w-20"
+                  />
+                </div>
+              </div>
+
+              {/* Dimensions */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Slab Size
+                </label>
+                <Select value={dimensionFilter} onValueChange={setDimensionFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Sizes" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category: string) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">All Sizes</SelectItem>
+                    <SelectItem value="large">Large (&gt;100")</SelectItem>
+                    <SelectItem value="medium">Medium (80-100")</SelectItem>
+                    <SelectItem value="small">Small (&lt;80")</SelectItem>
+                    <SelectItem value="2cm">2cm Thickness</SelectItem>
+                    <SelectItem value="3cm">3cm Thickness</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
+
+              {/* Finish Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Finish
+                </label>
+                <Select value={finishFilter} onValueChange={setFinishFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Finishes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Finishes</SelectItem>
+                    <SelectItem value="Polished">Polished</SelectItem>
+                    <SelectItem value="Leather">Leather</SelectItem>
+                    <SelectItem value="Brushed">Brushed</SelectItem>
+                    <SelectItem value="Matte">Matte</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sort By
+                </label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name">Name A-Z</SelectItem>
@@ -221,13 +336,14 @@ export default function PublicInventory() {
                   <SelectItem value="slabs">Most Slabs</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Package className="h-4 w-4" />
-                <span>{filteredProducts.reduce((total: number, product: any) => 
-                  total + (product.slabs?.filter((slab: any) => slab.status === 'available').length || 0), 0
-                )} slabs available</span>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-2 text-sm text-gray-600 mt-3">
+              <Package className="h-4 w-4" />
+              <span>{filteredProducts.reduce((total: number, product: any) => 
+                total + (product.slabs?.filter((slab: any) => slab.status === 'available').length || 0), 0
+              )} slabs available</span>
             </div>
           </div>
         </div>
@@ -247,6 +363,7 @@ export default function PublicInventory() {
                 className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
+                  addToRecentlyViewed(product);
                   setLocation(`/product/${product.id}`);
                 }}
               >
