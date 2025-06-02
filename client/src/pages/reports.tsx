@@ -571,15 +571,15 @@ export default function Reports() {
             <h2 className="text-xl font-semibold text-gray-900">Financial Analytics</h2>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {/* Profit Margin Analysis */}
-            <ProfitMarginAnalysis />
-            
-            {/* Revenue Trends */}
-            <RevenueTrendsReport />
-            
-            {/* Payment Status Tracking */}
+          <div className="space-y-6">
+            {/* Payment Status Tracking - Full Width */}
             <PaymentStatusReport />
+            
+            {/* Profit Margin and Revenue Trends - Two Columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ProfitMarginAnalysis />
+              <RevenueTrendsReport />
+            </div>
           </div>
         </div>
 
