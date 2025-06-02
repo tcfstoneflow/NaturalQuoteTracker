@@ -1708,33 +1708,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const quotes = await storage.getQuotesByDateRange(startDate, endDate);
     const users = await storage.getAllUsers();
     
-    const salesManagers = users.filter(u => u.role === 'sales_manager' || u.role === 'sales_rep' || u.role === 'admin');
+    const salesManagers = users.filter((u: any) => u.role === 'sales_manager' || u.role === 'sales_rep' || u.role === 'admin');
     
-    return salesManagers.map(manager => {
-      const managerQuotes = quotes.filter(q => q.salesManagerId === manager.id);
+    return salesManagers.map((manager: any) => {
+      const managerQuotes = quotes.filter((q: any) => q.salesManagerId === manager.id);
       const totalRevenue = managerQuotes
-        .filter(q => q.status === 'approved')
-        .reduce((sum, quote) => sum + parseFloat(quote.totalAmount), 0);
+        .filter((q: any) => q.status === 'approved')
+        .reduce((sum: number, quote: any) => sum + parseFloat(quote.totalAmount), 0);
       
       return {
         name: `${manager.firstName} ${manager.lastName}`,
         email: manager.email,
         totalQuotes: managerQuotes.length,
-        approvedQuotes: managerQuotes.filter(q => q.status === 'approved').length,
+        approvedQuotes: managerQuotes.filter((q: any) => q.status === 'approved').length,
         totalRevenue: totalRevenue.toFixed(2),
         conversionRate: managerQuotes.length > 0 ? 
-          ((managerQuotes.filter(q => q.status === 'approved').length / managerQuotes.length) * 100).toFixed(1) : '0'
+          ((managerQuotes.filter((q: any) => q.status === 'approved').length / managerQuotes.length) * 100).toFixed(1) : '0'
       };
     });
   }
 
   async function generateProductsReport(startDate: string, endDate: string) {
     const quotes = await storage.getQuotesByDateRange(startDate, endDate);
-    const products = await storage.getAllProducts();
+    const products = await storage.getProducts();
     
     const productSales = new Map();
     
-    quotes.forEach(quote => {
+    quotes.forEach((quote: any) => {
       if (quote.lineItems) {
         quote.lineItems.forEach((item: any) => {
           const productId = item.productId;
@@ -1746,7 +1746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             existing.quantity += quantity;
             existing.revenue += revenue;
           } else {
-            const product = products.find(p => p.id === productId);
+            const product = products.find((p: any) => p.id === productId);
             productSales.set(productId, {
               productName: product?.name || 'Unknown Product',
               category: product?.category || 'Unknown',
@@ -1759,40 +1759,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     return Array.from(productSales.values())
-      .map(item => ({
+      .map((item: any) => ({
         ...item,
         revenue: item.revenue.toFixed(2)
       }))
-      .sort((a, b) => parseFloat(b.revenue) - parseFloat(a.revenue));
+      .sort((a: any, b: any) => parseFloat(b.revenue) - parseFloat(a.revenue));
   }
 
   async function generateClientsReport(startDate: string, endDate: string) {
     const quotes = await storage.getQuotesByDateRange(startDate, endDate);
-    const clients = await storage.getAllClients();
+    const clients = await storage.getClients();
     
-    return clients.map(client => {
-      const clientQuotes = quotes.filter(q => q.clientId === client.id);
+    return clients.map((client: any) => {
+      const clientQuotes = quotes.filter((q: any) => q.clientId === client.id);
       const totalRevenue = clientQuotes
-        .filter(q => q.status === 'approved')
-        .reduce((sum, quote) => sum + parseFloat(quote.totalAmount), 0);
+        .filter((q: any) => q.status === 'approved')
+        .reduce((sum: number, quote: any) => sum + parseFloat(quote.totalAmount), 0);
       
       return {
         name: client.name,
         email: client.email,
         company: client.company || 'N/A',
         totalQuotes: clientQuotes.length,
-        approvedQuotes: clientQuotes.filter(q => q.status === 'approved').length,
+        approvedQuotes: clientQuotes.filter((q: any) => q.status === 'approved').length,
         totalRevenue: totalRevenue.toFixed(2),
         lastQuoteDate: clientQuotes.length > 0 ? 
-          new Date(Math.max(...clientQuotes.map(q => new Date(q.createdAt).getTime()))).toLocaleDateString() : 'N/A'
+          new Date(Math.max(...clientQuotes.map((q: any) => new Date(q.createdAt).getTime()))).toLocaleDateString() : 'N/A'
       };
-    }).filter(client => client.totalQuotes > 0);
+    }).filter((client: any) => client.totalQuotes > 0);
   }
 
   async function generateQuotesReport(startDate: string, endDate: string) {
     const quotes = await storage.getQuotesByDateRange(startDate, endDate);
     
-    return quotes.map(quote => ({
+    return quotes.map((quote: any) => ({
       quoteNumber: quote.quoteNumber,
       clientName: quote.clientName || 'Unknown Client',
       status: quote.status,
@@ -1809,7 +1809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(','),
-      ...data.map(row => 
+      ...data.map((row: any) => 
         headers.map(header => {
           const value = row[header];
           return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
@@ -1853,7 +1853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         yPosition += 10;
         
         // Table data
-        data.forEach((row, rowIndex) => {
+        data.forEach((row: any, rowIndex: number) => {
           if (yPosition > 700) {
             doc.addPage();
             yPosition = 50;

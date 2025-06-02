@@ -44,6 +44,57 @@ export default function Reports() {
 
   const isLoading = statsLoading || quotesLoading || clientsLoading || productsLoading;
 
+  // Report generation handler
+  const handleGenerateReport = async () => {
+    if (!reportType || !startDate || !endDate || !exportFormat) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/reports/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportType,
+          startDate,
+          endDate,
+          exportFormat,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate report');
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filename = contentDisposition 
+        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+        : `report.${exportFormat === 'excel' ? 'xls' : exportFormat}`;
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Failed to generate report. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Calculate additional metrics
   const calculateMetrics = () => {
     if (!quotes || !clients || !products) return null;
@@ -245,7 +296,7 @@ export default function Reports() {
               <div className="space-y-2">
                 <Label>&nbsp;</Label>
                 <Button 
-                  onClick={generateReport} 
+                  onClick={handleGenerateReport} 
                   disabled={isGenerating || !startDate || !endDate}
                   className="w-full"
                 >

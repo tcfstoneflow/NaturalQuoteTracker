@@ -985,6 +985,42 @@ export class DatabaseStorage implements IStorage {
     return quotesWithDetails;
   }
 
+  async getQuotesByDateRange(startDate: string, endDate: string): Promise<QuoteWithDetails[]> {
+    const results = await db
+      .select()
+      .from(quotes)
+      .leftJoin(clients, eq(quotes.clientId, clients.id))
+      .leftJoin(users, eq(quotes.createdBy, users.id))
+      .where(and(
+        gte(quotes.createdAt, new Date(startDate)),
+        lte(quotes.createdAt, new Date(endDate + ' 23:59:59'))
+      ))
+      .orderBy(desc(quotes.createdAt));
+
+    const quotesWithDetails = await Promise.all(
+      results.map(async (result) => {
+        const lineItems = await db
+          .select()
+          .from(quoteLineItems)
+          .leftJoin(products, eq(quoteLineItems.productId, products.id))
+          .where(eq(quoteLineItems.quoteId, result.quotes.id));
+
+        return {
+          ...result.quotes,
+          client: result.clients!,
+          clientName: result.clients?.name || 'Unknown Client',
+          salesManagerName: result.users ? `${result.users.firstName} ${result.users.lastName}` : 'Unassigned',
+          salesManagerId: result.users?.id || null,
+          lineItems: lineItems.map(item => ({
+            ...item.quote_line_items,
+            product: item.products!
+          }))
+        };
+      })
+    );
+    return quotesWithDetails;
+  }
+
   // Quote Line Items
   async getQuoteLineItems(quoteId: number): Promise<QuoteLineItem[]> {
     return await db.select().from(quoteLineItems).where(eq(quoteLineItems.quoteId, quoteId));
