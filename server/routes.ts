@@ -238,6 +238,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/showroom-visits", requireAuth, async (req, res) => {
+    try {
+      const { name, email, phone, preferredDate, message, status, assignedToUserId, assignedSalesMember } = req.body;
+      
+      if (!name || !email || !preferredDate) {
+        return res.status(400).json({ message: "Name, email, and preferred date are required" });
+      }
+
+      const newVisit = await storage.createShowroomVisit({
+        name,
+        email,
+        phone: phone || null,
+        preferredDate,
+        message: message || null,
+        status: status || "pending",
+        assignedToUserId: assignedToUserId || null,
+        assignedSalesMember: assignedSalesMember || null
+      });
+      
+      res.status(201).json(newVisit);
+    } catch (error: any) {
+      console.error("Create showroom visit error:", error);
+      res.status(500).json({ message: "Failed to create visit" });
+    }
+  });
+
   app.patch("/api/showroom-visits/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
