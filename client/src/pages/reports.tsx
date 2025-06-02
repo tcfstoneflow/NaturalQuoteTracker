@@ -13,6 +13,9 @@ import TopSellingProductsReport from "@/components/reports/top-selling-products-
 import SalesManagerPerformanceReport from "@/components/reports/sales-manager-performance-report";
 import TopClientsReport from "@/components/reports/top-clients-report";
 import InventoryCategoryReport from "@/components/reports/inventory-category-report";
+import InventoryTurnoverReport from "@/components/reports/inventory-turnover-report";
+import SupplierPerformanceReport from "@/components/reports/supplier-performance-report";
+import SeasonalTrendsReport from "@/components/reports/seasonal-trends-report";
 
 export default function Reports() {
   // Report generation state
@@ -401,6 +404,25 @@ export default function Reports() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <TopClientsReport />
           <InventoryCategoryReport />
+        </div>
+
+        {/* New Advanced Analytics Section */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-6">
+            <Package size={20} className="text-green-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Operational Analytics</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {/* Inventory Turnover */}
+            <InventoryTurnoverReport />
+            
+            {/* Supplier Performance */}
+            <SupplierPerformanceReport />
+            
+            {/* Seasonal Trends */}
+            <SeasonalTrendsReport />
+          </div>
         </div>
 
         {/* Advanced Reports Section */}
