@@ -282,20 +282,17 @@ export default function PublicInventory() {
                 </div>
               </div>
 
-              {/* Dimensions */}
+              {/* Slab Thickness */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slab Size
+                  Slab Thickness
                 </label>
                 <Select value={dimensionFilter} onValueChange={setDimensionFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Sizes" />
+                    <SelectValue placeholder="All Thickness" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Sizes</SelectItem>
-                    <SelectItem value="large">Large (&gt;100")</SelectItem>
-                    <SelectItem value="medium">Medium (80-100")</SelectItem>
-                    <SelectItem value="small">Small (&lt;80")</SelectItem>
+                    <SelectItem value="all">All Thickness</SelectItem>
                     <SelectItem value="2cm">2cm Thickness</SelectItem>
                     <SelectItem value="3cm">3cm Thickness</SelectItem>
                   </SelectContent>
