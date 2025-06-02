@@ -122,19 +122,13 @@ export default function PublicInventory() {
     
     const matchesCategory = activeTab === "all" || product.category === activeTab;
     
-    const price = parseFloat(product.price) || 0;
-    const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
-    
     const matchesDimension = dimensionFilter === "all" || 
       (dimensionFilter === "2cm" && product.thickness === "2cm") ||
-      (dimensionFilter === "3cm" && product.thickness === "3cm") ||
-      (dimensionFilter === "large" && product.slabLength && parseFloat(product.slabLength) > 100) ||
-      (dimensionFilter === "medium" && product.slabLength && parseFloat(product.slabLength) <= 100 && parseFloat(product.slabLength) > 80) ||
-      (dimensionFilter === "small" && product.slabLength && parseFloat(product.slabLength) <= 80);
+      (dimensionFilter === "3cm" && product.thickness === "3cm");
     
     const matchesFinish = finishFilter === "all" || product.finish === finishFilter;
     
-    return matchesSearch && matchesCategory && matchesPrice && matchesDimension && matchesFinish;
+    return matchesSearch && matchesCategory && matchesDimension && matchesFinish;
   });
 
   const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
@@ -257,31 +251,7 @@ export default function PublicInventory() {
               <span className="font-medium text-gray-700">Advanced Filters</span>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Price Range */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price Range ($/sqft)
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Min"
-                    value={priceRange[0]}
-                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                    className="w-20"
-                  />
-                  <span className="self-center">-</span>
-                  <Input
-                    type="number"
-                    placeholder="Max"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 1000])}
-                    className="w-20"
-                  />
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Slab Thickness */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
