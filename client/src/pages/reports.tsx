@@ -15,13 +15,15 @@ import TopClientsReport from "@/components/reports/top-clients-report";
 import InventoryCategoryReport from "@/components/reports/inventory-category-report";
 import InventoryTurnoverReport from "@/components/reports/inventory-turnover-report";
 import SupplierPerformanceReport from "@/components/reports/supplier-performance-report";
-import SeasonalTrendsReport from "@/components/reports/seasonal-trends-report";
 import ProfitMarginAnalysis from "@/components/reports/profit-margin-analysis";
 import RevenueTrendsReport from "@/components/reports/revenue-trends-report";
 import PaymentStatusReport from "@/components/reports/payment-status-report";
 import CostAnalysisReport from "@/components/reports/cost-analysis-report";
+import SeasonalTrendsReport from "@/components/reports/seasonal-trends-report";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Reports() {
+  const [showSeasonalTrends, setShowSeasonalTrends] = useState(false);
   // Report generation state
   const [reportType, setReportType] = useState("sales_managers");
   const [startDate, setStartDate] = useState("");
@@ -417,15 +419,12 @@ export default function Reports() {
             <h2 className="text-xl font-semibold text-gray-900">Operational Analytics</h2>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Inventory Turnover */}
             <InventoryTurnoverReport />
             
             {/* Supplier Performance */}
             <SupplierPerformanceReport />
-            
-            {/* Seasonal Trends */}
-            <SeasonalTrendsReport />
           </div>
         </div>
 
@@ -464,6 +463,68 @@ export default function Reports() {
             
             {/* Sales Manager Performance */}
             <SalesManagerPerformanceReport />
+          </div>
+
+          {/* On-Demand Analysis */}
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">On-Demand Analysis</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-orange-600" />
+                    Seasonal Trends
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Analyze sales patterns by season and identify peak demand periods for different stone categories.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => setShowSeasonalTrends(true)}
+                  >
+                    Generate Report
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow opacity-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    Customer Segmentation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Segment customers by purchase behavior, value, and preferences for targeted marketing.
+                  </p>
+                  <Button variant="outline" size="sm" className="w-full" disabled>
+                    Coming Soon
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow opacity-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                    Market Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Compare performance against industry benchmarks and identify market opportunities.
+                  </p>
+                  <Button variant="outline" size="sm" className="w-full" disabled>
+                    Coming Soon
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
 
