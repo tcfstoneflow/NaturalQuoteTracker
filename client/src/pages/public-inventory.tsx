@@ -439,28 +439,30 @@ export default function PublicInventory() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-4">
-                    <Button 
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setContactDialogOpen(true);
-                      }}
-                    >
-                      Request Quote
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setLocation(`/product/${product.id}`);
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
-                    <div onClick={(e) => e.stopPropagation()}>
+                  <div className="space-y-2 pt-4">
+                    <div className="flex gap-2">
+                      <Button 
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setContactDialogOpen(true);
+                        }}
+                      >
+                        Request Quote
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLocation(`/product/${product.id}`);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                    </div>
+                    <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                       <ShareButton
                         url={`${window.location.origin}/product/${product.id}`}
                         title={product.name}
