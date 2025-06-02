@@ -54,11 +54,27 @@ export function ShareButton({ url, title, description, price }: ShareButtonProps
 
   const openShareWindow = (shareUrl: string, platform: string) => {
     if (platform === 'instagram') {
+      // Copy link to clipboard and provide instructions
       copyToClipboard();
       toast({
-        title: "Instagram sharing",
-        description: "Link copied! Paste it in your Instagram story or bio.",
+        title: "Instagram Sharing",
+        description: "Link copied! Open Instagram and paste the link in your story, post, or bio.",
       });
+      
+      // Try to open Instagram app on mobile, fallback to web
+      const userAgent = navigator.userAgent.toLowerCase();
+      if (userAgent.includes('mobile') || userAgent.includes('android') || userAgent.includes('iphone')) {
+        // Try to open Instagram app
+        window.location.href = 'instagram://';
+        
+        // Fallback to Instagram web after a delay
+        setTimeout(() => {
+          window.open('https://www.instagram.com/', '_blank');
+        }, 1500);
+      } else {
+        // Desktop - open Instagram web
+        window.open('https://www.instagram.com/', '_blank');
+      }
       return;
     }
 
