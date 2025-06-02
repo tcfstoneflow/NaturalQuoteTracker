@@ -478,6 +478,41 @@ export default function PublicInventory() {
           </div>
         )}
 
+        {/* Recently Viewed Products */}
+        {recentlyViewed.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recently Viewed</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {recentlyViewed.map((product: any) => (
+                <Card 
+                  key={`recent-${product.id}`}
+                  className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setLocation(`/product/${product.id}`)}
+                >
+                  <div className="h-24 bg-gradient-to-br from-gray-200 to-gray-300">
+                    {product.imageUrl ? (
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Package className="h-6 w-6 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-3">
+                    <h3 className="font-medium text-sm truncate">{product.name}</h3>
+                    <p className="text-xs text-gray-600 capitalize">{product.category}</p>
+                    <p className="text-xs font-semibold text-blue-600">${product.price}/sqft</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Contact Dialog */}
         <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
           <DialogContent className="max-w-md">
