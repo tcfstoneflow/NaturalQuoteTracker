@@ -59,7 +59,7 @@ export const products = pgTable("products", {
   bundleId: text("bundle_id").unique(), // manual or auto-generated bundle identifier
   name: text("name").notNull(),
   supplier: text("supplier").notNull(), // supplier/quarry name
-  category: text("category").notNull(), // "marble", "granite", "quartz", "travertine", "porcelain"
+  category: text("category").notNull(), // "marble", "granite", "quartz", "travertine", "porcelain", "counter_fixtures"
   grade: text("grade").notNull(), // "premium", "standard", "economy"
   thickness: text("thickness").notNull(), // "2cm", "3cm"
   finish: text("finish").notNull(), // "Polished", "Leather", "Brushed", "Matte"
@@ -72,6 +72,19 @@ export const products = pgTable("products", {
   barcodes: text("barcodes").array(), // array of barcode strings for individual slabs
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
+  // E-commerce specific fields for counter fixtures
+  isEcommerceEnabled: boolean("is_ecommerce_enabled").notNull().default(false),
+  displayOnline: boolean("display_online").notNull().default(false),
+  ecommercePrice: decimal("ecommerce_price", { precision: 10, scale: 2 }), // public facing price
+  ecommerceDescription: text("ecommerce_description"),
+  ecommerceImages: text("ecommerce_images").array(), // multiple product images
+  specifications: jsonb("specifications"), // detailed specs for fixtures
+  weight: decimal("weight", { precision: 8, scale: 2 }), // shipping weight
+  dimensions: jsonb("dimensions"), // length, width, height for fixtures
+  shippingClass: text("shipping_class"), // "standard", "oversized", "freight"
+  minOrderQuantity: integer("min_order_quantity").default(1),
+  maxOrderQuantity: integer("max_order_quantity"),
+  leadTime: integer("lead_time"), // days
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // High-performance indexes for large inventory (5000+ products)
@@ -222,6 +235,9 @@ export const productsRelations = relations(products, ({ many }) => ({
   quoteLineItems: many(quoteLineItems),
   slabs: many(slabs),
   galleryImages: many(productGalleryImages),
+  ecommerceOrderItems: many(ecommerceOrderItems),
+  cartItems: many(shoppingCart),
+  reviews: many(productReviews),
 }));
 
 export const productGalleryImagesRelations = relations(productGalleryImages, ({ one }) => ({
@@ -242,6 +258,109 @@ export const mfaCodesRelations = relations(mfaCodes, ({ one }) => ({
   user: one(users, {
     fields: [mfaCodes.userId],
     references: [users.id],
+  }),
+}));
+
+// E-commerce orders for counter fixtures
+export const ecommerceOrders = pgTable("ecommerce_orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: text("order_number").notNull().unique(),
+  customerEmail: text("customer_email").notNull(),
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone"),
+  // Billing address
+  billingAddress: jsonb("billing_address"), // {street, city, state, zip, country}
+  // Shipping address
+  shippingAddress: jsonb("shipping_address"), // {street, city, state, zip, country}
+  // Order totals
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  shippingAmount: decimal("shipping_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  // Payment and status
+  paymentStatus: text("payment_status").notNull().default("pending"), // "pending", "paid", "failed", "refunded"
+  paymentMethod: text("payment_method"), // "stripe", "paypal", "bank_transfer"
+  paymentIntentId: text("payment_intent_id"), // Stripe payment intent ID
+  orderStatus: text("order_status").notNull().default("pending"), // "pending", "processing", "shipped", "delivered", "cancelled"
+  // Shipping
+  shippingMethod: text("shipping_method"), // "standard", "expedited", "freight"
+  trackingNumber: text("tracking_number"),
+  estimatedDelivery: timestamp("estimated_delivery"),
+  // Notes and metadata
+  customerNotes: text("customer_notes"),
+  internalNotes: text("internal_notes"),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// E-commerce order line items
+export const ecommerceOrderItems = pgTable("ecommerce_order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull().references(() => ecommerceOrders.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  productSnapshot: jsonb("product_snapshot"), // snapshot of product data at time of order
+});
+
+// Shopping cart for customers
+export const shoppingCart = pgTable("shopping_cart", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id"), // for anonymous users
+  customerEmail: text("customer_email"), // for registered customers
+  productId: integer("product_id").notNull().references(() => products.id),
+  quantity: integer("quantity").notNull(),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Product reviews and ratings
+export const productReviews = pgTable("product_reviews", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id),
+  customerName: text("customer_name").notNull(),
+  customerEmail: text("customer_email").notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  title: text("title"),
+  review: text("review"),
+  verified: boolean("verified").default(false), // verified purchase
+  isApproved: boolean("is_approved").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// E-commerce relations
+export const ecommerceOrdersRelations = relations(ecommerceOrders, ({ many, one }) => ({
+  orderItems: many(ecommerceOrderItems),
+  assignedUser: one(users, {
+    fields: [ecommerceOrders.assignedTo],
+    references: [users.id],
+  }),
+}));
+
+export const ecommerceOrderItemsRelations = relations(ecommerceOrderItems, ({ one }) => ({
+  order: one(ecommerceOrders, {
+    fields: [ecommerceOrderItems.orderId],
+    references: [ecommerceOrders.id],
+  }),
+  product: one(products, {
+    fields: [ecommerceOrderItems.productId],
+    references: [products.id],
+  }),
+}));
+
+export const shoppingCartRelations = relations(shoppingCart, ({ one }) => ({
+  product: one(products, {
+    fields: [shoppingCart.productId],
+    references: [products.id],
+  }),
+}));
+
+export const productReviewsRelations = relations(productReviews, ({ one }) => ({
+  product: one(products, {
+    fields: [productReviews.productId],
+    references: [products.id],
   }),
 }));
 
@@ -332,6 +451,28 @@ export const insertProductGalleryImageSchema = createInsertSchema(productGallery
   createdAt: true,
 });
 
+// E-commerce schemas
+export const insertEcommerceOrderSchema = createInsertSchema(ecommerceOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEcommerceOrderItemSchema = createInsertSchema(ecommerceOrderItems).omit({
+  id: true,
+});
+
+export const insertShoppingCartSchema = createInsertSchema(shoppingCart).omit({
+  id: true,
+  addedAt: true,
+  updatedAt: true,
+});
+
+export const insertProductReviewSchema = createInsertSchema(productReviews).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -358,6 +499,18 @@ export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
 export type Slab = typeof slabs.$inferSelect;
 export type InsertSlab = z.infer<typeof insertSlabSchema>;
+
+export type EcommerceOrder = typeof ecommerceOrders.$inferSelect;
+export type InsertEcommerceOrder = z.infer<typeof insertEcommerceOrderSchema>;
+
+export type EcommerceOrderItem = typeof ecommerceOrderItems.$inferSelect;
+export type InsertEcommerceOrderItem = z.infer<typeof insertEcommerceOrderItemSchema>;
+
+export type ShoppingCartItem = typeof shoppingCart.$inferSelect;
+export type InsertShoppingCartItem = z.infer<typeof insertShoppingCartSchema>;
+
+export type ProductReview = typeof productReviews.$inferSelect;
+export type InsertProductReview = z.infer<typeof insertProductReviewSchema>;
 
 export type ShowroomVisit = typeof showroomVisits.$inferSelect;
 export type InsertShowroomVisit = z.infer<typeof insertShowroomVisitSchema>;
