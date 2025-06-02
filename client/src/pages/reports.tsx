@@ -231,6 +231,7 @@ export default function Reports() {
       <TopBar 
         title="Reports" 
         subtitle="Business analytics and insights"
+        hideNewQuoteButton={true}
       />
       
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">

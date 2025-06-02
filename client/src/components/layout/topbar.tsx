@@ -19,9 +19,10 @@ interface TopBarProps {
   title: string;
   subtitle?: string;
   onSearch?: (query: string) => void;
+  hideNewQuoteButton?: boolean;
 }
 
-export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
+export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }: TopBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isQuoteBuilderOpen, setIsQuoteBuilderOpen] = useState(false);
   const { user } = useAuth();
@@ -91,13 +92,15 @@ export default function TopBar({ title, subtitle, onSearch }: TopBarProps) {
             )}
             
             {/* Quick Actions */}
-            <Button 
-              onClick={() => setIsQuoteBuilderOpen(true)}
-              className="bg-accent-orange hover:bg-accent-orange text-white"
-            >
-              <Plus size={16} className="mr-2" />
-              New Quote
-            </Button>
+            {!hideNewQuoteButton && (
+              <Button 
+                onClick={() => setIsQuoteBuilderOpen(true)}
+                className="bg-accent-orange hover:bg-accent-orange text-white"
+              >
+                <Plus size={16} className="mr-2" />
+                New Quote
+              </Button>
+            )}
             
             {/* Notifications */}
             <DropdownMenu>

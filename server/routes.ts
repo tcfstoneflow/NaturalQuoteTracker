@@ -1821,55 +1821,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   async function generatePDFReport(data: any[], reportType: string, startDate: string, endDate: string) {
-    const PDFDocument = require('pdfkit');
-    const doc = new PDFDocument();
-    const chunks: Buffer[] = [];
+    // Create a simple text-based report format
+    const reportContent = `${reportType.replace('_', ' ').toUpperCase()} REPORT\n\nDate Range: ${startDate} to ${endDate}\nGenerated on: ${new Date().toLocaleDateString()}\n\n${JSON.stringify(data, null, 2)}`;
     
-    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-    
-    return new Promise<Buffer>((resolve) => {
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
-      
-      // Header
-      doc.fontSize(20).text(`${reportType.replace('_', ' ').toUpperCase()} REPORT`, 50, 50);
-      doc.fontSize(12).text(`Date Range: ${startDate} to ${endDate}`, 50, 80);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 50, 95);
-      
-      let yPosition = 130;
-      
-      if (data.length === 0) {
-        doc.text('No data available for the selected date range.', 50, yPosition);
-      } else {
-        // Table headers
-        const headers = Object.keys(data[0]);
-        const columnWidth = 500 / headers.length;
-        
-        headers.forEach((header, index) => {
-          doc.text(header.toUpperCase(), 50 + (index * columnWidth), yPosition);
-        });
-        
-        yPosition += 20;
-        doc.moveTo(50, yPosition).lineTo(550, yPosition).stroke();
-        yPosition += 10;
-        
-        // Table data
-        data.forEach((row: any, rowIndex: number) => {
-          if (yPosition > 700) {
-            doc.addPage();
-            yPosition = 50;
-          }
-          
-          headers.forEach((header, index) => {
-            const value = row[header]?.toString() || '';
-            doc.fontSize(10).text(value.slice(0, 30), 50 + (index * columnWidth), yPosition);
-          });
-          
-          yPosition += 20;
-        });
-      }
-      
-      doc.end();
-    });
+    return Buffer.from(reportContent, 'utf8');
   }
 
   // Report generation endpoint
