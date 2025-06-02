@@ -45,6 +45,15 @@ export default function ShowroomVisits() {
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("");
   const [assignedToUserId, setAssignedToUserId] = useState<string>("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newVisit, setNewVisit] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    visitDate: "",
+    message: "",
+    assignedToUserId: "",
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -88,6 +97,41 @@ export default function ShowroomVisits() {
     },
   });
 
+  const createVisitMutation = useMutation({
+    mutationFn: async (visitData: any) => {
+      const response = await fetch("/api/showroom-visits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(visitData),
+      });
+      if (!response.ok) throw new Error("Failed to create visit");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits"] });
+      toast({
+        title: "Visit Created",
+        description: "The showroom visit has been created successfully.",
+      });
+      setIsCreateDialogOpen(false);
+      setNewVisit({
+        name: "",
+        email: "",
+        phone: "",
+        visitDate: "",
+        message: "",
+        assignedToUserId: "",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create the visit. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleUpdateVisit = () => {
     if (!selectedVisit) return;
     
@@ -98,6 +142,30 @@ export default function ShowroomVisits() {
         notes: notes || selectedVisit.notes,
         assignedToUserId: assignedToUserId && assignedToUserId !== "none" ? parseInt(assignedToUserId) : null,
       },
+    });
+  };
+
+  const handleCreateVisit = () => {
+    if (!newVisit.name || !newVisit.email || !newVisit.visitDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in name, email, and visit date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createVisitMutation.mutate({
+      name: newVisit.name,
+      email: newVisit.email,
+      phone: newVisit.phone,
+      preferredDate: newVisit.visitDate,
+      message: newVisit.message || null,
+      status: "scheduled",
+      assignedToUserId: newVisit.assignedToUserId ? parseInt(newVisit.assignedToUserId) : null,
+      assignedSalesMember: newVisit.assignedToUserId 
+        ? salesManagers.find(sm => sm.id === parseInt(newVisit.assignedToUserId))?.firstName 
+        : null
     });
   };
 
@@ -129,9 +197,96 @@ export default function ShowroomVisits() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Showroom Visit Requests</h1>
-        <p className="text-gray-600">Manage customer showroom visit requests and follow-ups</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Showroom Visit Requests</h1>
+          <p className="text-gray-600">Manage customer showroom visit requests and follow-ups</p>
+        </div>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>Add New Visit</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Showroom Visit</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Customer Name *</label>
+                <Input
+                  value={newVisit.name}
+                  onChange={(e) => setNewVisit(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter customer name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email *</label>
+                <Input
+                  type="email"
+                  value={newVisit.email}
+                  onChange={(e) => setNewVisit(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={newVisit.phone}
+                  onChange={(e) => setNewVisit(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Date of Showroom Visit *</label>
+                <Input
+                  type="date"
+                  value={newVisit.visitDate}
+                  onChange={(e) => setNewVisit(prev => ({ ...prev, visitDate: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Assign to Sales Member</label>
+                <Select value={newVisit.assignedToUserId} onValueChange={(value) => setNewVisit(prev => ({ ...prev, assignedToUserId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select sales member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Unassigned</SelectItem>
+                    {salesManagers.map((manager) => (
+                      <SelectItem key={manager.id} value={manager.id.toString()}>
+                        {manager.firstName} {manager.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Message/Notes</label>
+                <Textarea
+                  value={newVisit.message}
+                  onChange={(e) => setNewVisit(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Enter any additional notes or messages"
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCreateDialogOpen(false)}
+                  disabled={createVisitMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreateVisit}
+                  disabled={createVisitMutation.isPending}
+                >
+                  {createVisitMutation.isPending ? "Creating..." : "Create Visit"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Summary Cards */}
