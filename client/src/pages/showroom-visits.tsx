@@ -314,6 +314,11 @@ export default function ShowroomVisits() {
                         <div className="font-semibold text-xs leading-tight">{visit.preferredTime}</div>
                       )}
                       <div className="truncate leading-tight">{visit.name}</div>
+                      {visit.assignedSalesMember && (
+                        <div className="text-xs opacity-75 truncate leading-tight">
+                          {visit.assignedSalesMember}
+                        </div>
+                      )}
                     </div>
                   ))}
                   {dayVisits.length > 2 && (
