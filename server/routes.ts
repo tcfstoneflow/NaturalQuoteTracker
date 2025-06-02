@@ -1703,6 +1703,230 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Report generation helper functions
+  async function generateSalesManagerReport(startDate: string, endDate: string) {
+    const quotes = await storage.getQuotesByDateRange(startDate, endDate);
+    const users = await storage.getAllUsers();
+    
+    const salesManagers = users.filter(u => u.role === 'sales_manager' || u.role === 'sales_rep' || u.role === 'admin');
+    
+    return salesManagers.map(manager => {
+      const managerQuotes = quotes.filter(q => q.salesManagerId === manager.id);
+      const totalRevenue = managerQuotes
+        .filter(q => q.status === 'approved')
+        .reduce((sum, quote) => sum + parseFloat(quote.totalAmount), 0);
+      
+      return {
+        name: `${manager.firstName} ${manager.lastName}`,
+        email: manager.email,
+        totalQuotes: managerQuotes.length,
+        approvedQuotes: managerQuotes.filter(q => q.status === 'approved').length,
+        totalRevenue: totalRevenue.toFixed(2),
+        conversionRate: managerQuotes.length > 0 ? 
+          ((managerQuotes.filter(q => q.status === 'approved').length / managerQuotes.length) * 100).toFixed(1) : '0'
+      };
+    });
+  }
+
+  async function generateProductsReport(startDate: string, endDate: string) {
+    const quotes = await storage.getQuotesByDateRange(startDate, endDate);
+    const products = await storage.getAllProducts();
+    
+    const productSales = new Map();
+    
+    quotes.forEach(quote => {
+      if (quote.lineItems) {
+        quote.lineItems.forEach((item: any) => {
+          const productId = item.productId;
+          const quantity = parseInt(item.quantity);
+          const revenue = parseFloat(item.unitPrice) * quantity;
+          
+          if (productSales.has(productId)) {
+            const existing = productSales.get(productId);
+            existing.quantity += quantity;
+            existing.revenue += revenue;
+          } else {
+            const product = products.find(p => p.id === productId);
+            productSales.set(productId, {
+              productName: product?.name || 'Unknown Product',
+              category: product?.category || 'Unknown',
+              quantity,
+              revenue
+            });
+          }
+        });
+      }
+    });
+    
+    return Array.from(productSales.values())
+      .map(item => ({
+        ...item,
+        revenue: item.revenue.toFixed(2)
+      }))
+      .sort((a, b) => parseFloat(b.revenue) - parseFloat(a.revenue));
+  }
+
+  async function generateClientsReport(startDate: string, endDate: string) {
+    const quotes = await storage.getQuotesByDateRange(startDate, endDate);
+    const clients = await storage.getAllClients();
+    
+    return clients.map(client => {
+      const clientQuotes = quotes.filter(q => q.clientId === client.id);
+      const totalRevenue = clientQuotes
+        .filter(q => q.status === 'approved')
+        .reduce((sum, quote) => sum + parseFloat(quote.totalAmount), 0);
+      
+      return {
+        name: client.name,
+        email: client.email,
+        company: client.company || 'N/A',
+        totalQuotes: clientQuotes.length,
+        approvedQuotes: clientQuotes.filter(q => q.status === 'approved').length,
+        totalRevenue: totalRevenue.toFixed(2),
+        lastQuoteDate: clientQuotes.length > 0 ? 
+          new Date(Math.max(...clientQuotes.map(q => new Date(q.createdAt).getTime()))).toLocaleDateString() : 'N/A'
+      };
+    }).filter(client => client.totalQuotes > 0);
+  }
+
+  async function generateQuotesReport(startDate: string, endDate: string) {
+    const quotes = await storage.getQuotesByDateRange(startDate, endDate);
+    
+    return quotes.map(quote => ({
+      quoteNumber: quote.quoteNumber,
+      clientName: quote.clientName || 'Unknown Client',
+      status: quote.status,
+      totalAmount: parseFloat(quote.totalAmount).toFixed(2),
+      createdDate: new Date(quote.createdAt).toLocaleDateString(),
+      validUntil: quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : 'N/A',
+      salesManager: quote.salesManagerName || 'Unassigned'
+    }));
+  }
+
+  function generateCSVReport(data: any[], reportType: string) {
+    if (!data.length) return 'No data available for the selected date range.';
+    
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+        }).join(',')
+      )
+    ].join('\n');
+    
+    return csvContent;
+  }
+
+  async function generatePDFReport(data: any[], reportType: string, startDate: string, endDate: string) {
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument();
+    const chunks: Buffer[] = [];
+    
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+    
+    return new Promise<Buffer>((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      
+      // Header
+      doc.fontSize(20).text(`${reportType.replace('_', ' ').toUpperCase()} REPORT`, 50, 50);
+      doc.fontSize(12).text(`Date Range: ${startDate} to ${endDate}`, 50, 80);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 50, 95);
+      
+      let yPosition = 130;
+      
+      if (data.length === 0) {
+        doc.text('No data available for the selected date range.', 50, yPosition);
+      } else {
+        // Table headers
+        const headers = Object.keys(data[0]);
+        const columnWidth = 500 / headers.length;
+        
+        headers.forEach((header, index) => {
+          doc.text(header.toUpperCase(), 50 + (index * columnWidth), yPosition);
+        });
+        
+        yPosition += 20;
+        doc.moveTo(50, yPosition).lineTo(550, yPosition).stroke();
+        yPosition += 10;
+        
+        // Table data
+        data.forEach((row, rowIndex) => {
+          if (yPosition > 700) {
+            doc.addPage();
+            yPosition = 50;
+          }
+          
+          headers.forEach((header, index) => {
+            const value = row[header]?.toString() || '';
+            doc.fontSize(10).text(value.slice(0, 30), 50 + (index * columnWidth), yPosition);
+          });
+          
+          yPosition += 20;
+        });
+      }
+      
+      doc.end();
+    });
+  }
+
+  // Report generation endpoint
+  app.post('/api/reports/generate', requireAuth, async (req: any, res) => {
+    try {
+      const { reportType, startDate, endDate, exportFormat } = req.body;
+      
+      if (!reportType || !startDate || !endDate || !exportFormat) {
+        return res.status(400).json({ error: 'Missing required parameters' });
+      }
+
+      let reportData;
+      let filename;
+
+      // Generate report data based on type
+      switch (reportType) {
+        case 'sales_managers':
+          reportData = await generateSalesManagerReport(startDate, endDate);
+          filename = `sales_managers_report_${startDate}_to_${endDate}`;
+          break;
+        case 'products':
+          reportData = await generateProductsReport(startDate, endDate);
+          filename = `products_report_${startDate}_to_${endDate}`;
+          break;
+        case 'clients':
+          reportData = await generateClientsReport(startDate, endDate);
+          filename = `clients_report_${startDate}_to_${endDate}`;
+          break;
+        case 'quotes':
+          reportData = await generateQuotesReport(startDate, endDate);
+          filename = `quotes_report_${startDate}_to_${endDate}`;
+          break;
+        default:
+          return res.status(400).json({ error: 'Invalid report type' });
+      }
+
+      // Generate export based on format
+      if (exportFormat === 'pdf') {
+        const pdfBuffer = await generatePDFReport(reportData, reportType, startDate, endDate);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.pdf"`);
+        res.send(pdfBuffer);
+      } else if (exportFormat === 'excel' || exportFormat === 'csv') {
+        const csvData = generateCSVReport(reportData, reportType);
+        const contentType = exportFormat === 'excel' ? 'application/vnd.ms-excel' : 'text/csv';
+        const fileExtension = exportFormat === 'excel' ? 'xls' : 'csv';
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.${fileExtension}"`);
+        res.send(csvData);
+      }
+    } catch (error: any) {
+      console.error('Report generation error:', error);
+      res.status(500).json({ error: 'Failed to generate report' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

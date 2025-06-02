@@ -3,8 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import TopBar from "@/components/layout/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { dashboardApi, quotesApi, clientsApi, productsApi } from "@/lib/api";
-import { TrendingUp, DollarSign, Users, Package, FileText, Calendar } from "lucide-react";
+import { TrendingUp, DollarSign, Users, Package, FileText, Calendar, Download, Filter } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import TopSellingProductsReport from "@/components/reports/top-selling-products-report";
 import SalesManagerPerformanceReport from "@/components/reports/sales-manager-performance-report";
@@ -12,6 +15,12 @@ import TopClientsReport from "@/components/reports/top-clients-report";
 import InventoryCategoryReport from "@/components/reports/inventory-category-report";
 
 export default function Reports() {
+  // Report generation state
+  const [reportType, setReportType] = useState("sales_managers");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [exportFormat, setExportFormat] = useState("pdf");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
@@ -104,6 +113,49 @@ export default function Reports() {
 
   const metrics = calculateMetrics();
 
+  // Report generation function
+  const generateReport = async () => {
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/reports/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportType,
+          startDate,
+          endDate,
+          exportFormat,
+        }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `${reportType}_report_${startDate}_to_${endDate}.${exportFormat}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        throw new Error('Failed to generate report');
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Failed to generate report. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
@@ -131,6 +183,89 @@ export default function Reports() {
       />
       
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
+        {/* Report Generation Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter size={20} />
+              Generate Custom Report
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="reportType">Report Type</Label>
+                <Select value={reportType} onValueChange={setReportType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select report type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sales_managers">Sales Managers Performance</SelectItem>
+                    <SelectItem value="products">Product Sales Report</SelectItem>
+                    <SelectItem value="clients">Client Activity Report</SelectItem>
+                    <SelectItem value="quotes">Quote Summary Report</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="exportFormat">Export Format</Label>
+                <Select value={exportFormat} onValueChange={setExportFormat}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="excel">Excel</SelectItem>
+                    <SelectItem value="csv">CSV</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>&nbsp;</Label>
+                <Button 
+                  onClick={generateReport} 
+                  disabled={isGenerating || !startDate || !endDate}
+                  className="w-full"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={16} className="mr-2" />
+                      Generate Report
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
