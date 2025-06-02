@@ -331,7 +331,7 @@ export default function ShowroomVisits() {
   );
 
   return (
-    <div className="p-6">
+    <div className="p-6 min-h-full">
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Showroom Visit Requests</h1>
