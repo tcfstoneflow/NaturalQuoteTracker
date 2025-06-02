@@ -534,9 +534,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Products
   app.get("/api/products", async (req, res) => {
     try {
-      const products = await storage.getProducts();
+      const { category, search } = req.query;
+      let products = await storage.getProducts();
+      
+      // Filter by category if specified
+      if (category && typeof category === 'string') {
+        products = products.filter((product: any) => product.category === category);
+      }
+      
+      // Filter by search query if specified
+      if (search && typeof search === 'string') {
+        const searchLower = search.toLowerCase();
+        products = products.filter((product: any) => 
+          product.name.toLowerCase().includes(searchLower) ||
+          product.supplier.toLowerCase().includes(searchLower) ||
+          product.category.toLowerCase().includes(searchLower)
+        );
+      }
+      
       res.json(products);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });

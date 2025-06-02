@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Calendar,
   Target,
-  Activity
+  Activity,
+  ShoppingCart
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Inventory", href: "/inventory", icon: Package },
+  { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
   { name: "Quotes", href: "/quotes", icon: FileText },
   { name: "Showroom Visits", href: "/showroom-visits", icon: Calendar },
   { name: "Reports", href: "/reports", icon: TrendingUp },

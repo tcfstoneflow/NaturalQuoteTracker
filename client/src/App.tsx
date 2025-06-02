@@ -18,6 +18,7 @@ import ProductDetails from "@/pages/product-details";
 import SlabManagement from "@/pages/slab-management";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
+import CounterFixtures from "@/pages/counter-fixtures";
 import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
 import Sidebar from "@/components/layout/sidebar";
@@ -51,6 +52,7 @@ function Router() {
                   <Route path="/sales-dashboard" component={SalesDashboard} />
                   <Route path="/clients" component={Clients} />
                   <Route path="/inventory" component={Inventory} />
+                  <Route path="/counter-fixtures" component={CounterFixtures} />
                   <Route path="/quotes" component={Quotes} />
                   <Route path="/reports" component={Reports} />
                   <Route path="/sql-query" component={SQLQuery} />
