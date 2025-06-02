@@ -156,6 +156,7 @@ export default function ShowroomVisits() {
         email: editEmail,
         phone: editPhone,
         preferredDate: editVisitDate,
+        preferredTime: editVisitTime || null,
         status: status || selectedVisit.status,
         notes: notes || selectedVisit.notes,
         assignedToUserId: assignedToUserId && assignedToUserId !== "none" ? parseInt(assignedToUserId) : null,
@@ -179,6 +180,7 @@ export default function ShowroomVisits() {
       email: newVisit.email,
       phone: newVisit.phone,
       preferredDate: newVisit.visitDate,
+      preferredTime: newVisit.visitTime || null,
       message: newVisit.message || null,
       status: "scheduled",
       assignedToUserId: (newVisit.assignedToUserId && newVisit.assignedToUserId !== "unassigned") ? parseInt(newVisit.assignedToUserId) : null,
@@ -374,6 +376,14 @@ export default function ShowroomVisits() {
                 />
               </div>
               <div>
+                <label className="text-sm font-medium">Time of Showroom Visit</label>
+                <Input
+                  type="time"
+                  value={newVisit.visitTime}
+                  onChange={(e) => setNewVisit(prev => ({ ...prev, visitTime: e.target.value }))}
+                />
+              </div>
+              <div>
                 <label className="text-sm font-medium">Assign to Sales Member</label>
                 <Select value={newVisit.assignedToUserId} onValueChange={(value) => setNewVisit(prev => ({ ...prev, assignedToUserId: value }))}>
                   <SelectTrigger>
@@ -483,7 +493,10 @@ export default function ShowroomVisits() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">Showroom Visit Date: {visit.preferredDate}</span>
+                <span className="text-gray-600">
+                  Showroom Visit: {visit.preferredDate}
+                  {visit.preferredTime && ` at ${visit.preferredTime}`}
+                </span>
               </div>
               {visit.assignedSalesMember && (
                 <div className="flex items-center gap-2 text-sm">
@@ -550,6 +563,14 @@ export default function ShowroomVisits() {
                         type="date"
                         value={editVisitDate}
                         onChange={(e) => setEditVisitDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Showroom Visit Time</label>
+                      <Input
+                        type="time"
+                        value={editVisitTime}
+                        onChange={(e) => setEditVisitTime(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">

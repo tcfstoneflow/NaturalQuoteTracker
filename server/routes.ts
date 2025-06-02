@@ -13,6 +13,68 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 
+// Email function for appointment notifications
+async function sendAppointmentEmail(visit: any, type: 'confirmation' | 'update' | 'cancellation') {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log("SMTP not configured, skipping email notification");
+    return;
+  }
+
+  const nodemailer = require('nodemailer');
+  
+  const transporter = nodemailer.createTransporter({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const subject = type === 'confirmation' ? 'Showroom Visit Confirmation' :
+                  type === 'update' ? 'Showroom Visit Update' :
+                  'Showroom Visit Cancellation';
+
+  const timeText = visit.preferredTime ? ` at ${visit.preferredTime}` : '';
+  const assignedText = visit.assignedSalesMember ? `\n\nYour sales representative: ${visit.assignedSalesMember}` : '';
+
+  const htmlContent = `
+    <h2>${subject}</h2>
+    <p>Dear ${visit.name},</p>
+    
+    ${type === 'confirmation' ? 
+      `<p>Thank you for scheduling a showroom visit with us.</p>` :
+      type === 'update' ?
+      `<p>Your showroom visit has been updated.</p>` :
+      `<p>Your showroom visit has been cancelled.</p>`
+    }
+    
+    <h3>Visit Details:</h3>
+    <ul>
+      <li><strong>Date:</strong> ${visit.preferredDate}${timeText}</li>
+      <li><strong>Status:</strong> ${visit.status}</li>
+      ${visit.notes ? `<li><strong>Notes:</strong> ${visit.notes}</li>` : ''}
+    </ul>
+    
+    ${assignedText}
+    
+    <p>If you need to reschedule or have any questions, please contact us.</p>
+    
+    <p>Best regards,<br>
+    Texas Counter Fitters Team</p>
+  `;
+
+  const mailOptions = {
+    from: process.env.SMTP_USER,
+    to: visit.email,
+    subject,
+    html: htmlContent,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Showroom visit contact form - place at top to avoid conflicts
   app.post("/api/contact/showroom-visit", (req, res, next) => {
@@ -240,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/showroom-visits", requireAuth, async (req, res) => {
     try {
-      const { name, email, phone, preferredDate, message, status, assignedToUserId, assignedSalesMember } = req.body;
+      const { name, email, phone, preferredDate, preferredTime, message, status, assignedToUserId, assignedSalesMember } = req.body;
       
       if (!name || !email || !preferredDate) {
         return res.status(400).json({ message: "Name, email, and preferred date are required" });
@@ -251,11 +313,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         phone: phone || null,
         preferredDate,
+        preferredTime: preferredTime || null,
         message: message || null,
         status: status || "pending",
         assignedToUserId: assignedToUserId || null,
         assignedSalesMember: assignedSalesMember || null
       });
+
+      // Send appointment confirmation email
+      try {
+        await sendAppointmentEmail(newVisit, 'confirmation');
+      } catch (emailError) {
+        console.log("Email notification failed:", emailError);
+        // Don't fail the appointment creation if email fails
+      }
       
       res.status(201).json(newVisit);
     } catch (error: any) {
