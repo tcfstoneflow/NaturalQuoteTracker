@@ -1091,7 +1091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const revenueByPeriod = new Map();
       
       quotes.forEach((quote: any) => {
-        const date = new Date(quote.createdAt);
+        const date = new Date(quote.created_at || quote.createdAt);
         let periodKey = '';
         let periodName = '';
         
@@ -1130,10 +1130,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (quote.status === 'approved' || quote.status === 'completed') {
           if (quote.lineItems) {
             const quoteTotal = quote.lineItems.reduce((sum: number, item: any) => {
-              const itemTotal = item.quantity * item.price;
+              const itemTotal = item.quantity * (item.unit_price || item.price);
               
               // Find product to categorize revenue
-              const product = products.find((p: any) => p.id === item.productId);
+              const product = products.find((p: any) => p.id === (item.product_id || item.productId));
               if (product) {
                 periodData.categories.add(product.category);
                 
