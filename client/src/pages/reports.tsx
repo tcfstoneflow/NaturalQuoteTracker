@@ -407,6 +407,41 @@ export default function Reports() {
           </Card>
         </div>
 
+        {/* Quote Status Distribution */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Quote Status Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {quotes && quotes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {['pending', 'approved', 'rejected', 'expired'].map((status) => {
+                  const statusQuotes = quotes.filter((quote: any) => {
+                    if (status === 'expired') {
+                      return quote.status === 'pending' && new Date(quote.validUntil) < new Date();
+                    }
+                    return quote.status === status;
+                  });
+                  const percentage = quotes.length > 0 ? ((statusQuotes.length / quotes.length) * 100).toFixed(1) : '0';
+                  
+                  return (
+                    <div key={status} className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-900">{statusQuotes.length}</div>
+                      <div className="text-sm text-gray-600 capitalize">{status}</div>
+                      <div className="text-xs text-gray-500">{percentage}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-gray-500">No quote data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Advanced Reports Section */}
         <div className="mb-8">
           <div className="flex items-center space-x-2 mb-6">
@@ -528,52 +563,7 @@ export default function Reports() {
           </div>
         </div>
 
-        {/* Quote Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quote Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {quotes && quotes.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {['pending', 'approved', 'rejected', 'expired'].map((status) => {
-                  const statusQuotes = quotes.filter((quote: any) => {
-                    if (status === 'expired') {
-                      return quote.status === 'pending' && new Date(quote.validUntil) < new Date();
-                    }
-                    return quote.status === status;
-                  });
-                  const percentage = quotes.length > 0 ? (statusQuotes.length / quotes.length) * 100 : 0;
 
-                  const getStatusColor = (status: string) => {
-                    switch (status) {
-                      case 'pending': return 'bg-yellow-100 text-yellow-800';
-                      case 'approved': return 'bg-green-100 text-green-800';
-                      case 'rejected': return 'bg-red-100 text-red-800';
-                      case 'expired': return 'bg-gray-100 text-gray-800';
-                      default: return 'bg-gray-100 text-gray-800';
-                    }
-                  };
-
-                  return (
-                    <div key={status} className="text-center p-4 border rounded-lg">
-                      <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status)} mb-2`}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </div>
-                      <p className="text-2xl font-bold text-primary-custom">{statusQuotes.length}</p>
-                      <p className="text-sm text-secondary-custom">{percentage.toFixed(1)}%</p>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-gray-500">No quote data available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Seasonal Trends Modal */}
         <Dialog open={showSeasonalTrends} onOpenChange={setShowSeasonalTrends}>
