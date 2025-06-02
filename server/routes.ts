@@ -1709,14 +1709,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const users = await storage.getAllUsers();
     const allShowroomVisits = await storage.getShowroomVisits();
     
-    // Filter showroom visits by date range - use updatedAt for completed visits
+    // Filter showroom visits by date range - use preferredDate for completed visits
     const showroomVisits = allShowroomVisits.filter((visit: any) => {
       if (visit.status !== 'completed') return false;
       if (!visit.assignedToUserId) return false; // Only count visits assigned to someone
-      const completedDate = new Date(visit.updatedAt);
+      const visitDate = new Date(visit.preferredDate);
       const start = new Date(startDate);
       const end = new Date(endDate + 'T23:59:59.999Z'); // Include end of day
-      return completedDate >= start && completedDate <= end;
+      return visitDate >= start && visitDate <= end;
     });
     
     const salesManagers = users.filter((u: any) => u.role === 'sales_manager' || u.role === 'sales_rep' || u.role === 'admin');
