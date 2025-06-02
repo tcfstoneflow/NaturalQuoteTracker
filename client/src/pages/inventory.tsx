@@ -257,7 +257,7 @@ export default function Inventory() {
   const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     setFormData({
-      bundleId: product.bundleId,
+      bundleId: product.bundleId || "",
       name: product.name,
       supplier: product.supplier,
       category: product.category,
@@ -732,7 +732,7 @@ export default function Inventory() {
                         className="w-full"
                         onClick={async () => {
                           try {
-                            const response = await fetch(`/api/products/${editingProduct.id}/generate-python-render`, {
+                            const response = await fetch(`/api/products/${editingProduct?.id}/generate-python-render`, {
                               method: 'POST',
                               headers: {
                                 'Content-Type': 'application/json',

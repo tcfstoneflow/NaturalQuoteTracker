@@ -1105,7 +1105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if slabs already exist
-      const existingSlabs = await storage.getSlabs(product.bundleId);
+      const existingSlabs = await storage.getSlabs(product.bundleId || '');
       if (existingSlabs.length > 0) {
         return res.status(400).json({ error: 'Slabs already exist for this bundle' });
       }
@@ -1116,8 +1116,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const slabData = {
           bundleId: product.bundleId || '',
           slabNumber: `S${i.toString().padStart(3, '0')}`,
-          length: product.slabLength || null,
-          width: product.slabWidth || null,
+          length: product.slabLength ? Number(product.slabLength) : null,
+          width: product.slabWidth ? Number(product.slabWidth) : null,
           status: 'available' as const,
           barcode: null,
           location: product.location || null,
