@@ -68,6 +68,7 @@ export interface IStorage {
   deleteQuote(id: number): Promise<boolean>;
   getRecentQuotes(limit?: number): Promise<QuoteWithDetails[]>;
   getClientQuotes(clientId: number): Promise<QuoteWithDetails[]>;
+  getQuotesByDateRange(startDate: string, endDate: string): Promise<QuoteWithDetails[]>;
 
   // Quote Line Items
   getQuoteLineItems(quoteId: number): Promise<QuoteLineItem[]>;
