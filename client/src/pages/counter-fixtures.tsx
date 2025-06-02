@@ -263,6 +263,7 @@ export default function CounterFixtures() {
         title="Counter Fixtures" 
         subtitle="Manage counter fixtures with e-commerce capabilities"
         onSearch={setSearchQuery}
+        hideNewQuoteButton={true}
       />
       
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
