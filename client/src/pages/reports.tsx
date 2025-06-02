@@ -407,49 +407,6 @@ export default function Reports() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <TopClientsReport />
-          <InventoryCategoryReport />
-        </div>
-
-        {/* New Advanced Analytics Section */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 mb-6">
-            <Package size={20} className="text-green-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Operational Analytics</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Inventory Turnover */}
-            <InventoryTurnoverReport />
-            
-            {/* Supplier Performance */}
-            <SupplierPerformanceReport />
-          </div>
-        </div>
-
-        {/* Financial Analytics Section */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 mb-6">
-            <DollarSign size={20} className="text-green-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Financial Analytics</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Profit Margin Analysis */}
-            <ProfitMarginAnalysis />
-            
-            {/* Revenue Trends */}
-            <RevenueTrendsReport />
-            
-            {/* Payment Status Tracking */}
-            <PaymentStatusReport />
-            
-            {/* Cost Analysis */}
-            <CostAnalysisReport />
-          </div>
-        </div>
-
         {/* Advanced Reports Section */}
         <div className="mb-8">
           <div className="flex items-center space-x-2 mb-6">
@@ -457,12 +414,17 @@ export default function Reports() {
             <h2 className="text-xl font-semibold text-gray-900">Advanced Reports</h2>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Top Selling Products */}
             <TopSellingProductsReport />
             
             {/* Sales Manager Performance */}
             <SalesManagerPerformanceReport />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <TopClientsReport />
+            <InventoryCategoryReport />
           </div>
 
           {/* On-Demand Analysis */}
@@ -525,6 +487,44 @@ export default function Reports() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </div>
+
+        {/* Operational Analytics Section */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-6">
+            <Package size={20} className="text-green-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Operational Analytics</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Inventory Turnover */}
+            <InventoryTurnoverReport />
+            
+            {/* Supplier Performance */}
+            <SupplierPerformanceReport />
+          </div>
+        </div>
+
+        {/* Financial Analytics Section */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-6">
+            <DollarSign size={20} className="text-green-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Financial Analytics</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Profit Margin Analysis */}
+            <ProfitMarginAnalysis />
+            
+            {/* Revenue Trends */}
+            <RevenueTrendsReport />
+            
+            {/* Payment Status Tracking */}
+            <PaymentStatusReport />
+            
+            {/* Cost Analysis */}
+            <CostAnalysisReport />
           </div>
         </div>
 
