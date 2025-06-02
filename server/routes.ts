@@ -469,6 +469,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk client import
+  app.post("/api/clients/bulk-import", requireAuth, async (req, res) => {
+    try {
+      const clients = JSON.parse(req.body.clients);
+      let imported = 0;
+      let errors = 0;
+      const errorDetails: string[] = [];
+
+      for (const clientData of clients) {
+        try {
+          // Validate required fields
+          if (!clientData.name || !clientData.email) {
+            errors++;
+            errorDetails.push(`Row ${clientData.rowNumber}: Missing required fields (name or email)`);
+            continue;
+          }
+
+          // Check if client already exists by email
+          const existingClients = await storage.getClients();
+          const existingClient = existingClients.find((c: any) => 
+            c.email.toLowerCase() === clientData.email.toLowerCase()
+          );
+
+          if (existingClient) {
+            errors++;
+            errorDetails.push(`Row ${clientData.rowNumber}: Client with email ${clientData.email} already exists`);
+            continue;
+          }
+
+          // Create client
+          await storage.createClient({
+            name: clientData.name,
+            email: clientData.email,
+            phone: clientData.phone || '',
+            company: clientData.company || '',
+            address: clientData.address || '',
+            city: clientData.city || '',
+            state: clientData.state || '',
+            zipCode: clientData.zipCode || '',
+            notes: clientData.notes || '',
+            salesManagerId: null
+          });
+
+          imported++;
+        } catch (clientError) {
+          errors++;
+          errorDetails.push(`Row ${clientData.rowNumber}: ${(clientError as Error).message}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        imported,
+        errors,
+        errorDetails: errorDetails.slice(0, 10)
+      });
+    } catch (error: any) {
+      console.error("Bulk import error:", error);
+      res.status(500).json({ error: "Failed to process bulk import" });
+    }
+  });
+
   // Products
   app.get("/api/products", async (req, res) => {
     try {
