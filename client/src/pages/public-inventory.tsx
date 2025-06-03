@@ -443,18 +443,20 @@ export default function PublicInventory() {
                         View Details
                       </Button>
                     </div>
-                    <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <FavoriteButton
                         productId={product.id}
                         productName={product.name}
                         variant="outline"
                         size="sm"
+                        className="flex-1"
                       />
                       <ShareButton
                         url={`${window.location.origin}/product/${product.id}`}
                         title={product.name}
                         description={`${product.category} from ${product.supplier} - ${product.grade} grade with ${product.finish} finish`}
                         price={`$${product.price}`}
+                        className="flex-1"
                       />
                     </div>
                   </div>
