@@ -54,7 +54,7 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
       }}
     >
       <div 
-        className="relative max-w-7xl max-h-full p-4"
+        className="relative max-w-7xl max-h-full p-4 flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -75,13 +75,13 @@ export function Lightbox({ isOpen, onClose, imageSrc, imageTitle }: LightboxProp
         <img
           src={imageSrc}
           alt={imageTitle || "Lightbox image"}
-          className="max-w-full max-h-screen object-contain"
+          className="max-w-full max-h-[calc(100vh-8rem)] object-contain"
           onClick={(e) => e.stopPropagation()}
         />
         
         {imageTitle && (
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-4 text-center">
-            {imageTitle}
+          <div className="mt-4 bg-white text-gray-900 px-6 py-3 rounded-lg shadow-lg text-center max-w-2xl">
+            <p className="text-lg font-medium">{imageTitle}</p>
           </div>
         )}
       </div>
