@@ -18,6 +18,7 @@ import { ImageUpload } from "@/components/ui/image-upload";
 interface Product {
   id: number;
   name: string;
+  description: string | null;
   supplier: string;
   category: string;
   grade: string;
@@ -69,6 +70,7 @@ export default function Inventory() {
   const [formData, setFormData] = useState({
     bundleId: "",
     name: "",
+    description: "",
     supplier: "",
     category: "",
     grade: "",
@@ -306,6 +308,7 @@ export default function Inventory() {
     setFormData({
       bundleId: "",
       name: "",
+      description: "",
       supplier: "",
       category: "",
       grade: "",

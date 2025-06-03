@@ -58,6 +58,7 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   bundleId: text("bundle_id").unique(), // manual or auto-generated bundle identifier
   name: text("name").notNull(),
+  description: text("description"), // product description
   supplier: text("supplier").notNull(), // supplier/quarry name
   category: text("category").notNull(), // "marble", "granite", "quartz", "travertine", "porcelain", "counter_fixtures"
   grade: text("grade").notNull(), // "premium", "standard", "economy"
