@@ -180,6 +180,12 @@ export default function ClientFavorites() {
       consultationForm.reset();
     } catch (error) {
       console.error('Consultation submission error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        type: typeof error,
+        stringified: JSON.stringify(error)
+      });
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to schedule consultation. Please try again.",
