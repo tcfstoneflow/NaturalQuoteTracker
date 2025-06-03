@@ -27,6 +27,7 @@ export function useFavorites(clientEmail?: string) {
   // Get client favorites
   const { data: favorites = [], isLoading, error } = useQuery<ClientFavorite[]>({
     queryKey: ["/api/favorites", clientEmail],
+    queryFn: () => apiRequest("GET", `/api/favorites/${encodeURIComponent(clientEmail!)}`).then(res => res.json()),
     enabled: !!clientEmail,
     retry: false,
   });
