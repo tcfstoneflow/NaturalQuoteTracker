@@ -261,6 +261,7 @@ export default function Inventory() {
     setFormData({
       bundleId: product.bundleId || "",
       name: product.name,
+      description: product.description || "",
       supplier: product.supplier,
       category: product.category,
       grade: product.grade,
@@ -585,6 +586,19 @@ export default function Inventory() {
                       required
                     />
                   </div>
+                </div>
+                <div>
+                  <Label htmlFor="description">Product Description</Label>
+                  <textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Describe this product (optional)"
+                    className="w-full min-h-[80px] px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="supplier">Supplier *</Label>
                     <Input
