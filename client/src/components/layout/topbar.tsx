@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Bell, Plus, LogOut, User, Settings } from "lucide-react";
+import { Search, Bell, Plus, LogOut, User, Settings, Check, X } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
 
@@ -57,6 +58,48 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
         variant: "destructive",
         title: "Logout failed",
         description: "Please try again",
+      });
+    },
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: async ({ type, referenceId }: { type: string; referenceId?: number }) => {
+      return await apiRequest("POST", "/api/notifications/mark-read", { type, referenceId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products/low-stock"] });
+      toast({
+        title: "Marked as read",
+        description: "Notification has been marked as read",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to mark notification as read",
+      });
+    },
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async (type: string) => {
+      return await apiRequest("POST", "/api/notifications/mark-all-read", { type });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products/low-stock"] });
+      toast({
+        title: "All notifications marked as read",
+        description: "All notifications of this type have been cleared",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to mark all notifications as read",
       });
     },
   });
@@ -115,31 +158,88 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
-                <div className="p-3 border-b">
+                <div className="p-3 border-b flex justify-between items-center">
                   <h4 className="font-semibold text-sm">Notifications</h4>
+                  {notificationCount > 0 && (
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                      {notificationCount} new
+                    </span>
+                  )}
                 </div>
                 <div className="max-h-64 overflow-y-auto">
                   {pendingVisits && pendingVisits.length > 0 && (
                     <>
+                      <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
+                        <span className="text-xs font-medium text-gray-700">Showroom Visit Requests</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => markAllAsReadMutation.mutate('showroom_visit')}
+                          disabled={markAllAsReadMutation.isPending}
+                        >
+                          <Check size={12} className="mr-1" />
+                          Mark All Read
+                        </Button>
+                      </div>
                       {pendingVisits.map((visit: any) => (
-                        <DropdownMenuItem key={visit.id} className="flex-col items-start p-3">
-                          <div className="font-medium text-sm">New Showroom Visit Request</div>
-                          <div className="text-xs text-gray-600">
-                            {visit.name} ({visit.email}) wants to visit on {new Date(visit.requestedDate).toLocaleDateString()}
+                        <div key={visit.id} className="p-3 border-b hover:bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">New Showroom Visit Request</div>
+                              <div className="text-xs text-gray-600">
+                                {visit.name} ({visit.email}) wants to visit on {new Date(visit.requestedDate).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 ml-2"
+                              onClick={() => markAsReadMutation.mutate({ type: 'showroom_visit', referenceId: visit.id })}
+                              disabled={markAsReadMutation.isPending}
+                            >
+                              <X size={12} />
+                            </Button>
                           </div>
-                        </DropdownMenuItem>
+                        </div>
                       ))}
                     </>
                   )}
                   {lowStockProducts && lowStockProducts.length > 0 && (
                     <>
+                      <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
+                        <span className="text-xs font-medium text-gray-700">Low Stock Alerts</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => markAllAsReadMutation.mutate('low_stock')}
+                          disabled={markAllAsReadMutation.isPending}
+                        >
+                          <Check size={12} className="mr-1" />
+                          Mark All Read
+                        </Button>
+                      </div>
                       {lowStockProducts.map((product: any) => (
-                        <DropdownMenuItem key={product.id} className="flex-col items-start p-3">
-                          <div className="font-medium text-sm">Low Stock Alert</div>
-                          <div className="text-xs text-gray-600">
-                            {product.name} - Only {product.stockQuantity} slabs remaining
+                        <div key={product.id} className="p-3 border-b hover:bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">Low Stock Alert</div>
+                              <div className="text-xs text-gray-600">
+                                {product.name} - Only {product.stockQuantity} slabs remaining
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 ml-2"
+                              onClick={() => markAsReadMutation.mutate({ type: 'low_stock', referenceId: product.id })}
+                              disabled={markAsReadMutation.isPending}
+                            >
+                              <X size={12} />
+                            </Button>
                           </div>
-                        </DropdownMenuItem>
+                        </div>
                       ))}
                     </>
                   )}

@@ -10,6 +10,8 @@ import { analyzeClientPurchases } from "./client-analysis";
 import { processSlabUpload } from "./ai-rendering";
 import { generatePythonCountertopRender, uploadRenderingAsset } from "./python-rendering";
 import { validateProductData, optimizeQuoteCalculations, cleanupExpiredData, generateHealthReport } from "./database-maintenance";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
@@ -2889,6 +2891,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       doc.end();
     });
   }
+
+  // Notifications endpoints
+  app.post('/api/notifications/mark-read', requireAuth, async (req: any, res) => {
+    try {
+      const { type, referenceId } = req.body;
+      const userId = req.user.id;
+
+      if (!type) {
+        return res.status(400).json({ error: 'Type is required' });
+      }
+
+      // For simplicity, we'll use a session-based approach to track read notifications
+      // Store read notifications in the user session
+      if (!req.session.readNotifications) {
+        req.session.readNotifications = {};
+      }
+      
+      const notificationKey = `${type}_${referenceId || 'all'}`;
+      req.session.readNotifications[notificationKey] = true;
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Mark notification as read error:', error);
+      res.status(500).json({ error: 'Failed to mark notification as read' });
+    }
+  });
+
+  app.post('/api/notifications/mark-all-read', requireAuth, async (req: any, res) => {
+    try {
+      const { type } = req.body;
+      const userId = req.user.id;
+
+      if (!type) {
+        return res.status(400).json({ error: 'Type is required' });
+      }
+
+      // Initialize session storage for read notifications
+      if (!req.session.readNotifications) {
+        req.session.readNotifications = {};
+      }
+
+      if (type === 'showroom_visit') {
+        // Mark all showroom visits as read
+        const visits = await storage.getPendingShowroomVisits();
+        for (const visit of visits) {
+          const notificationKey = `showroom_visit_${visit.id}`;
+          req.session.readNotifications[notificationKey] = true;
+        }
+      } else if (type === 'low_stock') {
+        // Mark all low stock alerts as read
+        const products = await storage.getLowStockProducts();
+        for (const product of products) {
+          const notificationKey = `low_stock_${product.id}`;
+          req.session.readNotifications[notificationKey] = true;
+        }
+      }
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Mark all notifications as read error:', error);
+      res.status(500).json({ error: 'Failed to mark all notifications as read' });
+    }
+  });
 
   // Report generation endpoint
   app.post('/api/reports/generate', requireAuth, async (req: any, res) => {
