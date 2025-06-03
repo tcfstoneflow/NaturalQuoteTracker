@@ -307,7 +307,7 @@ export default function ClientFavorites() {
               <DialogTitle>Request Quote</DialogTitle>
             </DialogHeader>
             <Form {...quoteForm}>
-              <form className="space-y-4">
+              <form onSubmit={quoteForm.handleSubmit(onQuoteSubmit)} className="space-y-4">
                 <FormField
                   control={quoteForm.control}
                   name="name"
@@ -378,6 +378,147 @@ export default function ClientFavorites() {
                   </Button>
                   <Button type="submit">
                     Send Request
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Consultation Dialog */}
+        <Dialog open={consultationDialogOpen} onOpenChange={setConsultationDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Schedule Consultation</DialogTitle>
+              <DialogDescription>
+                Let's discuss your project and review your {favorites.length} favorite slabs.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...consultationForm}>
+              <form onSubmit={consultationForm.handleSubmit(onConsultationSubmit)} className="space-y-4">
+                <FormField
+                  control={consultationForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={consultationForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="your.email@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={consultationForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={consultationForm.control}
+                    name="preferredDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preferred Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={consultationForm.control}
+                    name="preferredTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preferred Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={consultationForm.control}
+                  name="projectType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Type</FormLabel>
+                      <FormControl>
+                        <select {...field} className="w-full p-2 border border-gray-300 rounded-md">
+                          <option value="">Select project type</option>
+                          <option value="Kitchen Countertops">Kitchen Countertops</option>
+                          <option value="Bathroom Vanity">Bathroom Vanity</option>
+                          <option value="Island">Kitchen Island</option>
+                          <option value="Fireplace">Fireplace Surround</option>
+                          <option value="Commercial">Commercial Project</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={consultationForm.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Details</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Tell us about your project and any specific questions..."
+                          className="min-h-[120px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setConsultationDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule Consultation
                   </Button>
                 </div>
               </form>
