@@ -54,6 +54,18 @@ export const clients = pgTable("clients", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Client favorites for saving preferred slabs
+export const clientFavorites = pgTable("client_favorites", {
+  id: serial("id").primaryKey(),
+  clientEmail: text("client_email").notNull(), // using email as client identifier for public users
+  productId: integer("product_id").references(() => products.id).notNull(),
+  notes: text("notes"), // optional client notes about why they like this slab
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // Ensure one favorite per client per product
+  uniqueFavorite: index("unique_client_product_favorite").on(table.clientEmail, table.productId),
+}));
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   bundleId: text("bundle_id").unique(), // manual or auto-generated bundle identifier
@@ -244,6 +256,13 @@ export const productsRelations = relations(products, ({ many }) => ({
 export const productGalleryImagesRelations = relations(productGalleryImages, ({ one }) => ({
   product: one(products, {
     fields: [productGalleryImages.productId],
+    references: [products.id],
+  }),
+}));
+
+export const clientFavoritesRelations = relations(clientFavorites, ({ one }) => ({
+  product: one(products, {
+    fields: [clientFavorites.productId],
     references: [products.id],
   }),
 }));
@@ -474,6 +493,11 @@ export const insertProductReviewSchema = createInsertSchema(productReviews).omit
   createdAt: true,
 });
 
+export const insertClientFavoriteSchema = createInsertSchema(clientFavorites).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -518,6 +542,9 @@ export type InsertShowroomVisit = z.infer<typeof insertShowroomVisitSchema>;
 
 export type ProductGalleryImage = typeof productGalleryImages.$inferSelect;
 export type InsertProductGalleryImage = z.infer<typeof insertProductGalleryImageSchema>;
+
+export type ClientFavorite = typeof clientFavorites.$inferSelect;
+export type InsertClientFavorite = z.infer<typeof insertClientFavoriteSchema>;
 
 export type MfaCode = typeof mfaCodes.$inferSelect;
 export type InsertMfaCode = typeof mfaCodes.$inferInsert;
