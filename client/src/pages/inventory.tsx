@@ -280,6 +280,7 @@ export default function Inventory() {
     const submitData = {
       bundleId: formData.bundleId.trim(),
       name: formData.name.trim(),
+      description: formData.description.trim() || null,
       supplier: formData.supplier.trim(),
       category: formData.category,
       grade: formData.grade,
