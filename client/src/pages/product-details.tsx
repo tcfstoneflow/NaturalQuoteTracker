@@ -227,7 +227,7 @@ export default function ProductDetails() {
           </div>
 
           {/* Product Details */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
               <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
               <p className="text-lg text-gray-600 mb-4">
@@ -244,52 +244,44 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* Product Specifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Specifications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-gray-600">Supplier:</span>
-                    <div className="font-medium">{product.supplier}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Category:</span>
-                    <div className="font-medium capitalize">{product.category}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Grade:</span>
-                    <div className="font-medium">{product.grade} Grade</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Finish:</span>
-                    <div className="font-medium">{product.finish}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Thickness:</span>
-                    <div className="font-medium">{product.thickness}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Location:</span>
-                    <div className="font-medium">{product.location || 'N/A'}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Description */}
             {product.description && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700">{product.description}</p>
-                </CardContent>
-              </Card>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-3">Description</h3>
+                <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              </div>
             )}
+
+            {/* Product Specifications */}
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Specifications</h3>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <div>
+                  <span className="text-sm text-gray-600">Supplier:</span>
+                  <div className="font-medium">{product.supplier}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Category:</span>
+                  <div className="font-medium capitalize">{product.category}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Grade:</span>
+                  <div className="font-medium">{product.grade} Grade</div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Finish:</span>
+                  <div className="font-medium">{product.finish}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Thickness:</span>
+                  <div className="font-medium">{product.thickness}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600">Location:</span>
+                  <div className="font-medium">{product.location || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
 
             {/* Social Sharing */}
             <SocialShare
