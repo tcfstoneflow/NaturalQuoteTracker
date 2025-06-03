@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Lightbox } from "@/components/ui/lightbox";
 import { SocialShare } from "@/components/ui/social-share";
+import { FavoriteButton } from "@/components/ui/favorite-button";
 
 const quoteRequestSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -292,14 +293,15 @@ export default function ProductDetails() {
               price={`$${product.price}`}
             />
 
-            {/* Action Button */}
-            <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
-                  <Mail className="h-5 w-5 mr-2" />
-                  Request Quote for {product.name}
-                </Button>
-              </DialogTrigger>
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
+                    <Mail className="h-5 w-5 mr-2" />
+                    Request Quote for {product.name}
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Request Quote</DialogTitle>
@@ -386,6 +388,14 @@ export default function ProductDetails() {
                 </Form>
               </DialogContent>
             </Dialog>
+            
+            <FavoriteButton 
+              productId={product.id}
+              productName={product.name}
+              className="w-full"
+              variant="outline"
+              size="default"
+            />
           </div>
         </div>
 
@@ -561,6 +571,7 @@ export default function ProductDetails() {
           onClose={closeLightbox}
         />
       )}
+      </div>
     </div>
   );
 }
