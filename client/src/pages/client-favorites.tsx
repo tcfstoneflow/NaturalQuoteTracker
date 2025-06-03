@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, X, Mail, ArrowLeft } from "lucide-react";
+import { Heart, X, Mail, ArrowLeft, Calendar } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,11 +23,23 @@ const quoteRequestSchema = z.object({
   message: z.string().min(1, "Message is required"),
 });
 
+const consultationSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(1, "Phone is required"),
+  preferredDate: z.string().optional(),
+  preferredTime: z.string().optional(),
+  projectType: z.string().min(1, "Project type is required"),
+  message: z.string().min(1, "Please describe your project"),
+});
+
 type QuoteRequestData = z.infer<typeof quoteRequestSchema>;
+type ConsultationData = z.infer<typeof consultationSchema>;
 
 export default function ClientFavorites() {
   const [, setLocation] = useLocation();
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [consultationDialogOpen, setConsultationDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const { clientEmail, hasClientEmail, clearClientEmail } = useClientEmail();
   const { favorites, isLoading, removeFavorite, isRemovingFavorite } = useFavorites(clientEmail);
@@ -39,6 +51,19 @@ export default function ClientFavorites() {
       name: "",
       email: clientEmail || "",
       phone: "",
+      message: "",
+    },
+  });
+
+  const consultationForm = useForm<ConsultationData>({
+    resolver: zodResolver(consultationSchema),
+    defaultValues: {
+      name: "",
+      email: clientEmail || "",
+      phone: "",
+      preferredDate: "",
+      preferredTime: "",
+      projectType: "",
       message: "",
     },
   });
@@ -70,6 +95,63 @@ export default function ClientFavorites() {
     setQuoteDialogOpen(true);
   };
 
+  const handleScheduleConsultation = () => {
+    const favoritesList = favorites.map(fav => `• ${fav.product.name} (${fav.product.category})`).join('\n');
+    consultationForm.setValue("message", 
+      `I'd like to schedule a consultation to discuss my project. I have ${favorites.length} favorite slabs I'd like to review:\n\n${favoritesList}\n\nPlease help me select the best materials for my project.`
+    );
+    setConsultationDialogOpen(true);
+  };
+
+  const onQuoteSubmit = async (data: QuoteRequestData) => {
+    try {
+      await apiRequest("POST", "/api/quote-requests", data);
+      toast({
+        title: "Quote request sent",
+        description: "We'll get back to you soon!",
+      });
+      setQuoteDialogOpen(false);
+      quoteForm.reset();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send quote request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const onConsultationSubmit = async (data: ConsultationData) => {
+    try {
+      const favoriteProducts = favorites.map(fav => ({
+        id: fav.product.id,
+        name: fav.product.name,
+        category: fav.product.category,
+        notes: fav.notes
+      }));
+
+      const consultationData = {
+        ...data,
+        favoriteProducts,
+        source: 'favorites_page'
+      };
+
+      await apiRequest("POST", "/api/consultations", consultationData);
+      toast({
+        title: "Consultation scheduled",
+        description: "We'll contact you soon to discuss your project and favorites!",
+      });
+      setConsultationDialogOpen(false);
+      consultationForm.reset();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to schedule consultation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -96,7 +178,7 @@ export default function ClientFavorites() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-start mb-8">
           <div>
             <Button 
               variant="outline" 
@@ -111,9 +193,20 @@ export default function ClientFavorites() {
               {favorites.length} favorite{favorites.length !== 1 ? 's' : ''} saved for {clientEmail}
             </p>
           </div>
-          <Button variant="outline" onClick={clearClientEmail}>
-            Sign Out
-          </Button>
+          <div className="flex flex-col gap-2">
+            {favorites.length > 0 && (
+              <Button 
+                onClick={handleScheduleConsultation}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule Consultation
+              </Button>
+            )}
+            <Button variant="outline" onClick={clearClientEmail}>
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         {/* Favorites Grid */}
