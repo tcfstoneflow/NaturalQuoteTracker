@@ -170,6 +170,7 @@ export default function ClientFavorites() {
         source: 'favorites_page'
       };
 
+      console.log('Submitting consultation data:', consultationData);
       await apiRequest("POST", "/api/consultations", consultationData);
       toast({
         title: "Consultation scheduled",
@@ -178,9 +179,10 @@ export default function ClientFavorites() {
       setConsultationDialogOpen(false);
       consultationForm.reset();
     } catch (error) {
+      console.error('Consultation submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to schedule consultation. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to schedule consultation. Please try again.",
         variant: "destructive",
       });
     }
