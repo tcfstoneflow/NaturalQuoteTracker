@@ -2120,6 +2120,70 @@ Write the description in a tone that's informative yet appealing to both homeown
     }
   });
 
+  // Client Favorites API routes
+  app.get("/api/favorites/:email", async (req, res) => {
+    try {
+      const clientEmail = decodeURIComponent(req.params.email);
+      const favorites = await storage.getClientFavorites(clientEmail);
+      res.json(favorites);
+    } catch (error: any) {
+      console.error('Get favorites error:', error);
+      res.status(500).json({ error: 'Failed to get favorites' });
+    }
+  });
+
+  app.post("/api/favorites", async (req, res) => {
+    try {
+      const { clientEmail, productId, notes } = req.body;
+      
+      if (!clientEmail || !productId) {
+        return res.status(400).json({ error: 'Client email and product ID are required' });
+      }
+
+      const favorite = await storage.addClientFavorite({
+        clientEmail,
+        productId: parseInt(productId),
+        notes: notes || null
+      });
+
+      res.status(201).json(favorite);
+    } catch (error: any) {
+      console.error('Add favorite error:', error);
+      res.status(500).json({ error: 'Failed to add favorite' });
+    }
+  });
+
+  app.delete("/api/favorites/:email/:productId", async (req, res) => {
+    try {
+      const clientEmail = decodeURIComponent(req.params.email);
+      const productId = parseInt(req.params.productId);
+      
+      const success = await storage.removeClientFavorite(clientEmail, productId);
+      
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(404).json({ error: 'Favorite not found' });
+      }
+    } catch (error: any) {
+      console.error('Remove favorite error:', error);
+      res.status(500).json({ error: 'Failed to remove favorite' });
+    }
+  });
+
+  app.get("/api/favorites/:email/:productId/check", async (req, res) => {
+    try {
+      const clientEmail = decodeURIComponent(req.params.email);
+      const productId = parseInt(req.params.productId);
+      
+      const isFavorited = await storage.isProductFavorited(clientEmail, productId);
+      res.json({ isFavorited });
+    } catch (error: any) {
+      console.error('Check favorite error:', error);
+      res.status(500).json({ error: 'Failed to check favorite status' });
+    }
+  });
+
   // Constant Contact Marketing Routes
   app.get('/api/marketing/lists', async (req, res) => {
     try {

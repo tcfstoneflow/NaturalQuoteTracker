@@ -1,5 +1,5 @@
 import { 
-  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages,
+  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -9,6 +9,7 @@ import {
   type Slab, type InsertSlab, type ProductWithSlabs,
   type ShowroomVisit, type InsertShowroomVisit,
   type ProductGalleryImage, type InsertProductGalleryImage,
+  type ClientFavorite, type InsertClientFavorite,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -110,6 +111,12 @@ export interface IStorage {
 
   // Product Gallery
   getProductGalleryImages(productId: number): Promise<ProductGalleryImage[]>;
+  
+  // Client Favorites
+  getClientFavorites(clientEmail: string): Promise<(ClientFavorite & { product: Product })[]>;
+  addClientFavorite(favorite: InsertClientFavorite): Promise<ClientFavorite>;
+  removeClientFavorite(clientEmail: string, productId: number): Promise<boolean>;
+  isProductFavorited(clientEmail: string, productId: number): Promise<boolean>;
   
   // Reports
   getTopSellingProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
@@ -1430,6 +1437,72 @@ export class DatabaseStorage implements IStorage {
       console.error('Sales manager quotes by date error:', error);
       return [];
     }
+  }
+
+  // Client Favorites Implementation
+  async getClientFavorites(clientEmail: string): Promise<(ClientFavorite & { product: Product })[]> {
+    const favorites = await db
+      .select()
+      .from(clientFavorites)
+      .innerJoin(products, eq(clientFavorites.productId, products.id))
+      .where(eq(clientFavorites.clientEmail, clientEmail))
+      .orderBy(desc(clientFavorites.createdAt));
+
+    return favorites.map(row => ({
+      ...row.client_favorites,
+      product: row.products
+    }));
+  }
+
+  async addClientFavorite(favorite: InsertClientFavorite): Promise<ClientFavorite> {
+    // Check if already favorited (prevent duplicates)
+    const existing = await db
+      .select()
+      .from(clientFavorites)
+      .where(
+        and(
+          eq(clientFavorites.clientEmail, favorite.clientEmail),
+          eq(clientFavorites.productId, favorite.productId)
+        )
+      );
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const [newFavorite] = await db
+      .insert(clientFavorites)
+      .values(favorite)
+      .returning();
+
+    return newFavorite;
+  }
+
+  async removeClientFavorite(clientEmail: string, productId: number): Promise<boolean> {
+    const result = await db
+      .delete(clientFavorites)
+      .where(
+        and(
+          eq(clientFavorites.clientEmail, clientEmail),
+          eq(clientFavorites.productId, productId)
+        )
+      );
+
+    return (result.rowCount || 0) > 0;
+  }
+
+  async isProductFavorited(clientEmail: string, productId: number): Promise<boolean> {
+    const [favorite] = await db
+      .select()
+      .from(clientFavorites)
+      .where(
+        and(
+          eq(clientFavorites.clientEmail, clientEmail),
+          eq(clientFavorites.productId, productId)
+        )
+      );
+
+    return !!favorite;
   }
 }
 
