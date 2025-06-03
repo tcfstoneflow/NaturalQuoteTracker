@@ -2041,6 +2041,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI-powered product description generation
+  app.post('/api/generate-product-description', requireAuth, async (req, res) => {
+    try {
+      const { bundleName, category, imageUrl, supplier, grade, finish } = req.body;
+
+      if (!bundleName || !category) {
+        return res.status(400).json({ error: 'Bundle name and category are required' });
+      }
+
+      const OpenAI = (await import('openai')).default;
+      
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: 'OpenAI API key not configured' });
+      }
+
+      const openai = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY 
+      });
+
+      // Create a detailed prompt for generating stone product descriptions
+      const prompt = `Write a compelling product description for this natural stone slab. Focus on visual appeal and practical applications for potential buyers.
+
+Product Details:
+- Name: ${bundleName}
+- Category: ${category}
+- Supplier: ${supplier || 'Premium supplier'}
+- Grade: ${grade || 'Premium'}
+- Finish: ${finish || 'Polished'}
+
+Requirements:
+1. Write 2-3 sentences (60-120 words)
+2. Highlight the stone's visual characteristics and unique patterns
+3. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
+4. Use engaging, professional language that appeals to homeowners and designers
+5. Focus on the stone's natural beauty and durability
+6. Avoid overly technical jargon
+
+Write the description in a tone that's informative yet appealing to both homeowners and interior designers.`;
+
+      const messages: any[] = [
+        {
+          role: "system",
+          content: "You are an expert in natural stone products with extensive knowledge of geology, interior design, and construction applications. You write compelling product descriptions that help customers understand the beauty and practical benefits of natural stone."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ];
+
+      // If image is provided, include it in the analysis
+      if (imageUrl && imageUrl.startsWith('data:image/')) {
+        messages[1].content = [
+          {
+            type: "text",
+            text: prompt + "\n\nAnalyze the provided image to describe the stone's color, pattern, veining, and texture."
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: imageUrl
+            }
+          }
+        ];
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages,
+        max_tokens: 200,
+        temperature: 0.7,
+      });
+
+      const description = response.choices[0].message.content?.trim();
+
+      if (!description) {
+        throw new Error('Failed to generate description');
+      }
+
+      res.json({ description });
+    } catch (error: any) {
+      console.error('AI description generation error:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate description', 
+        details: error.message 
+      });
+    }
+  });
+
   // Constant Contact Marketing Routes
   app.get('/api/marketing/lists', async (req, res) => {
     try {

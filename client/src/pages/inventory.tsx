@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -94,10 +94,57 @@ export default function Inventory() {
     isAiGenerated: boolean;
   }>>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
   });
+
+  const generateDescription = async () => {
+    if (!formData.name || !formData.category || !formData.imageUrl) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide bundle name, category, and upload an image before generating description.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+    try {
+      const response = await fetch("/api/generate-product-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bundleName: formData.name,
+          category: formData.category,
+          imageUrl: formData.imageUrl,
+          supplier: formData.supplier,
+          grade: formData.grade,
+          finish: formData.finish,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate description");
+      }
+
+      const data = await response.json();
+      setFormData({ ...formData, description: data.description });
+      toast({
+        title: "Description Generated",
+        description: "AI-powered product description has been created.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -588,15 +635,42 @@ export default function Inventory() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="description">Product Description</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="description">Product Description</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={generateDescription}
+                      disabled={isGeneratingDescription || !formData.name || !formData.category}
+                      className="text-xs"
+                    >
+                      {isGeneratingDescription ? (
+                        <>
+                          <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full mr-2" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-3 w-3 mr-2" />
+                          Generate Description
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe this product (optional)"
+                    placeholder="Describe this product (optional) or use AI generation"
                     className="w-full min-h-[80px] px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
                     rows={3}
                   />
+                  {(!formData.name || !formData.category) && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Fill in bundle name and category to enable AI description generation
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
