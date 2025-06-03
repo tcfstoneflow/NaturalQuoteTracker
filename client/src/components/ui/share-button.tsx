@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Share2, Copy, Check } from "lucide-react";
+import { Share2, Copy, Check, Mail } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTwitter, FaWhatsapp } from "react-icons/fa";
 
 interface ShareButtonProps {
@@ -50,6 +50,7 @@ export function ShareButton({ url, title, description, price }: ShareButtonProps
     twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}&hashtags=naturalstone,countertops,stone`,
     whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
     instagram: url, // For Instagram, we'll just copy the link
+    email: `mailto:?subject=${encodedTitle}&body=${encodedDescription}%0A%0AView this product: ${encodedUrl}`,
   };
 
   const openShareWindow = (shareUrl: string, platform: string) => {
@@ -113,19 +114,9 @@ export function ShareButton({ url, title, description, price }: ShareButtonProps
           Facebook
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={() => openShareWindow(shareUrls.instagram, 'instagram')}>
-          <FaInstagram className="h-4 w-4 mr-2 text-pink-600" />
-          Instagram
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem onClick={() => openShareWindow(shareUrls.twitter, 'twitter')}>
-          <FaTwitter className="h-4 w-4 mr-2 text-blue-400" />
-          Twitter
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem onClick={() => openShareWindow(shareUrls.whatsapp, 'whatsapp')}>
-          <FaWhatsapp className="h-4 w-4 mr-2 text-green-600" />
-          WhatsApp
+        <DropdownMenuItem onClick={() => openShareWindow(shareUrls.email, 'email')}>
+          <Mail className="h-4 w-4 mr-2" />
+          Email
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -139,42 +139,6 @@ export function SocialShare({ url, title, description, imageUrl, price }: Social
           </Button>
 
           <Button
-            onClick={() => openShareWindow(shareUrls.instagram, 'instagram')}
-            variant="outline"
-            className="w-full"
-          >
-            <FaInstagram className="h-4 w-4 mr-2 text-pink-600" />
-            Instagram
-          </Button>
-
-          <Button
-            onClick={() => openShareWindow(shareUrls.twitter, 'twitter')}
-            variant="outline"
-            className="w-full"
-          >
-            <FaTwitter className="h-4 w-4 mr-2 text-blue-400" />
-            Twitter
-          </Button>
-
-          <Button
-            onClick={() => openShareWindow(shareUrls.whatsapp, 'whatsapp')}
-            variant="outline"
-            className="w-full"
-          >
-            <FaWhatsapp className="h-4 w-4 mr-2 text-green-600" />
-            WhatsApp
-          </Button>
-
-          <Button
-            onClick={() => openShareWindow(shareUrls.pinterest, 'pinterest')}
-            variant="outline"
-            className="w-full"
-          >
-            <FaPinterest className="h-4 w-4 mr-2 text-red-600" />
-            Pinterest
-          </Button>
-
-          <Button
             onClick={() => openShareWindow(shareUrls.email, 'email')}
             variant="outline"
             className="w-full"
@@ -187,11 +151,6 @@ export function SocialShare({ url, title, description, imageUrl, price }: Social
         {/* Share stats or additional info */}
         <div className="text-xs text-muted-foreground text-center pt-2">
           Share this beautiful {title.toLowerCase()} with friends and family
-          {price && (
-            <div className="mt-1 font-medium">
-              Starting at {price}/sqft
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
