@@ -671,13 +671,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const product = await storage.updateProduct(id, validatedData);
       
-      // Trigger AI rendering if imageUrl was updated
-      if (validatedData.imageUrl) {
-        // Run AI processing in background to avoid blocking the response
-        processSlabUpload(id, validatedData.imageUrl).catch(error => {
-          console.error('Background AI rendering failed:', error);
-        });
-      }
+      // Note: Automatic AI rendering disabled to prevent unwanted gallery image generation
+      // Use manual render endpoints instead: /api/products/:id/generate-render or /api/products/:id/generate-python-render
       
       res.json(product);
     } catch (error) {
@@ -697,13 +692,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const product = await storage.updateProduct(id, validatedData);
       
-      // Trigger AI rendering if imageUrl was updated
-      if (validatedData.imageUrl) {
-        // Run AI processing in background to avoid blocking the response
-        processSlabUpload(id, validatedData.imageUrl).catch(error => {
-          console.error('Background AI rendering failed:', error);
-        });
-      }
+      // Note: Automatic AI rendering disabled to prevent unwanted gallery image generation
+      // Use manual render endpoints instead: /api/products/:id/generate-render or /api/products/:id/generate-python-render
       
       res.json(product);
     } catch (error) {
