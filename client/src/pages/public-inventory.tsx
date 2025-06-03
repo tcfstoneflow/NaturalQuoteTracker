@@ -12,11 +12,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Filter, Package, Ruler, MapPin, Eye, Calendar, Phone, Mail } from "lucide-react";
+import { Search, Filter, Package, Ruler, MapPin, Eye, Calendar, Phone, Mail, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { Lightbox } from "@/components/ui/lightbox";
 import { ShareButton } from "@/components/ui/share-button";
+import { FavoriteButton } from "@/components/ui/favorite-button";
+import { useClientEmail } from "@/hooks/use-favorites";
 
 // Contact form schema
 const contactSchema = z.object({
@@ -49,6 +51,7 @@ export default function PublicInventory() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { hasClientEmail } = useClientEmail();
 
   // Handle URL parameters for category filtering and load recently viewed
   useEffect(() => {
@@ -201,13 +204,25 @@ export default function PublicInventory() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-6">
-          <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Premium Natural Stone Collection
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover our exquisite selection of granite, marble, and quartz slabs. Each piece is carefully selected for quality and beauty.
-            </p>
+          <div className="flex justify-between items-start mb-6">
+            <div className="text-center flex-1">
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                Premium Natural Stone Collection
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Discover our exquisite selection of granite, marble, and quartz slabs. Each piece is carefully selected for quality and beauty.
+              </p>
+            </div>
+            {hasClientEmail && (
+              <Button 
+                variant="outline" 
+                onClick={() => setLocation("/favorites")}
+                className="flex items-center gap-2"
+              >
+                <Heart className="h-4 w-4" />
+                My Favorites
+              </Button>
+            )}
           </div>
 
           {/* Search Bar */}
@@ -428,7 +443,13 @@ export default function PublicInventory() {
                         View Details
                       </Button>
                     </div>
-                    <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+                      <FavoriteButton
+                        productId={product.id}
+                        productName={product.name}
+                        variant="outline"
+                        size="sm"
+                      />
                       <ShareButton
                         url={`${window.location.origin}/product/${product.id}`}
                         title={product.name}
