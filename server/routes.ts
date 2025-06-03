@@ -293,10 +293,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/showroom-visits/pending", requireAuth, async (req, res) => {
+  app.get("/api/showroom-visits/pending", requireAuth, async (req: any, res) => {
     try {
       const pendingVisits = await storage.getPendingShowroomVisits();
-      res.json(pendingVisits);
+      
+      // Filter out read notifications
+      const readNotifications = req.session.readNotifications || {};
+      const unreadVisits = pendingVisits.filter((visit: any) => {
+        const notificationKey = `showroom_visit_${visit.id}`;
+        return !readNotifications[notificationKey];
+      });
+      
+      res.json(unreadVisits);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch pending visits" });
     }
@@ -560,11 +568,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/products/low-stock", requireAuth, async (req, res) => {
+  app.get("/api/products/low-stock", requireAuth, async (req: any, res) => {
     try {
       const lowStockProducts = await storage.getLowStockProducts();
-      res.json(lowStockProducts);
-    } catch (error) {
+      
+      // Filter out read notifications
+      const readNotifications = req.session.readNotifications || {};
+      const unreadProducts = lowStockProducts.filter((product: any) => {
+        const notificationKey = `low_stock_${product.id}`;
+        return !readNotifications[notificationKey];
+      });
+      
+      res.json(unreadProducts);
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
