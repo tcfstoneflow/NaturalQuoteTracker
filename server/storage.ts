@@ -1443,6 +1443,15 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Consultations Implementation
+  async createConsultation(consultation: InsertConsultation): Promise<Consultation> {
+    const [newConsultation] = await db
+      .insert(consultations)
+      .values(consultation)
+      .returning();
+    return newConsultation;
+  }
+
   // Client Favorites Implementation
   async getClientFavorites(clientEmail: string): Promise<(ClientFavorite & { product: Product })[]> {
     const favorites = await db
