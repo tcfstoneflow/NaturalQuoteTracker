@@ -2184,6 +2184,35 @@ Write the description in a tone that's informative yet appealing to both homeown
     }
   });
 
+  // Consultation requests
+  app.post("/api/consultations", async (req, res) => {
+    try {
+      const { name, email, phone, preferredDate, preferredTime, projectType, message, favoriteProducts, source } = req.body;
+      
+      if (!name || !email || !phone || !projectType || !message) {
+        return res.status(400).json({ error: 'Required fields missing' });
+      }
+
+      const consultation = await storage.createConsultation({
+        name,
+        email,
+        phone,
+        preferredDate: preferredDate || null,
+        preferredTime: preferredTime || null,
+        projectType,
+        message,
+        favoriteProducts: favoriteProducts ? JSON.stringify(favoriteProducts) : null,
+        source: source || 'website',
+        status: 'pending'
+      });
+
+      res.status(201).json(consultation);
+    } catch (error: any) {
+      console.error('Create consultation error:', error);
+      res.status(500).json({ error: 'Failed to schedule consultation' });
+    }
+  });
+
   // Constant Contact Marketing Routes
   app.get('/api/marketing/lists', async (req, res) => {
     try {

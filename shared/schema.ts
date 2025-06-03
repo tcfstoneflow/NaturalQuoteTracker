@@ -204,6 +204,23 @@ export const productGalleryImages = pgTable("product_gallery_images", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Consultation requests from the favorites page
+export const consultations = pgTable("consultations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  preferredDate: text("preferred_date"),
+  preferredTime: text("preferred_time"),
+  projectType: text("project_type").notNull(),
+  message: text("message").notNull(),
+  favoriteProducts: text("favorite_products"), // JSON string of favorite products
+  source: text("source").default("website").notNull(),
+  status: text("status").default("pending").notNull(), // "pending", "contacted", "scheduled", "completed", "cancelled"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const clientsRelations = relations(clients, ({ one, many }) => ({
   quotes: many(quotes),
@@ -471,6 +488,12 @@ export const insertProductGalleryImageSchema = createInsertSchema(productGallery
   createdAt: true,
 });
 
+export const insertConsultationSchema = createInsertSchema(consultations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // E-commerce schemas
 export const insertEcommerceOrderSchema = createInsertSchema(ecommerceOrders).omit({
   id: true,
@@ -545,6 +568,9 @@ export type InsertProductGalleryImage = z.infer<typeof insertProductGalleryImage
 
 export type ClientFavorite = typeof clientFavorites.$inferSelect;
 export type InsertClientFavorite = z.infer<typeof insertClientFavoriteSchema>;
+
+export type Consultation = typeof consultations.$inferSelect;
+export type InsertConsultation = z.infer<typeof insertConsultationSchema>;
 
 export type MfaCode = typeof mfaCodes.$inferSelect;
 export type InsertMfaCode = typeof mfaCodes.$inferInsert;

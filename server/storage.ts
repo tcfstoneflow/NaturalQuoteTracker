@@ -1,5 +1,5 @@
 import { 
-  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites,
+  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -10,6 +10,7 @@ import {
   type ShowroomVisit, type InsertShowroomVisit,
   type ProductGalleryImage, type InsertProductGalleryImage,
   type ClientFavorite, type InsertClientFavorite,
+  type Consultation, type InsertConsultation,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -117,6 +118,9 @@ export interface IStorage {
   addClientFavorite(favorite: InsertClientFavorite): Promise<ClientFavorite>;
   removeClientFavorite(clientEmail: string, productId: number): Promise<boolean>;
   isProductFavorited(clientEmail: string, productId: number): Promise<boolean>;
+  
+  // Consultations
+  createConsultation(consultation: InsertConsultation): Promise<Consultation>;
   
   // Reports
   getTopSellingProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
