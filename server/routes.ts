@@ -2184,7 +2184,7 @@ Write the description in a tone that's informative yet appealing to both homeown
     }
   });
 
-  // Consultation requests
+  // Consultation requests - create as showroom visits
   app.post("/api/consultations", async (req, res) => {
     try {
       const { name, email, phone, preferredDate, preferredTime, projectType, message, favoriteProducts, source } = req.body;
@@ -2193,20 +2193,42 @@ Write the description in a tone that's informative yet appealing to both homeown
         return res.status(400).json({ error: 'Required fields missing' });
       }
 
-      const consultation = await storage.createConsultation({
+      // Create consultation message with favorite products info
+      let consultationMessage = message;
+      if (favoriteProducts && favoriteProducts.length > 0) {
+        const favoritesText = favoriteProducts.map((fav: any) => `• ${fav.name} (${fav.category})`).join('\n');
+        consultationMessage = `${message}\n\nFavorite Products:\n${favoritesText}`;
+      }
+
+      // Create as a showroom visit so it appears in the dashboard
+      const showroomVisit = await storage.createShowroomVisit({
         name,
         email,
-        phone,
-        preferredDate: preferredDate || null,
-        preferredTime: preferredTime || null,
-        projectType,
-        message,
-        favoriteProducts: favoriteProducts ? JSON.stringify(favoriteProducts) : null,
-        source: source || 'website',
+        phone: phone || '',
+        preferredDate: preferredDate || new Date().toISOString().split('T')[0],
+        preferredTime: preferredTime || '',
+        message: consultationMessage,
         status: 'pending'
       });
 
-      res.status(201).json(consultation);
+      // Also log as activity
+      await storage.createActivity({
+        type: 'showroom_visit_request',
+        description: `New consultation request from ${name}`,
+        entityType: 'showroom_visit',
+        entityId: showroomVisit.id,
+        metadata: {
+          name,
+          email,
+          phone: phone || '',
+          preferredDate: preferredDate || '',
+          message: consultationMessage,
+          source: source || 'favorites_page',
+          favoriteProducts: favoriteProducts || []
+        }
+      });
+
+      res.status(201).json(showroomVisit);
     } catch (error: any) {
       console.error('Create consultation error:', error);
       res.status(500).json({ error: 'Failed to schedule consultation' });
