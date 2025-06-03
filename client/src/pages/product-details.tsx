@@ -242,13 +242,6 @@ export default function ProductDetails() {
                   {availableSlabs.length} slabs available
                 </Badge>
               </div>
-
-              {product.description && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-gray-900 mb-2">Description</h3>
-                  <p className="text-gray-700 leading-relaxed">{product.description}</p>
-                </div>
-              )}
             </div>
 
             {/* Product Specifications */}
