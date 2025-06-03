@@ -2189,7 +2189,7 @@ Write the description in a tone that's informative yet appealing to both homeown
     try {
       const { name, email, phone, preferredDate, preferredTime, projectType, message, favoriteProducts, source } = req.body;
       
-      if (!name || !email || !phone || !projectType || !message) {
+      if (!name || !email || !projectType || !message) {
         return res.status(400).json({ error: 'Required fields missing' });
       }
 

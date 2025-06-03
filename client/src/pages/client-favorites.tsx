@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Heart, X, Mail, ArrowLeft, Calendar } from "lucide-react";
 import { useLocation } from "wouter";
@@ -26,7 +26,7 @@ const quoteRequestSchema = z.object({
 const consultationSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
-  phone: z.string().min(1, "Phone is required"),
+  phone: z.string().optional(),
   preferredDate: z.string().optional(),
   preferredTime: z.string().optional(),
   projectType: z.string().min(1, "Project type is required"),
@@ -55,10 +55,24 @@ export default function ClientFavorites() {
     },
   });
 
+  // Extract name from email for pre-population
+  const getNameFromEmail = (email: string) => {
+    if (!email) return "";
+    const localPart = email.split('@')[0];
+    // Convert underscores/dots to spaces and capitalize each word
+    return localPart
+      .replace(/[._]/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  const userName = clientEmail ? getNameFromEmail(clientEmail) : "";
+
   const consultationForm = useForm<ConsultationData>({
     resolver: zodResolver(consultationSchema),
     defaultValues: {
-      name: "",
+      name: userName,
       email: clientEmail || "",
       phone: "",
       preferredDate: "",
@@ -67,6 +81,26 @@ export default function ClientFavorites() {
       message: "",
     },
   });
+
+  // Reset consultation form with current user values when dialog opens
+  useEffect(() => {
+    if (consultationDialogOpen && clientEmail) {
+      const currentUserName = getNameFromEmail(clientEmail);
+      const favoritesList = favorites.slice(0, 3).map(fav => 
+        `• ${fav.product.name} (${fav.product.category})`
+      ).join('\n');
+      
+      consultationForm.reset({
+        name: currentUserName,
+        email: clientEmail,
+        phone: "",
+        preferredDate: "",
+        preferredTime: "",
+        projectType: "",
+        message: favoritesList ? `I'd like to schedule a consultation to discuss my project. I have ${favorites.length} favorite slabs I'd like to review:\n\n${favoritesList}` : "I'd like to schedule a consultation to discuss my project.",
+      });
+    }
+  }, [consultationDialogOpen, clientEmail, favorites, consultationForm]);
 
   if (!hasClientEmail) {
     return (
