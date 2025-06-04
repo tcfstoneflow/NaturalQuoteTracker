@@ -121,7 +121,7 @@ export default function SalesDashboard() {
   });
 
   // Get sales managers for assignment
-  const { data: salesManagers = [] } = useQuery({
+  const { data: salesManagers = [], isLoading: salesManagersLoading } = useQuery({
     queryKey: ["/api/sales-dashboard/sales-managers"],
     queryFn: salesDashboardApi.getSalesManagers,
     enabled: isEditingAppointment,
@@ -551,17 +551,26 @@ export default function SalesDashboard() {
                 onValueChange={(value) => setEditForm(prev => ({ ...prev, assignedToUserId: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select sales member" />
+                  <SelectValue placeholder={salesManagersLoading ? "Loading..." : "Select sales member"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">No assignment</SelectItem>
-                  {salesManagers.map((manager: any) => (
-                    <SelectItem key={manager.id} value={manager.id.toString()}>
-                      {manager.name}
-                    </SelectItem>
-                  ))}
+                  {salesManagersLoading ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : (
+                    salesManagers.map((manager: any) => (
+                      <SelectItem key={manager.id} value={manager.id.toString()}>
+                        {manager.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Debug: {salesManagers.length} sales managers loaded, Loading: {salesManagersLoading ? 'true' : 'false'}
+                </div>
+              )}
             </div>
 
             <div>
