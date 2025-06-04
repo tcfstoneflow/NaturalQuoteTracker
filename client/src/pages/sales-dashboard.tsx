@@ -124,10 +124,13 @@ export default function SalesDashboard() {
   });
 
   // Get sales managers for assignment - always fetch since we might need them
-  const { data: salesManagers = [], isLoading: salesManagersLoading } = useQuery({
+  const { data: salesManagers = [], isLoading: salesManagersLoading, error: salesManagersError } = useQuery({
     queryKey: ["/api/sales-dashboard/sales-managers"],
     queryFn: salesDashboardApi.getSalesManagers,
   });
+
+  // Debug logging
+  console.log('Sales Managers Query:', { salesManagers, salesManagersLoading, salesManagersError });
 
   return (
     <div className="flex flex-col h-full">
