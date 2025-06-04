@@ -281,6 +281,7 @@ export default function SalesDashboard() {
 
   // Debug logging
   console.log('Sales Managers Query:', { salesManagers, salesManagersLoading, salesManagersError });
+  console.log('User data structure:', user);
 
   return (
     <div className="flex flex-col h-full">
