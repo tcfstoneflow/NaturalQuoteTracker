@@ -2035,6 +2035,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate-product-description', requireAuth, async (req, res) => {
     try {
       const { bundleName, category, imageUrl, supplier, grade, finish } = req.body;
+      
+      console.log('Description generation request:', { bundleName, category, imageUrl: imageUrl ? 'provided' : 'missing', supplier, grade, finish });
 
       if (!bundleName || !category) {
         return res.status(400).json({ error: 'Bundle name and category are required' });
@@ -2061,16 +2063,17 @@ Product Details:
 - Finish: ${finish || 'Polished'}
 
 Requirements:
-1. Start with a short, catchy headline (4-8 words) that captures the stone's essence, wrapped in **bold markdown** formatting
-2. Follow with 2-3 descriptive sentences (60-120 words)
-3. Highlight the stone's visual characteristics and unique patterns
-4. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
-5. Use engaging, professional language that appeals to homeowners and designers
-6. Focus on the stone's natural beauty and durability
-7. Avoid overly technical jargon
+1. Start with a persuasive, hard-working headline (4-15 words) that captures the stone's essence and appeals to consumers, wrapped in **bold markdown** formatting
+2. Make the headline compelling and sales-focused - emphasize luxury, beauty, transformation, or emotional appeal
+3. Follow with 2-3 descriptive sentences (60-120 words)
+4. Highlight the stone's visual characteristics and unique patterns
+5. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
+6. Use engaging, professional language that appeals to homeowners and designers
+7. Focus on the stone's natural beauty and durability
+8. Avoid overly technical jargon
 
 Format example:
-**Elegant Marble Sophistication**
+**Transform Your Kitchen with Timeless Granite Elegance**
 This stunning natural stone features...
 
 Write the description in a tone that's informative yet appealing to both homeowners and interior designers.`;
@@ -2087,7 +2090,8 @@ Write the description in a tone that's informative yet appealing to both homeown
       ];
 
       // If image is provided, include it in the analysis
-      if (imageUrl && imageUrl.startsWith('data:image/')) {
+      if (imageUrl && (imageUrl.startsWith('data:image/') || imageUrl.startsWith('http'))) {
+        console.log('Including image in AI analysis, URL type:', imageUrl.startsWith('data:') ? 'base64' : 'URL');
         messages[1].content = [
           {
             type: "text",
@@ -2100,6 +2104,8 @@ Write the description in a tone that's informative yet appealing to both homeown
             }
           }
         ];
+      } else {
+        console.log('No image provided or invalid format for AI analysis');
       }
 
       const response = await openai.chat.completions.create({
