@@ -2061,12 +2061,17 @@ Product Details:
 - Finish: ${finish || 'Polished'}
 
 Requirements:
-1. Write 2-3 sentences (60-120 words)
-2. Highlight the stone's visual characteristics and unique patterns
-3. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
-4. Use engaging, professional language that appeals to homeowners and designers
-5. Focus on the stone's natural beauty and durability
-6. Avoid overly technical jargon
+1. Start with a short, catchy headline (4-8 words) that captures the stone's essence, wrapped in **bold markdown** formatting
+2. Follow with 2-3 descriptive sentences (60-120 words)
+3. Highlight the stone's visual characteristics and unique patterns
+4. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
+5. Use engaging, professional language that appeals to homeowners and designers
+6. Focus on the stone's natural beauty and durability
+7. Avoid overly technical jargon
+
+Format example:
+**Elegant Marble Sophistication**
+This stunning natural stone features...
 
 Write the description in a tone that's informative yet appealing to both homeowners and interior designers.`;
 

@@ -29,6 +29,18 @@ const quoteRequestSchema = z.object({
 
 type QuoteRequestData = z.infer<typeof quoteRequestSchema>;
 
+// Helper function to render markdown bold formatting
+function renderDescriptionWithBold(text: string) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const boldText = part.slice(2, -2);
+      return <strong key={index} className="font-bold text-gray-900">{boldText}</strong>;
+    }
+    return part;
+  });
+}
+
 export default function ProductDetails() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
@@ -296,7 +308,9 @@ export default function ProductDetails() {
             {product.description && (
               <div className="border border-gray-200 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-3">Description</h3>
-                <p className="text-gray-700 leading-relaxed">{product.description}</p>
+                <div className="text-gray-700 leading-relaxed">
+                  {renderDescriptionWithBold(product.description)}
+                </div>
               </div>
             )}
 
