@@ -1625,34 +1625,15 @@ export class DatabaseStorage implements IStorage {
 
   async getAllProductTags(): Promise<(ProductTag & { tag: Tag })[]> {
     try {
-      const result = await db.execute(sql`
-        SELECT 
-          pt.id,
-          pt.product_id as "productId",
-          pt.tag_id as "tagId", 
-          pt.created_at as "createdAt",
-          t.id as "tag_id",
-          t.name as "tag_name",
-          t.description as "tag_description",
-          t.category as "tag_category",
-          t.created_at as "tag_createdAt"
-        FROM product_tags pt
-        INNER JOIN tags t ON pt.tag_id = t.id
-        ORDER BY t.name
-      `);
+      const productTagsWithTags = await db
+        .select()
+        .from(productTags)
+        .innerJoin(tags, eq(productTags.tagId, tags.id))
+        .orderBy(asc(tags.name));
 
-      return result.rows.map((row: any) => ({
-        id: row.id,
-        productId: row.productId,
-        tagId: row.tagId,
-        createdAt: row.createdAt,
-        tag: {
-          id: row.tag_id,
-          name: row.tag_name,
-          description: row.tag_description,
-          category: row.tag_category,
-          createdAt: row.tag_createdAt
-        }
+      return productTagsWithTags.map(row => ({
+        ...row.product_tags,
+        tag: row.tags
       }));
     } catch (error) {
       console.error('Error fetching all product tags:', error);

@@ -3433,16 +3433,7 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  // Public product-tags endpoint for filtering (renamed to avoid conflicts)
-  app.get("/api/public/products/tags", async (req, res) => {
-    try {
-      const allProductTags = await storage.getAllProductTags();
-      res.json(allProductTags);
-    } catch (error: any) {
-      console.error('Get public product tags error:', error);
-      res.status(500).json({ error: "Failed to fetch all product tags", details: error.message });
-    }
-  });
+
 
   // Get all product tags for filtering (protected route) - EXACT match before parameterized
   app.get("/api/products/tags", requireAuth, async (req, res) => {
