@@ -3328,7 +3328,7 @@ Write the description in a tone that's informative yet appealing to both homeown
   });
 
   // Product Tags API endpoints
-  app.get("/api/products/:id/tags", requireAuth, requireInventoryAccess, async (req, res) => {
+  app.get("/api/products/:id/tags", requireAuth, async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
       console.log(`Fetching tags for product ID: ${productId}`);
