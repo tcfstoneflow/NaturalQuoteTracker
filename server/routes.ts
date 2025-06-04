@@ -3292,10 +3292,18 @@ Write the description in a tone that's informative yet appealing to both homeown
 
   app.post("/api/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
     try {
-      const { name, description } = req.body;
+      const { name, description, category } = req.body;
       
       if (!name) {
         return res.status(400).json({ error: "Tag name is required" });
+      }
+
+      // Validate category
+      const validCategories = ['color', 'pattern', 'texture', 'finish', 'style'];
+      if (category && !validCategories.includes(category)) {
+        return res.status(400).json({ 
+          error: "Invalid category. Must be one of: " + validCategories.join(', ') 
+        });
       }
 
       // Check if tag already exists
@@ -3304,7 +3312,7 @@ Write the description in a tone that's informative yet appealing to both homeown
         return res.status(400).json({ error: "Tag already exists" });
       }
 
-      const tag = await storage.createTag({ name, description });
+      const tag = await storage.createTag({ name, description, category });
       res.status(201).json(tag);
     } catch (error: any) {
       console.error('Create tag error:', error);
@@ -3362,6 +3370,32 @@ Write the description in a tone that's informative yet appealing to both homeown
 
       if (!tagId) {
         return res.status(400).json({ error: "Tag ID is required" });
+      }
+
+      // Check current tag count for this product
+      const currentTags = await storage.getProductTags(productId);
+      
+      // Enforce 3-5 tag limit
+      if (currentTags.length >= 5) {
+        return res.status(400).json({ 
+          error: "Product already has the maximum of 5 tags. Remove a tag before adding a new one." 
+        });
+      }
+
+      // Get the tag being added to check its category
+      const newTag = await storage.getTag(tagId);
+      if (!newTag) {
+        return res.status(404).json({ error: "Tag not found" });
+      }
+
+      // Check if this would violate color tag rules (only one color tag allowed)
+      if (newTag.category === 'color') {
+        const hasColorTag = currentTags.some(pt => pt.tag.category === 'color');
+        if (hasColorTag) {
+          return res.status(400).json({ 
+            error: "Product already has a color tag. Remove the existing color tag before adding a new one." 
+          });
+        }
       }
 
       const productTag = await storage.addProductTag({ productId, tagId });

@@ -100,6 +100,7 @@ export default function Inventory() {
     tag: { id: number; name: string; description?: string };
   }>>([]);
   const [newTagName, setNewTagName] = useState("");
+  const [newTagCategory, setNewTagCategory] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
 
   // Fetch available tags for the tags dropdown
@@ -480,13 +481,17 @@ export default function Inventory() {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newTagName.trim() }),
+        body: JSON.stringify({ 
+          name: newTagName.trim(),
+          category: newTagCategory || null
+        }),
       });
       
       if (response.ok) {
         const newTag = await response.json();
         queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
         setNewTagName("");
+        setNewTagCategory("");
         
         // Automatically add the new tag to the current product
         if (editingProduct) {
@@ -1199,30 +1204,45 @@ export default function Inventory() {
                       {/* Create New Tag */}
                       <div className="space-y-2 mt-3">
                         <Label className="text-sm">Create New Tag</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Enter new tag name"
-                            value={newTagName}
-                            onChange={(e) => setNewTagName(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                createNewTag();
-                              }
-                            }}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={createNewTag}
-                            disabled={!newTagName.trim()}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Enter new tag name"
+                              value={newTagName}
+                              onChange={(e) => setNewTagName(e.target.value)}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && newTagName.trim()) {
+                                  e.preventDefault();
+                                  createNewTag();
+                                }
+                              }}
+                              className="flex-1"
+                            />
+                            <Select value={newTagCategory} onValueChange={setNewTagCategory}>
+                              <SelectTrigger className="w-32">
+                                <SelectValue placeholder="Category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="color">Color</SelectItem>
+                                <SelectItem value="pattern">Pattern</SelectItem>
+                                <SelectItem value="texture">Texture</SelectItem>
+                                <SelectItem value="finish">Finish</SelectItem>
+                                <SelectItem value="style">Style</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={createNewTag}
+                              disabled={!newTagName.trim()}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-xs text-gray-500">
-                          Tags help group similar products for better recommendations
+                          Use 3-5 tags total: one color-focused tag and 2-4 visual/texture details
                         </p>
                       </div>
                     </div>
