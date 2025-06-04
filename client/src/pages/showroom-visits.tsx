@@ -410,7 +410,7 @@ export default function ShowroomVisits() {
                     <SelectItem value="unassigned">Unassigned</SelectItem>
                     {salesManagers.map((manager) => (
                       <SelectItem key={manager.id} value={manager.id.toString()}>
-                        {manager.firstName} {manager.lastName}
+                        {manager.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -679,7 +679,7 @@ export default function ShowroomVisits() {
                           <SelectItem value="none">No assignment</SelectItem>
                           {salesManagers.map((manager: any) => (
                             <SelectItem key={manager.id} value={manager.id.toString()}>
-                              {manager.firstName} {manager.lastName} ({manager.role === 'sales_rep' ? 'sales_manager' : manager.role})
+                              {manager.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
