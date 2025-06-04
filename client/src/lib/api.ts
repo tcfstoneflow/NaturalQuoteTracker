@@ -59,6 +59,10 @@ export const salesDashboardApi = {
     const response = await apiRequest('GET', '/api/sales-dashboard/my-quotes');
     return response.json();
   },
+  getMyClients: async () => {
+    const response = await apiRequest('GET', '/api/sales-dashboard/my-clients');
+    return response.json();
+  },
   getRecentActivities: async () => {
     const response = await apiRequest('GET', '/api/sales-dashboard/recent-activities');
     return response.json();

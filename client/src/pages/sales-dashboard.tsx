@@ -33,6 +33,11 @@ export default function SalesDashboard() {
     queryFn: salesDashboardApi.getRecentQuotes,
   });
 
+  const { data: myClients } = useQuery({
+    queryKey: ["/api/sales-dashboard/my-clients"],
+    queryFn: salesDashboardApi.getMyClients,
+  });
+
   // Debug logging
   console.log('Sales Dashboard - myQuotes data:', myQuotes);
   console.log('Sales Dashboard - myQuotes type:', typeof myQuotes);
@@ -40,6 +45,7 @@ export default function SalesDashboard() {
   
   // Ensure we have an array
   const quotesArray = Array.isArray(myQuotes) ? myQuotes : [];
+  const clientsArray = Array.isArray(myClients) ? myClients : [];
 
   const { data: myActivities } = useQuery({
     queryKey: ["/api/sales-dashboard/recent-activities"],
@@ -99,7 +105,7 @@ export default function SalesDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-accent-orange">
-                  {salesStats?.totalClients || 0}
+                  {clientsArray.length}
                 </div>
                 <p className="text-xs text-gray-600">
                   {salesStats?.newClientsThisMonth || 0} new this month
@@ -215,24 +221,30 @@ export default function SalesDashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {myQuotes?.slice(0, 6).map((quote: any) => (
-                  <div key={quote.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium">{quote.client.name}</div>
-                      <Badge variant="default" className="bg-blue-500 text-white">
-                        {quote.status}
-                      </Badge>
+                {clientsArray.length > 0 ? (
+                  clientsArray.slice(0, 6).map((client: any) => (
+                    <div key={client.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium">{client.name}</div>
+                        <Badge variant="default" className="bg-green-500 text-white">
+                          Active
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">{client.email}</div>
+                      <div className="text-sm text-gray-600 mb-3">{client.company || 'No company'}</div>
+                      <div className="flex items-center justify-between">
+                        <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                          <Phone className="h-3 w-3" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                          <Mail className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 mb-2">{quote.quoteNumber}</div>
-                    <div className="text-sm text-gray-600 mb-3">${quote.subtotal}</div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">Created:</span>
-                      <span className="font-medium">{format(new Date(quote.createdAt), "MMM d")}</span>
-                    </div>
-                  </div>
-                )) || (
+                  ))
+                ) : (
                   <div className="col-span-full text-center py-8 text-gray-500">
-                    No recent quotes found
+                    No clients yet. Create your first quote!
                   </div>
                 )}
               </div>

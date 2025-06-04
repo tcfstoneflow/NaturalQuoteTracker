@@ -2579,6 +2579,30 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Get clients assigned to this sales rep
+  app.get('/api/sales-dashboard/my-clients', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      let clients;
+      if (userRole === 'admin') {
+        // Admins can see all clients
+        clients = await storage.getClients();
+      } else {
+        // Sales reps see only clients assigned to them
+        const allClients = await storage.getClients();
+        clients = allClients.filter(client => client.salesManagerId === userId);
+      }
+      
+      console.log(`Sales Dashboard - Found ${clients.length} clients for user ${userId} (role: ${userRole})`);
+      res.json(clients);
+    } catch (error: any) {
+      console.error('Error getting my clients:', error);
+      res.status(500).json({ error: 'Failed to get my clients' });
+    }
+  });
+
   // Top selling products by time period
   app.get("/api/dashboard/top-selling-products", async (req, res) => {
     try {
