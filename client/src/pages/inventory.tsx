@@ -1114,14 +1114,27 @@ export default function Inventory() {
                                 const target = e.target as HTMLImageElement;
                                 const parent = target.parentElement;
                                 if (parent) {
-                                  parent.innerHTML = `
-                                    <div class="w-full h-32 bg-gray-100 border border-gray-300 rounded-md mt-2 flex items-center justify-center">
-                                      <div class="text-center text-gray-500">
-                                        <p class="text-sm">Image no longer available</p>
-                                        <p class="text-xs">${image.title || 'Gallery image'}</p>
-                                      </div>
-                                    </div>
-                                  `;
+                                  // Create DOM elements safely to prevent XSS
+                                  const container = document.createElement('div');
+                                  container.className = 'w-full h-32 bg-gray-100 border border-gray-300 rounded-md mt-2 flex items-center justify-center';
+                                  
+                                  const innerDiv = document.createElement('div');
+                                  innerDiv.className = 'text-center text-gray-500';
+                                  
+                                  const p1 = document.createElement('p');
+                                  p1.className = 'text-sm';
+                                  p1.textContent = 'Image no longer available';
+                                  
+                                  const p2 = document.createElement('p');
+                                  p2.className = 'text-xs';
+                                  p2.textContent = image.title || 'Gallery image';
+                                  
+                                  innerDiv.appendChild(p1);
+                                  innerDiv.appendChild(p2);
+                                  container.appendChild(innerDiv);
+                                  
+                                  parent.innerHTML = '';
+                                  parent.appendChild(container);
                                 }
                               }}
                             />
