@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Package, Ruler, MapPin, Calendar, Eye, Home, Bath, ChefHat, Wand2, Palette, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Package, Ruler, MapPin, Calendar, Eye, Home, Bath, ChefHat, Wand2, Palette, Mail, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { useState, useEffect } from "react";
 import { Lightbox } from "@/components/ui/lightbox";
 import { SocialShare, CollapsibleShare } from "@/components/ui/social-share";
 import { FavoriteButton } from "@/components/ui/favorite-button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const quoteRequestSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -36,6 +37,7 @@ export default function ProductDetails() {
   const [lightboxTitle, setLightboxTitle] = useState("");
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [similarProductsOffset, setSimilarProductsOffset] = useState(0);
+  const [slabsExpanded, setSlabsExpanded] = useState(false);
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery({
@@ -449,8 +451,18 @@ export default function ProductDetails() {
         {/* Available Slabs */}
         {availableSlabs.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">Available Slabs ({availableSlabs.length})</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Collapsible open={slabsExpanded} onOpenChange={setSlabsExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-between mb-6 text-2xl font-bold h-auto py-4"
+                >
+                  Available Slabs ({availableSlabs.length})
+                  {slabsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableSlabs.map((slab: any) => (
                 <Card key={slab.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-4">
@@ -490,11 +502,13 @@ export default function ProductDetails() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
-        </div>
       </div>
+    </div>
 
       {/* Similar Products Section - Full Width */}
       {similarProducts.length > 0 && (
