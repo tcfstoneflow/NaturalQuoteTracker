@@ -98,6 +98,7 @@ export default function ShowroomVisits() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-dashboard/pending-showroom-visits"] });
       toast({
         title: "Visit Updated",
         description: "The showroom visit has been updated successfully.",

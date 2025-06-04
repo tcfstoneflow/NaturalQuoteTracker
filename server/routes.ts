@@ -2571,8 +2571,24 @@ Your body text starts here with proper spacing.`;
 
   app.get('/api/sales-dashboard/pending-showroom-visits', requireAuth, async (req: any, res) => {
     try {
-      const pendingVisits = await storage.getPendingShowroomVisits();
-      res.json(pendingVisits);
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      let visits;
+      if (userRole === 'admin') {
+        // Admins see all pending visits
+        visits = await storage.getPendingShowroomVisits();
+      } else {
+        // Sales reps see visits assigned to them (any status) plus unassigned pending visits
+        const allVisits = await storage.getShowroomVisits();
+        visits = allVisits.filter(visit => 
+          visit.assignedToUserId === userId || 
+          (visit.status === 'pending' && !visit.assignedToUserId)
+        );
+      }
+      
+      console.log(`Sales Dashboard - Found ${visits.length} visits for user ${userId} (role: ${userRole})`);
+      res.json(visits);
     } catch (error: any) {
       console.error('Error getting pending showroom visits:', error);
       res.status(500).json({ error: 'Failed to get pending showroom visits' });
