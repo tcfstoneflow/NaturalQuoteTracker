@@ -60,10 +60,22 @@ export default function ClientFavorites() {
   const getNameFromEmail = (email: string) => {
     if (!email) return "";
     const localPart = email.split('@')[0];
-    // Convert underscores/dots to spaces and capitalize each word
-    return localPart
-      .replace(/[._]/g, ' ')
+    
+    // Handle common email patterns and improve name formatting
+    let formattedName = localPart;
+    
+    // Replace common separators with spaces
+    formattedName = formattedName.replace(/[._-]/g, ' ');
+    
+    // Split on numbers or camelCase boundaries
+    formattedName = formattedName.replace(/([a-z])([A-Z])/g, '$1 $2');
+    formattedName = formattedName.replace(/([a-zA-Z])([0-9])/g, '$1 $2');
+    formattedName = formattedName.replace(/([0-9])([a-zA-Z])/g, '$1 $2');
+    
+    // Capitalize each word and clean up extra spaces
+    return formattedName
       .split(' ')
+      .filter(word => word.length > 0)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   };
