@@ -530,7 +530,6 @@ export default function PublicInventory() {
                   <CardContent className="p-3">
                     <h3 className="font-medium text-sm truncate">{product.name}</h3>
                     <p className="text-xs text-gray-600 capitalize">{product.category}</p>
-                    <p className="text-xs font-semibold text-blue-600">${product.price}/sqft</p>
                   </CardContent>
                 </Card>
               ))}
