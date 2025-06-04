@@ -95,6 +95,31 @@ export default function Inventory() {
   }>>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [productTags, setProductTags] = useState<Array<{
+    id: number;
+    tag: { id: number; name: string; description?: string };
+  }>>([]);
+  const [newTagName, setNewTagName] = useState("");
+
+  // Fetch available tags for the tags dropdown
+  const { data: availableTags = [] } = useQuery({
+    queryKey: ["/api/tags"],
+    enabled: !!editingProduct,
+  });
+
+  // Fetch product tags when editing a product
+  const { data: currentProductTags = [] } = useQuery({
+    queryKey: ["/api/products", editingProduct?.id, "tags"],
+    queryFn: () => fetch(`/api/products/${editingProduct?.id}/tags`).then(res => res.json()),
+    enabled: !!editingProduct?.id,
+  });
+
+  // Sync product tags when currentProductTags changes
+  useEffect(() => {
+    if (currentProductTags) {
+      setProductTags(currentProductTags);
+    }
+  }, [currentProductTags]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
@@ -372,6 +397,81 @@ export default function Inventory() {
       imageUrl: ""
     });
     setGalleryImages([]);
+    setProductTags([]);
+    setNewTagName("");
+  };
+
+  // Add tag to product
+  const addTagToProduct = async (tagId: number) => {
+    if (!editingProduct) return;
+    
+    try {
+      const response = await fetch(`/api/products/${editingProduct.id}/tags`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tagId }),
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        toast({ title: "Tag added successfully" });
+      } else {
+        throw new Error("Failed to add tag");
+      }
+    } catch (error) {
+      toast({ title: "Failed to add tag", variant: "destructive" });
+    }
+  };
+
+  // Remove tag from product
+  const removeTagFromProduct = async (tagId: number) => {
+    if (!editingProduct) return;
+    
+    try {
+      const response = await fetch(`/api/products/${editingProduct.id}/tags/${tagId}`, {
+        method: "DELETE",
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        toast({ title: "Tag removed successfully" });
+      } else {
+        throw new Error("Failed to remove tag");
+      }
+    } catch (error) {
+      toast({ title: "Failed to remove tag", variant: "destructive" });
+    }
+  };
+
+  // Create new tag
+  const createNewTag = async () => {
+    if (!newTagName.trim()) return;
+    
+    try {
+      const response = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newTagName.trim() }),
+      });
+      
+      if (response.ok) {
+        const newTag = await response.json();
+        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
+        setNewTagName("");
+        
+        // Automatically add the new tag to the current product
+        if (editingProduct) {
+          await addTagToProduct(newTag.id);
+        }
+        
+        toast({ title: "Tag created and added successfully" });
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create tag");
+      }
+    } catch (error: any) {
+      toast({ title: error.message || "Failed to create tag", variant: "destructive" });
+    }
   };
 
   const handleSort = (column: string) => {
@@ -1003,6 +1103,92 @@ export default function Inventory() {
                     </div>
                   )}
                 </div>
+
+                {/* Tags Management Section */}
+                {editingProduct && (
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Product Tags (Internal Use)
+                    </Label>
+                    
+                    {/* Current Tags Display */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {productTags.map((productTag) => (
+                          <Badge 
+                            key={productTag.id} 
+                            variant="secondary" 
+                            className="flex items-center gap-1"
+                          >
+                            {productTag.tag.name}
+                            <X 
+                              className="h-3 w-3 cursor-pointer hover:text-red-500" 
+                              onClick={() => removeTagFromProduct(productTag.tag.id)}
+                            />
+                          </Badge>
+                        ))}
+                        {productTags.length === 0 && (
+                          <p className="text-sm text-gray-500">No tags assigned</p>
+                        )}
+                      </div>
+                      
+                      {/* Add Existing Tag */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">Add Existing Tag</Label>
+                        <Select onValueChange={(value) => addTagToProduct(parseInt(value))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a tag to add" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableTags
+                              .filter((tag: any) => !productTags.some(pt => pt.tag.id === tag.id))
+                              .map((tag: any) => (
+                                <SelectItem key={tag.id} value={tag.id.toString()}>
+                                  {tag.name}
+                                  {tag.description && (
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      - {tag.description}
+                                    </span>
+                                  )}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Create New Tag */}
+                      <div className="space-y-2 mt-3">
+                        <Label className="text-sm">Create New Tag</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Enter new tag name"
+                            value={newTagName}
+                            onChange={(e) => setNewTagName(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                createNewTag();
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={createNewTag}
+                            disabled={!newTagName.trim()}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Tags help group similar products for better recommendations
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div>
                   <Label htmlFor="location">Storage Location</Label>
