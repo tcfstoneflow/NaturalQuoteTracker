@@ -495,7 +495,7 @@ export default function PublicInventory() {
                       <ShareButton
                         url={`${window.location.origin}/product/${product.id}`}
                         title={product.name}
-                        description={`${product.category} from ${product.supplier} - ${product.grade} grade with ${product.finish} finish`}
+                        description={`${product.category} - ${product.grade} grade with ${product.finish} finish`}
                         price={`$${product.price}`}
                         className="flex-1"
                       />

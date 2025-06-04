@@ -15,9 +15,10 @@ interface ShareButtonProps {
   title: string;
   description?: string;
   price?: string;
+  className?: string;
 }
 
-export function ShareButton({ url, title, description, price }: ShareButtonProps) {
+export function ShareButton({ url, title, description, price, className }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
@@ -94,7 +95,7 @@ export function ShareButton({ url, title, description, price }: ShareButtonProps
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" className={className}>
           <Share2 className="h-4 w-4 mr-2" />
           Share
         </Button>
