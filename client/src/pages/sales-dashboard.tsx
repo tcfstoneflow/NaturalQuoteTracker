@@ -5,6 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   TrendingUp, 
   Users, 
@@ -15,7 +20,8 @@ import {
   Phone,
   Mail,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Edit
 } from "lucide-react";
 import { format } from "date-fns";
 import TopBar from "@/components/layout/topbar";
@@ -24,6 +30,49 @@ import { useState } from "react";
 export default function SalesDashboard() {
   const { user } = useAuth();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [isEditingAppointment, setIsEditingAppointment] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    preferredDate: '',
+    preferredTime: '',
+    message: '',
+    status: ''
+  });
+  
+  const queryClient = useQueryClient();
+
+  // Mutation for updating appointments
+  const updateAppointmentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PATCH', `/api/showroom-visits/${selectedAppointment.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-dashboard/pending-showroom-visits"] });
+      setIsEditingAppointment(false);
+      setSelectedAppointment(null);
+    },
+  });
+
+  // Handle edit appointment
+  const handleEditAppointment = () => {
+    setEditForm({
+      name: selectedAppointment.name || '',
+      email: selectedAppointment.email || '',
+      phone: selectedAppointment.phone || '',
+      preferredDate: selectedAppointment.preferredDate || '',
+      preferredTime: selectedAppointment.preferredTime || '',
+      message: selectedAppointment.message || '',
+      status: selectedAppointment.status || 'pending'
+    });
+    setIsEditingAppointment(true);
+  };
+
+  const handleSaveAppointment = () => {
+    updateAppointmentMutation.mutate(editForm);
+  };
   
   // Get sales rep's personalized data
   const { data: salesStats } = useQuery({
@@ -383,15 +432,10 @@ export default function SalesDashboard() {
                 <Button 
                   variant="outline" 
                   className="flex-1"
-                  onClick={() => {
-                    if (selectedAppointment.phone) {
-                      window.location.href = `tel:${selectedAppointment.phone}`;
-                    }
-                  }}
-                  disabled={!selectedAppointment.phone}
+                  onClick={handleEditAppointment}
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Client
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Appointment
                 </Button>
                 <Button 
                   variant="outline" 
@@ -406,6 +450,109 @@ export default function SalesDashboard() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Appointment Modal */}
+      <Dialog open={isEditingAppointment} onOpenChange={setIsEditingAppointment}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Appointment</DialogTitle>
+            <DialogDescription>
+              Update the appointment details below
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Client Name</label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter client name"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Phone</label>
+              <Input
+                value={editForm.phone}
+                onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Date</label>
+                <Input
+                  type="date"
+                  value={editForm.preferredDate}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, preferredDate: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Time</label>
+                <Input
+                  type="time"
+                  value={editForm.preferredTime}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, preferredTime: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Status</label>
+              <Select value={editForm.status} onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Message</label>
+              <Textarea
+                value={editForm.message}
+                onChange={(e) => setEditForm(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Enter message or notes"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setIsEditingAppointment(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1"
+                onClick={handleSaveAppointment}
+                disabled={updateAppointmentMutation.isPending}
+              >
+                {updateAppointmentMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
