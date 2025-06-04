@@ -72,7 +72,7 @@ export default function ProductDetails() {
     enabled: !!id,
   });
 
-  const itemsPerPage = 4;
+  const itemsPerPage = 6; // Show 6 products at a time for better use of space
   const visibleProducts = similarProducts.slice(similarProductsOffset, similarProductsOffset + itemsPerPage);
   const canGoNext = similarProductsOffset + itemsPerPage < similarProducts.length;
   const canGoPrev = similarProductsOffset > 0;
@@ -522,7 +522,7 @@ export default function ProductDetails() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {visibleProducts.map((similarProduct: any) => (
                 <Card 
                   key={similarProduct.id}
