@@ -536,11 +536,76 @@ export default function ShowroomVisits() {
                     Edit Appointment
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Update Visit: {visit.name}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
+                    {/* Consultation Details Section */}
+                    {visit.message && (visit.message.includes('Project Type:') || visit.message.includes('Favorite Products:')) && (
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          Consultation Request Details
+                        </h4>
+                        <div className="space-y-3">
+                          {(() => {
+                            const message = visit.message;
+                            let projectType = '';
+                            let projectDescription = '';
+                            let favoriteProductsSection = '';
+                            
+                            // Extract project type
+                            if (message.includes('Project Type:')) {
+                              const projectTypeMatch = message.match(/Project Type:\s*(.+?)(\n|$)/);
+                              projectType = projectTypeMatch ? projectTypeMatch[1].trim() : '';
+                            }
+                            
+                            // Split message into sections
+                            const parts = message.split('Favorite Products:');
+                            const beforeFavorites = parts[0];
+                            favoriteProductsSection = parts[1];
+                            
+                            // Extract project description (everything after project type but before favorites)
+                            if (beforeFavorites.includes('Project Type:')) {
+                              projectDescription = beforeFavorites.split('Project Type:')[1]?.replace(projectType, '').trim() || '';
+                            } else {
+                              projectDescription = beforeFavorites.trim();
+                            }
+                            
+                            return (
+                              <>
+                                {projectType && (
+                                  <div>
+                                    <span className="text-sm font-medium text-blue-800">Project Type:</span>
+                                    <p className="text-sm text-blue-700 mt-1 font-semibold">{projectType}</p>
+                                  </div>
+                                )}
+                                {projectDescription && (
+                                  <div>
+                                    <span className="text-sm font-medium text-blue-800">Project Description:</span>
+                                    <p className="text-sm text-blue-700 mt-1">{projectDescription}</p>
+                                  </div>
+                                )}
+                                {favoriteProductsSection && (
+                                  <div>
+                                    <span className="text-sm font-medium text-blue-800">Favorite Slabs to Review:</span>
+                                    <div className="text-sm text-blue-700 mt-1">
+                                      {favoriteProductsSection.split('\n').filter(line => line.trim().startsWith('•')).map((line, index) => (
+                                        <div key={index} className="flex items-start gap-2 mt-1">
+                                          <span className="text-blue-600">•</span>
+                                          <span>{line.replace('•', '').trim()}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Customer Name</label>
                       <Input

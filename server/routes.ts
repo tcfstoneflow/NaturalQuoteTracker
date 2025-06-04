@@ -2193,11 +2193,11 @@ Write the description in a tone that's informative yet appealing to both homeown
         return res.status(400).json({ error: 'Required fields missing' });
       }
 
-      // Create consultation message with favorite products info
-      let consultationMessage = message;
+      // Create consultation message with project type and favorite products info
+      let consultationMessage = `Project Type: ${projectType}\n\n${message}`;
       if (favoriteProducts && favoriteProducts.length > 0) {
         const favoritesText = favoriteProducts.map((fav: any) => `• ${fav.name} (${fav.category})`).join('\n');
-        consultationMessage = `${message}\n\nFavorite Products:\n${favoritesText}`;
+        consultationMessage = `${consultationMessage}\n\nFavorite Products:\n${favoritesText}`;
       }
 
       // Create as a showroom visit so it appears in the dashboard
