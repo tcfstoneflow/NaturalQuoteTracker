@@ -263,16 +263,29 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
                   {user?.user?.role === 'admin' ? 'Admin' : 'Sales Rep'}
                 </span>
               </div>
-              <Link href="/settings">
+              <div className="flex items-center space-x-2">
+                <Link href="/settings">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-secondary-custom hover:text-primary"
+                  >
+                    <Settings size={16} className="mr-1" />
+                    Settings
+                  </Button>
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-secondary-custom hover:text-primary"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                  className="text-secondary-custom hover:text-error-red"
+                  title="Logout"
                 >
-                  <Settings size={16} className="mr-1" />
-                  Settings
+                  <LogOut size={16} className="mr-1" />
+                  Logout
                 </Button>
-              </Link>
+              </div>
             </div>
           </div>
         </div>
