@@ -624,6 +624,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public product-tags endpoint for tag filtering in gallery
+  app.get("/api/public/product-tags", async (req, res) => {
+    try {
+      const allProductTags = await storage.getAllProductTags();
+      res.json(allProductTags);
+    } catch (error: any) {
+      console.error('Get public product tags error:', error);
+      res.status(500).json({ error: "Failed to fetch product tags for filtering", details: error.message });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
