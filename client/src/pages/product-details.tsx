@@ -302,11 +302,7 @@ export default function ProductDetails() {
                 {product.category} • {product.grade} Grade
               </p>
               
-              <div className="mb-4">
-                <Badge variant={availableSlabs.length > 5 ? "default" : "secondary"}>
-                  {availableSlabs.length} slabs available
-                </Badge>
-              </div>
+
             </div>
 
             {/* Description */}
