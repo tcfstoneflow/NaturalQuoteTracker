@@ -69,14 +69,22 @@ export default function ShowroomVisits() {
     queryKey: ["/api/showroom-visits"],
   });
 
-  // Fetch sales managers for the dropdown (includes both managers and reps, all labeled as sales_manager)
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
+  // Fetch sales managers for the dropdown
+  const { data: salesManagers = [] } = useQuery({
+    queryKey: ["/api/sales-dashboard/sales-managers"],
+    queryFn: async () => {
+      const response = await fetch('/api/sales-dashboard/sales-managers', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch sales managers');
+      }
+      return response.json();
+    },
   });
-
-  const salesManagers = users.filter((user: any) => 
-    user.role === 'sales_manager' || user.role === 'sales_rep' || user.role === 'admin'
-  );
 
   const updateVisitMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
