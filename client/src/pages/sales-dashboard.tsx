@@ -38,7 +38,9 @@ export default function SalesDashboard() {
     preferredDate: '',
     preferredTime: '',
     message: '',
-    status: ''
+    status: '',
+    assignedToUserId: '',
+    assignedSalesMember: ''
   });
   
   const queryClient = useQueryClient();
@@ -65,7 +67,9 @@ export default function SalesDashboard() {
       preferredDate: selectedAppointment.preferredDate || '',
       preferredTime: selectedAppointment.preferredTime || '',
       message: selectedAppointment.message || '',
-      status: selectedAppointment.status || 'pending'
+      status: selectedAppointment.status || 'pending',
+      assignedToUserId: selectedAppointment.assignedToUserId?.toString() || '',
+      assignedSalesMember: selectedAppointment.assignedSalesMember || ''
     });
     setIsEditingAppointment(true);
   };
@@ -107,6 +111,13 @@ export default function SalesDashboard() {
   const { data: pendingVisits } = useQuery({
     queryKey: ["/api/sales-dashboard/pending-showroom-visits"],
     queryFn: salesDashboardApi.getPendingShowroomVisits,
+  });
+
+  // Get sales managers for assignment
+  const { data: salesManagers = [] } = useQuery({
+    queryKey: ["/api/sales-dashboard/sales-managers"],
+    queryFn: salesDashboardApi.getSalesManagers,
+    enabled: isEditingAppointment,
   });
 
   return (
@@ -522,6 +533,26 @@ export default function SalesDashboard() {
                   <SelectItem value="scheduled">Scheduled</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Assign Sales Member</label>
+              <Select 
+                value={editForm.assignedToUserId} 
+                onValueChange={(value) => setEditForm(prev => ({ ...prev, assignedToUserId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select sales member" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No assignment</SelectItem>
+                  {salesManagers.map((manager: any) => (
+                    <SelectItem key={manager.id} value={manager.id.toString()}>
+                      {manager.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

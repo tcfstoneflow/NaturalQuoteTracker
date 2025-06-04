@@ -2603,6 +2603,23 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Get sales managers for appointment assignment
+  app.get('/api/sales-dashboard/sales-managers', requireAuth, async (req: any, res) => {
+    try {
+      const salesManagers = await storage.getSalesManagers();
+      const formattedManagers = salesManagers.map((manager: any) => ({
+        id: manager.id,
+        name: `${manager.firstName} ${manager.lastName}`.trim(),
+        value: manager.id.toString()
+      }));
+      
+      res.json(formattedManagers);
+    } catch (error: any) {
+      console.error('Error getting sales managers:', error);
+      res.status(500).json({ error: 'Failed to get sales managers' });
+    }
+  });
+
   // Top selling products by time period
   app.get("/api/dashboard/top-selling-products", async (req, res) => {
     try {
