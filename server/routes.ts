@@ -3357,6 +3357,17 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Get all product tags for filtering
+  app.get("/api/products/tags", requireAuth, async (req, res) => {
+    try {
+      const allProductTags = await storage.getAllProductTags();
+      res.json(allProductTags);
+    } catch (error: any) {
+      console.error('Get all product tags error:', error);
+      res.status(500).json({ error: "Failed to fetch all product tags" });
+    }
+  });
+
   app.post("/api/products/:id/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
     try {
       const productId = parseInt(req.params.id);

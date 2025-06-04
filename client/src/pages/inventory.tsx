@@ -64,6 +64,8 @@ export default function Inventory() {
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<string>("all");
   const [priceRangeFilter, setPriceRangeFilter] = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("all");
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   
@@ -107,6 +109,11 @@ export default function Inventory() {
   const { data: availableTags = [] } = useQuery({
     queryKey: ["/api/tags"],
     enabled: !!editingProduct,
+  });
+
+  // Fetch all tags for filtering
+  const { data: allTags = [] } = useQuery({
+    queryKey: ["/api/tags"],
   });
 
   // Fetch product tags when editing a product
@@ -534,6 +541,11 @@ export default function Inventory() {
   const uniqueSuppliers = Array.from(new Set((products as Product[])?.map((p: Product) => p.supplier) || []));
   const uniqueGrades = Array.from(new Set((products as Product[])?.map((p: Product) => p.grade) || []));
 
+  // Fetch product tags for filtering
+  const { data: allProductTags = [] } = useQuery({
+    queryKey: ["/api/products/tags"],
+  });
+
   const filteredAndSortedProducts = (products as Product[])?.filter((product: Product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -565,7 +577,27 @@ export default function Inventory() {
       }
     })();
 
-    return matchesSearch && matchesCategory && matchesGrade && matchesSupplier && matchesStock && matchesPriceRange;
+    // Tag filtering
+    const matchesTag = (() => {
+      if (tagFilter === "all") return true;
+      
+      // Find product tags for this product
+      const productTags = allProductTags.filter((pt: any) => pt.productId === product.id);
+      return productTags.some((pt: any) => pt.tagId.toString() === tagFilter);
+    })();
+
+    // Tag search filtering
+    const matchesTagSearch = (() => {
+      if (!tagSearchQuery.trim()) return true;
+      
+      // Find product tags for this product
+      const productTags = allProductTags.filter((pt: any) => pt.productId === product.id);
+      return productTags.some((pt: any) => 
+        pt.tag && pt.tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
+      );
+    })();
+
+    return matchesSearch && matchesCategory && matchesGrade && matchesSupplier && matchesStock && matchesPriceRange && matchesTag && matchesTagSearch;
   }).sort((a: Product, b: Product) => {
     let result = 0;
     switch (sortBy) {
@@ -681,6 +713,31 @@ export default function Inventory() {
               <SelectItem value="high">Over $100</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={tagFilter} onValueChange={setTagFilter}>
+            <SelectTrigger className="w-36">
+              <Palette className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Tag" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tags</SelectItem>
+              {allTags.map((tag: any) => (
+                <SelectItem key={tag.id} value={tag.id.toString()}>
+                  {tag.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search tags..."
+              value={tagSearchQuery}
+              onChange={(e) => setTagSearchQuery(e.target.value)}
+              className="pl-10 w-40"
+            />
+          </div>
 
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-36">
