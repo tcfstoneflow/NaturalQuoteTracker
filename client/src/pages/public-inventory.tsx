@@ -454,7 +454,7 @@ export default function PublicInventory() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="space-y-2 pt-4">
+                  <div className="space-y-2 pt-4 mt-[-4px] mb-[-4px]">
                     <div className="flex gap-2">
                       <Button 
                         variant="outline"
