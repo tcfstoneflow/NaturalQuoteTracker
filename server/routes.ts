@@ -3415,7 +3415,7 @@ Your body text starts here with proper spacing.`;
   });
 
   // Public product-tags endpoint for filtering (renamed to avoid conflicts)
-  app.get("/api/public/product-tags", async (req, res) => {
+  app.get("/api/public/products/tags", async (req, res) => {
     try {
       const result = await db.execute(sql`
         SELECT 
