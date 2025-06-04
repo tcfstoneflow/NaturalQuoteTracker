@@ -316,7 +316,6 @@ export default function ProductDetails() {
             {/* Description */}
             {product.description && (
               <div className="border border-gray-200 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-3">Description</h3>
                 <div className="text-gray-700 leading-relaxed">
                   {renderDescriptionWithBold(product.description)}
                 </div>
