@@ -264,10 +264,7 @@ export default function ProductDetails() {
                 {product.category} • {product.grade} Grade
               </p>
               
-              <div className="flex items-center gap-2 mb-4">
-                <span className="font-mono bg-gray-100 px-3 py-1 rounded text-sm">
-                  ID: {product.bundleId}
-                </span>
+              <div className="mb-4">
                 <Badge variant={availableSlabs.length > 5 ? "default" : "secondary"}>
                   {availableSlabs.length} slabs available
                 </Badge>
@@ -276,7 +273,7 @@ export default function ProductDetails() {
 
             {/* Description */}
             {product.description && (
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="border border-gray-200 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-3">Description</h3>
                 <p className="text-gray-700 leading-relaxed">{product.description}</p>
               </div>
@@ -481,82 +478,69 @@ export default function ProductDetails() {
         {/* Similar Products Section */}
         {similarProducts.length > 0 && (
           <div className="mt-16 border-t pt-12">
-            <div className="flex justify-between items-center mb-8">
+            <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900">
-                Similar {product?.category} Products
+                Similar Products
               </h2>
-              <Button 
-                variant="outline"
-                onClick={() => setLocation(`/public-inventory?category=${product?.category}`)}
-              >
-                View All {product?.category}
-              </Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {similarProducts.map((similarProduct: any) => (
                 <Card 
                   key={similarProduct.id}
                   className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                   onClick={() => setLocation(`/product/${similarProduct.id}`)}
                 >
-                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative">
-                    {similarProduct.imageUrl ? (
-                      <img 
-                        src={similarProduct.imageUrl} 
-                        alt={similarProduct.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Package className="h-12 w-12 text-gray-400" />
+                  <div className="flex">
+                    <div className="w-48 h-32 bg-gradient-to-br from-gray-200 to-gray-300 relative flex-shrink-0">
+                      {similarProduct.imageUrl ? (
+                        <img 
+                          src={similarProduct.imageUrl} 
+                          alt={similarProduct.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <Package className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                      
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {similarProduct.stockQuantity || 0} slabs
+                        </Badge>
                       </div>
-                    )}
-                    
-                    <div className="absolute top-3 right-3">
-                      <Badge variant="secondary">
-                        {similarProduct.stockQuantity || 0} slabs
-                      </Badge>
                     </div>
-                  </div>
 
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">{similarProduct.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {similarProduct.supplier} • {similarProduct.finish}
-                    </p>
-                    
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">ID: {similarProduct.bundleId}</span>
-                      <span className="font-medium">${similarProduct.price}/sq ft</span>
-                    </div>
-                    
-                    <Button 
-                      className="w-full mt-4"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setLocation(`/product/${similarProduct.id}`);
-                      }}
-                    >
-                      View Details
-                    </Button>
-                  </CardContent>
+                    <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg mb-1">{similarProduct.name}</h3>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {similarProduct.supplier} • {similarProduct.finish}
+                        </p>
+                        <div className="text-sm text-gray-600">
+                          {similarProduct.category} • {similarProduct.grade} Grade
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="font-medium text-lg">${similarProduct.price}/sq ft</span>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/product/${similarProduct.id}`);
+                          }}
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </div>
                 </Card>
               ))}
             </div>
-            
-            {similarProducts.length > 3 && (
-              <div className="text-center mt-8">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  onClick={() => setLocation(`/public-inventory?category=${product?.category}`)}
-                >
-                  View More {product?.category} Products
-                </Button>
-              </div>
-            )}
           </div>
         )}
       </div>
