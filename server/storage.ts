@@ -1593,19 +1593,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllProductTags(): Promise<(ProductTag & { tag: Tag })[]> {
-    const allProductTagsWithTags = await db
-      .select({
-        productTag: productTags,
-        tag: tags
-      })
-      .from(productTags)
-      .innerJoin(tags, eq(productTags.tagId, tags.id))
-      .orderBy(asc(tags.name));
+    try {
+      const allProductTagsWithTags = await db
+        .select()
+        .from(productTags)
+        .innerJoin(tags, eq(productTags.tagId, tags.id))
+        .orderBy(asc(tags.name));
 
-    return allProductTagsWithTags.map(row => ({
-      ...row.productTag,
-      tag: row.tag
-    }));
+      return allProductTagsWithTags.map(row => ({
+        ...row.product_tags,
+        tag: row.tags
+      }));
+    } catch (error) {
+      console.error('Error fetching all product tags:', error);
+      return [];
+    }
   }
 
   async addProductTag(productTag: InsertProductTag): Promise<ProductTag> {

@@ -129,7 +129,7 @@ export default function PublicInventory() {
     return ((length * width) / 144).toFixed(1);
   };
 
-  // Enhanced filtering with price range, dimensions, and finish
+  // Enhanced filtering with price range, dimensions, finish, and tags
   const filteredProducts = productsWithSlabs.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -143,7 +143,15 @@ export default function PublicInventory() {
     
     const matchesFinish = finishFilter === "all" || product.finish === finishFilter;
     
-    return matchesSearch && matchesCategory && matchesDimension && matchesFinish;
+    // Tag filtering logic
+    const matchesTag = tagFilter === "all" || 
+      (allProductTags || []).some((pt: any) => 
+        pt.productId === product.id && 
+        (tagFilter === "all" || pt.tag.id.toString() === tagFilter) &&
+        (tagSearchQuery === "" || pt.tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()))
+      );
+    
+    return matchesSearch && matchesCategory && matchesDimension && matchesFinish && matchesTag;
   });
 
   const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
@@ -313,6 +321,40 @@ export default function PublicInventory() {
                     <SelectItem value="Matte">Matte</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Tag Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tags
+                </label>
+                <Select value={tagFilter} onValueChange={setTagFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Tags" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tags</SelectItem>
+                    {(allTags || []).map((tag: any) => (
+                      <SelectItem key={tag.id} value={tag.id.toString()}>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Tag Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search Tags
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Search tags..."
+                  value={tagSearchQuery}
+                  onChange={(e) => setTagSearchQuery(e.target.value)}
+                  className="w-full"
+                />
               </div>
 
               {/* Sort Options */}
