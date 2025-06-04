@@ -584,13 +584,9 @@ export default function ProductDetails() {
 
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-lg mb-2">{similarProduct.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {similarProduct.supplier} • {similarProduct.finish}
-                    </p>
                     
-                    <div className="flex justify-between items-center text-sm mb-3">
+                    <div className="text-sm mb-3">
                       <span className="text-gray-600">{similarProduct.category}</span>
-                      <span className="font-medium">${similarProduct.price}/sq ft</span>
                     </div>
                     
                     <Button 
