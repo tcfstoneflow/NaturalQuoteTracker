@@ -75,7 +75,14 @@ export default function SalesDashboard() {
   };
 
   const handleSaveAppointment = () => {
-    updateAppointmentMutation.mutate(editForm);
+    const updateData = {
+      ...editForm,
+      assignedToUserId: editForm.assignedToUserId ? parseInt(editForm.assignedToUserId) : null
+    };
+    updateAppointmentMutation.mutate({
+      id: selectedAppointment.id,
+      ...updateData
+    });
   };
   
   // Get sales rep's personalized data
