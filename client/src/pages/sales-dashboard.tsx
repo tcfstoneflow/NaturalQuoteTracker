@@ -21,8 +21,12 @@ import {
   Mail,
   CheckCircle,
   AlertCircle,
-  Edit
+  Edit,
+  X,
+  FileText,
+  Send
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import TopBar from "@/components/layout/topbar";
 import { useState } from "react";
@@ -47,10 +51,19 @@ export default function SalesDashboard() {
   });
 
   const [quoteEditForm, setQuoteEditForm] = useState({
+    clientId: '',
     projectName: '',
     status: '',
     notes: '',
-    validUntil: ''
+    validUntil: '',
+    assignedSalesRep: '',
+    items: [] as any[],
+    additionalMessage: '',
+    creditCardProcessing: false,
+    subtotal: 0,
+    processingFee: 0,
+    tax: 0,
+    totalAmount: 0
   });
   
   const queryClient = useQueryClient();
@@ -119,16 +132,68 @@ export default function SalesDashboard() {
   const handleEditQuote = (quote: any) => {
     setSelectedQuote(quote);
     setQuoteEditForm({
+      clientId: quote.clientId?.toString() || selectedClient?.id?.toString() || '',
       projectName: quote.projectName || '',
       status: quote.status || 'pending',
       notes: quote.notes || '',
-      validUntil: quote.validUntil ? new Date(quote.validUntil).toISOString().split('T')[0] : ''
+      validUntil: quote.validUntil ? new Date(quote.validUntil).toISOString().split('T')[0] : '',
+      assignedSalesRep: quote.createdBy?.toString() || '',
+      items: quote.items || [],
+      additionalMessage: quote.additionalMessage || '',
+      creditCardProcessing: quote.creditCardProcessing || false,
+      subtotal: parseFloat(quote.subtotal || 0),
+      processingFee: parseFloat(quote.processingFee || 0),
+      tax: parseFloat(quote.tax || 0),
+      totalAmount: parseFloat(quote.totalAmount || 0)
     });
     setIsEditingQuote(true);
   };
 
   const handleSaveQuote = () => {
     updateQuoteMutation.mutate(quoteEditForm);
+  };
+
+  // Quote item management functions
+  const addQuoteItem = () => {
+    setQuoteEditForm(prev => ({
+      ...prev,
+      items: [...prev.items, { productId: '', quantity: 1, pricePerSlab: 0 }]
+    }));
+  };
+
+  const removeQuoteItem = (index: number) => {
+    setQuoteEditForm(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateQuoteItem = (index: number, field: string, value: any) => {
+    setQuoteEditForm(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  // Calculate totals
+  const calculateTotals = () => {
+    const subtotal = quoteEditForm.items.reduce((sum, item) => 
+      sum + (parseFloat(item.quantity || 0) * parseFloat(item.pricePerSlab || 0)), 0
+    );
+    
+    const processingFee = quoteEditForm.creditCardProcessing ? subtotal * 0.035 : 0;
+    const tax = subtotal * 0.085; // 8.5% tax
+    const totalAmount = subtotal + processingFee + tax;
+
+    setQuoteEditForm(prev => ({
+      ...prev,
+      subtotal,
+      processingFee,
+      tax,
+      totalAmount
+    }));
   };
   
   // Get sales rep's personalized data
@@ -167,6 +232,24 @@ export default function SalesDashboard() {
       return response.json();
     },
     enabled: !!selectedClient?.id,
+  });
+
+  // Get all clients for dropdown
+  const { data: allClients } = useQuery({
+    queryKey: ['/api/clients'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/clients');
+      return response.json();
+    }
+  });
+
+  // Get all products for quote items
+  const { data: allProducts } = useQuery({
+    queryKey: ['/api/products'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/products');
+      return response.json();
+    }
   });
 
   // Debug logging
@@ -825,17 +908,48 @@ export default function SalesDashboard() {
 
       {/* Edit Quote Modal */}
       <Dialog open={isEditingQuote} onOpenChange={setIsEditingQuote}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Quote</DialogTitle>
             <DialogDescription>
-              Update the quote details below
+              Update the complete quote details below
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Client and Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Select Client *</label>
+                <Select 
+                  value={quoteEditForm.clientId} 
+                  onValueChange={(value) => setQuoteEditForm(prev => ({ ...prev, clientId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allClients?.map((client: any) => (
+                      <SelectItem key={client.id} value={client.id.toString()}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Quote Valid Until *</label>
+                <Input
+                  type="date"
+                  value={quoteEditForm.validUntil}
+                  onChange={(e) => setQuoteEditForm(prev => ({ ...prev, validUntil: e.target.value }))}
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="text-sm font-medium text-gray-700">Project Name</label>
+              <label className="text-sm font-medium text-gray-700">Project Name *</label>
               <Input
                 value={quoteEditForm.projectName}
                 onChange={(e) => setQuoteEditForm(prev => ({ ...prev, projectName: e.target.value }))}
@@ -844,56 +958,174 @@ export default function SalesDashboard() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">Status</label>
+              <label className="text-sm font-medium text-gray-700">Assigned Sales Rep</label>
               <Select 
-                value={quoteEditForm.status} 
-                onValueChange={(value) => setQuoteEditForm(prev => ({ ...prev, status: value }))}
+                value={quoteEditForm.assignedSalesRep} 
+                onValueChange={(value) => setQuoteEditForm(prev => ({ ...prev, assignedSalesRep: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select sales representative..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
+                  {salesManagers?.map((rep: any) => (
+                    <SelectItem key={rep.id} value={rep.id.toString()}>
+                      {rep.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Quote Items */}
             <div>
-              <label className="text-sm font-medium text-gray-700">Valid Until</label>
-              <Input
-                type="date"
-                value={quoteEditForm.validUntil}
-                onChange={(e) => setQuoteEditForm(prev => ({ ...prev, validUntil: e.target.value }))}
-              />
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Quote Items</h3>
+                <Button 
+                  onClick={addQuoteItem}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  + Add Item
+                </Button>
+              </div>
+
+              {quoteEditForm.items.length > 0 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700 pb-2 border-b">
+                    <div className="col-span-5">Product *</div>
+                    <div className="col-span-2">Quantity (slabs) *</div>
+                    <div className="col-span-3">Price Per Slab *</div>
+                    <div className="col-span-1">Total</div>
+                    <div className="col-span-1"></div>
+                  </div>
+
+                  {quoteEditForm.items.map((item, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                      <div className="col-span-5">
+                        <Select 
+                          value={item.productId} 
+                          onValueChange={(value) => updateQuoteItem(index, 'productId', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select product" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allProducts?.map((product: any) => (
+                              <SelectItem key={product.id} value={product.id.toString()}>
+                                {product.name} - {product.thickness}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            updateQuoteItem(index, 'quantity', e.target.value);
+                            setTimeout(calculateTotals, 100);
+                          }}
+                          placeholder="2.00"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.pricePerSlab}
+                          onChange={(e) => {
+                            updateQuoteItem(index, 'pricePerSlab', e.target.value);
+                            setTimeout(calculateTotals, 100);
+                          }}
+                          placeholder="656.25"
+                        />
+                      </div>
+                      <div className="col-span-1 text-right">
+                        ${((parseFloat(item.quantity || 0) * parseFloat(item.pricePerSlab || 0)).toFixed(2))}
+                      </div>
+                      <div className="col-span-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeQuoteItem(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
+            {/* Processing Fee Checkbox */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="creditCardProcessing"
+                checked={quoteEditForm.creditCardProcessing}
+                onCheckedChange={(checked) => {
+                  setQuoteEditForm(prev => ({ ...prev, creditCardProcessing: !!checked }));
+                  setTimeout(calculateTotals, 100);
+                }}
+              />
+              <label htmlFor="creditCardProcessing" className="text-sm font-medium">
+                Credit Card Processing Fee (3.5%)
+              </label>
+              <span className="ml-auto text-sm">
+                +${quoteEditForm.processingFee.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Totals */}
+            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal:</span>
+                <span>${quoteEditForm.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Processing Fee (3.5%):</span>
+                <span>${quoteEditForm.processingFee.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Tax (8.5%):</span>
+                <span>${quoteEditForm.tax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-semibold border-t pt-2">
+                <span>Total:</span>
+                <span>${quoteEditForm.totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Additional Message */}
             <div>
-              <label className="text-sm font-medium text-gray-700">Notes</label>
+              <label className="text-sm font-medium text-gray-700">Additional Message (for email)</label>
               <Textarea
-                value={quoteEditForm.notes}
-                onChange={(e) => setQuoteEditForm(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Enter quote notes"
+                value={quoteEditForm.additionalMessage}
+                onChange={(e) => setQuoteEditForm(prev => ({ ...prev, additionalMessage: e.target.value }))}
+                placeholder="Optional message to include when sending the quote..."
                 rows={3}
               />
             </div>
 
+            {/* Action Buttons */}
             <div className="flex gap-2 pt-4">
               <Button 
                 variant="outline" 
                 className="flex-1"
                 onClick={() => setIsEditingQuote(false)}
               >
-                Cancel
+                <FileText className="h-4 w-4 mr-2" />
+                Save as Draft
               </Button>
               <Button 
-                className="flex-1"
+                className="flex-1 bg-orange-500 hover:bg-orange-600"
                 onClick={handleSaveQuote}
                 disabled={updateQuoteMutation.isPending}
               >
-                {updateQuoteMutation.isPending ? 'Saving...' : 'Save Changes'}
+                <Send className="h-4 w-4 mr-2" />
+                {updateQuoteMutation.isPending ? 'Saving...' : 'Save & Send'}
               </Button>
             </div>
           </div>
