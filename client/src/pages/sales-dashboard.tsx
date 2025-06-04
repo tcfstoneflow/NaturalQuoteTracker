@@ -4,6 +4,7 @@ import { salesDashboardApi } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   TrendingUp, 
   Users, 
@@ -18,9 +19,11 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import TopBar from "@/components/layout/topbar";
+import { useState } from "react";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   
   // Get sales rep's personalized data
   const { data: salesStats } = useQuery({
@@ -183,22 +186,42 @@ export default function SalesDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {pendingVisits?.slice(0, 10).map((visit: any) => (
-                    <div key={visit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div 
+                      key={visit.id} 
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={() => setSelectedAppointment(visit)}
+                    >
                       <div className="flex-1">
                         <div className="font-medium text-sm">{visit.clientName || visit.name}</div>
                         <div className="text-xs text-gray-600">{visit.requestType || 'Showroom Visit'}</div>
                         <div className="text-xs text-gray-500">
-                          {visit.requestedDate ? 
-                            `Scheduled: ${format(new Date(visit.requestedDate), "MMM d, yyyy")}` :
+                          {visit.preferredDate ? 
+                            `${format(new Date(visit.preferredDate), "MMM d, yyyy")}${visit.preferredTime ? ` at ${visit.preferredTime}` : ''}` :
                             `Requested: ${format(new Date(visit.createdAt), "MMM d, yyyy")}`
                           }
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle phone call
+                          }}
+                        >
                           <Phone className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle email
+                          }}
+                        >
                           <Mail className="h-3 w-3" />
                         </Button>
                       </div>
@@ -279,6 +302,112 @@ export default function SalesDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Appointment Details Modal */}
+      <Dialog open={!!selectedAppointment} onOpenChange={() => setSelectedAppointment(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Appointment Details</DialogTitle>
+            <DialogDescription>
+              Complete information for this scheduled appointment
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedAppointment && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Client Name</label>
+                  <p className="text-sm text-gray-900">{selectedAppointment.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <Badge variant="outline" className={
+                    selectedAppointment.status === 'scheduled' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                    selectedAppointment.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                    selectedAppointment.status === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                    'bg-red-50 text-red-700 border-red-200'
+                  }>
+                    {selectedAppointment.status?.charAt(0).toUpperCase() + selectedAppointment.status?.slice(1)}
+                  </Badge>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Email</label>
+                <p className="text-sm text-gray-900">{selectedAppointment.email}</p>
+              </div>
+
+              {selectedAppointment.phone && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Phone</label>
+                  <p className="text-sm text-gray-900">{selectedAppointment.phone}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Date</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAppointment.preferredDate ? 
+                      format(new Date(selectedAppointment.preferredDate), "MMM d, yyyy") :
+                      'Not scheduled'
+                    }
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Time</label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAppointment.preferredTime || 'Not specified'}
+                  </p>
+                </div>
+              </div>
+
+              {selectedAppointment.message && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Message</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                    {selectedAppointment.message}
+                  </p>
+                </div>
+              )}
+
+              {selectedAppointment.assignedSalesMember && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Assigned Sales Member</label>
+                  <p className="text-sm text-gray-900">{selectedAppointment.assignedSalesMember}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    if (selectedAppointment.phone) {
+                      window.location.href = `tel:${selectedAppointment.phone}`;
+                    }
+                  }}
+                  disabled={!selectedAppointment.phone}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call Client
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    window.location.href = `mailto:${selectedAppointment.email}`;
+                  }}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Email Client
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
