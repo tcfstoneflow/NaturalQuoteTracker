@@ -422,25 +422,23 @@ export default function PublicInventory() {
                   </div>
                 </div>
 
-                <CardHeader className="pb-3">
+                <CardHeader className="p-4 pb-2">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <CardTitle className="text-xl mb-1">{product.name}</CardTitle>
+                      {product.aiHeadline && (
+                        <p className="text-sm text-gray-700 mb-2">{product.aiHeadline}</p>
+                      )}
                       <CardDescription className="space-y-1">
                         <div className="capitalize">
                           {product.category} • {product.grade} Grade
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">
-                            ID: {product.bundleId || 'N/A'}
-                          </span>
                         </div>
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
 
-                <CardContent className="pt-0">
+                <CardContent className="p-4 pt-0">
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center text-sm text-gray-600">
                       <Ruler className="h-4 w-4 mr-2" />
@@ -449,14 +447,10 @@ export default function PublicInventory() {
                     
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-gray-600">Supplier:</span>
-                        <div className="font-medium">{product.supplier}</div>
-                      </div>
-                      <div>
                         <span className="text-gray-600">Finish:</span>
                         <div className="font-medium">{product.finish}</div>
                       </div>
-                      <div className="col-span-2">
+                      <div>
                         <span className="text-gray-600">Available Slabs:</span>
                         <div className="font-semibold">
                           {product.slabs?.filter((slab: any) => slab.status === 'available').length || product.stockQuantity || 0}
@@ -469,7 +463,8 @@ export default function PublicInventory() {
                   <div className="space-y-2 pt-4">
                     <div className="flex gap-2">
                       <Button 
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        variant="outline"
+                        className="flex-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           setContactDialogOpen(true);
