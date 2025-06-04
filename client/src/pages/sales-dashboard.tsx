@@ -254,10 +254,7 @@ export default function SalesDashboard() {
     }
   });
 
-  // Debug logging
-  console.log('Sales Dashboard - myQuotes data:', myQuotes);
-  console.log('Sales Dashboard - myQuotes type:', typeof myQuotes);
-  console.log('Sales Dashboard - myQuotes length:', myQuotes?.length);
+
   
   // Ensure we have an array
   const quotesArray = Array.isArray(myQuotes) ? myQuotes : [];
@@ -737,7 +734,7 @@ export default function SalesDashboard() {
                 <SelectContent>
                   <SelectItem value="none">No assignment</SelectItem>
                   {!salesManagersLoading && salesManagers.length > 0 && salesManagers.map((manager: any) => {
-                    console.log('Rendering manager option:', manager);
+
                     return (
                       <SelectItem key={manager.id} value={manager.id.toString()}>
                         {manager.name}

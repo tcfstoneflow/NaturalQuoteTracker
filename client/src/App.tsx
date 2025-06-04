@@ -1,9 +1,11 @@
+import React from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
@@ -24,8 +26,25 @@ import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
 import Sidebar from "@/components/layout/sidebar";
 
+// Component to handle role-based default routing
+function DefaultRoute() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  
+  // Redirect sales reps to sales dashboard, others to main dashboard
+  React.useEffect(() => {
+    if (user?.role === 'sales_rep') {
+      setLocation('/sales-dashboard');
+    } else {
+      setLocation('/dashboard');
+    }
+  }, [user, setLocation]);
+  
+  return null;
+}
+
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -50,7 +69,8 @@ function Router() {
               <Sidebar />
               <main className="flex-1 overflow-y-auto">
                 <Switch>
-                  <Route path="/" component={Dashboard} />
+                  <Route path="/" component={DefaultRoute} />
+                  <Route path="/dashboard" component={Dashboard} />
                   <Route path="/sales-dashboard" component={SalesDashboard} />
                   <Route path="/clients" component={Clients} />
                   <Route path="/inventory" component={Inventory} />
