@@ -76,6 +76,7 @@ export default function SalesDashboard() {
     email: '',
     phone: '',
     company: '',
+    salesManagerId: '',
     address: '',
     city: '',
     state: '',
@@ -121,6 +122,7 @@ export default function SalesDashboard() {
         email: '',
         phone: '',
         company: '',
+        salesManagerId: '',
         address: '',
         city: '',
         state: '',
@@ -1206,22 +1208,39 @@ export default function SalesDashboard() {
 
       {/* New Client Modal */}
       <Dialog open={isNewClientDialogOpen} onOpenChange={setIsNewClientDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Add New Client</DialogTitle>
-            <DialogDescription>
-              Create a new client record for your sales pipeline
-            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Name *</label>
+                <label className="text-sm font-medium">Full Name *</label>
                 <Input
                   value={newClientForm.name}
                   onChange={(e) => setNewClientForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Client name"
+                  placeholder=""
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email *</label>
+                <Input
+                  type="email"
+                  value={newClientForm.email}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder=""
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={newClientForm.phone}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder=""
                 />
               </div>
               <div>
@@ -1229,29 +1248,29 @@ export default function SalesDashboard() {
                 <Input
                   value={newClientForm.company}
                   onChange={(e) => setNewClientForm(prev => ({ ...prev, company: e.target.value }))}
-                  placeholder="Company name"
+                  placeholder=""
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Email *</label>
-                <Input
-                  type="email"
-                  value={newClientForm.email}
-                  onChange={(e) => setNewClientForm(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="email@example.com"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Phone</label>
-                <Input
-                  value={newClientForm.phone}
-                  onChange={(e) => setNewClientForm(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="(555) 123-4567"
-                />
-              </div>
+            <div>
+              <label className="text-sm font-medium">Sales Manager</label>
+              <Select 
+                value={newClientForm.salesManagerId} 
+                onValueChange={(value) => setNewClientForm(prev => ({ ...prev, salesManagerId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="No Sales Manager" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Sales Manager</SelectItem>
+                  {salesManagers?.data?.map((manager: any) => (
+                    <SelectItem key={manager.id} value={manager.id.toString()}>
+                      {manager.firstName} {manager.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -1259,17 +1278,17 @@ export default function SalesDashboard() {
               <Input
                 value={newClientForm.address}
                 onChange={(e) => setNewClientForm(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Street address"
+                placeholder=""
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">City</label>
                 <Input
                   value={newClientForm.city}
                   onChange={(e) => setNewClientForm(prev => ({ ...prev, city: e.target.value }))}
-                  placeholder="City"
+                  placeholder=""
                 />
               </div>
               <div>
@@ -1277,17 +1296,18 @@ export default function SalesDashboard() {
                 <Input
                   value={newClientForm.state}
                   onChange={(e) => setNewClientForm(prev => ({ ...prev, state: e.target.value }))}
-                  placeholder="TX"
+                  placeholder=""
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium">ZIP</label>
-                <Input
-                  value={newClientForm.zipCode}
-                  onChange={(e) => setNewClientForm(prev => ({ ...prev, zipCode: e.target.value }))}
-                  placeholder="12345"
-                />
-              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">ZIP Code</label>
+              <Input
+                value={newClientForm.zipCode}
+                onChange={(e) => setNewClientForm(prev => ({ ...prev, zipCode: e.target.value }))}
+                placeholder=""
+              />
             </div>
 
             <div>
@@ -1295,7 +1315,7 @@ export default function SalesDashboard() {
               <Textarea
                 value={newClientForm.notes}
                 onChange={(e) => setNewClientForm(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Additional notes about the client"
+                placeholder=""
                 rows={3}
               />
             </div>
@@ -1309,7 +1329,7 @@ export default function SalesDashboard() {
                 Cancel
               </Button>
               <Button
-                className="flex-1 bg-accent-orange hover:bg-accent-orange/90"
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={() => createClientMutation.mutate(newClientForm)}
                 disabled={createClientMutation.isPending || !newClientForm.name || !newClientForm.email}
               >
