@@ -2065,15 +2065,18 @@ Product Details:
 Requirements:
 1. Start with a persuasive, hard-working headline (4-15 words) that captures the stone's essence and appeals to consumers, wrapped in **bold markdown** formatting
 2. Make the headline compelling and sales-focused - emphasize luxury, beauty, transformation, or emotional appeal
-3. Follow with 2-3 descriptive sentences (60-120 words)
-4. Highlight the stone's visual characteristics and unique patterns
-5. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
-6. Use engaging, professional language that appeals to homeowners and designers
-7. Focus on the stone's natural beauty and durability
-8. Avoid overly technical jargon
+3. Incorporate the stone's specific visual traits into the headline (veining, colors, patterns, texture) to make it more descriptive and unique
+4. Follow with 2-3 descriptive sentences (60-120 words)
+5. Highlight the stone's visual characteristics and unique patterns
+6. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
+7. Use engaging, professional language that appeals to homeowners and designers
+8. Focus on the stone's natural beauty and durability
+9. Avoid overly technical jargon
 
-Format example:
-**Transform Your Kitchen with Timeless Granite Elegance**
+Format examples:
+**Let Carrara's Bold Veins Dance Across Your Kitchen**
+**Transform Your Space with Dramatic Black Granite Beauty**
+**Discover Luxury Where Golden Veins Meet Timeless Elegance**
 This stunning natural stone features...
 
 Write the description in a tone that's informative yet appealing to both homeowners and interior designers.`;
