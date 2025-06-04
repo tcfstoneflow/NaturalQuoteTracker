@@ -266,7 +266,7 @@ export default function PublicInventory() {
               <Button
                 variant={activeTab === "all" ? "default" : "ghost"}
                 onClick={() => setActiveTab("all")}
-                className={`px-4 py-2 ${activeTab === "all" ? "bg-white shadow-sm" : ""}`}
+                className={`px-4 py-2 ${activeTab === "all" ? "bg-white shadow-sm text-gray-900 font-medium" : "text-gray-700 hover:text-gray-900"}`}
               >
                 All Stones
               </Button>
@@ -275,7 +275,7 @@ export default function PublicInventory() {
                   key={category}
                   variant={activeTab === category ? "default" : "ghost"}
                   onClick={() => setActiveTab(category)}
-                  className={`px-4 py-2 capitalize ${activeTab === category ? "bg-white shadow-sm" : ""}`}
+                  className={`px-4 py-2 capitalize ${activeTab === category ? "bg-white shadow-sm text-gray-900 font-medium" : "text-gray-700 hover:text-gray-900"}`}
                 >
                   {category}
                 </Button>
