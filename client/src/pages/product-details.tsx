@@ -29,15 +29,24 @@ const quoteRequestSchema = z.object({
 
 type QuoteRequestData = z.infer<typeof quoteRequestSchema>;
 
-// Helper function to render markdown bold formatting
+// Helper function to render markdown bold formatting with enhanced styling
 function renderDescriptionWithBold(text: string) {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-  return parts.map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      const boldText = part.slice(2, -2);
-      return <strong key={index} className="font-bold text-gray-900">{boldText}</strong>;
+  const lines = text.split('\n');
+  return lines.map((line, lineIndex) => {
+    if (line.trim() === '') {
+      return <br key={`br-${lineIndex}`} />;
     }
-    return part;
+    
+    const parts = line.split(/(\*\*.*?\*\*)/g);
+    const renderedLine = parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const boldText = part.slice(2, -2);
+        return <strong key={index} className="font-bold text-gray-900 text-lg leading-relaxed">{boldText}</strong>;
+      }
+      return part;
+    });
+    
+    return <div key={`line-${lineIndex}`} className="mb-2">{renderedLine}</div>;
   });
 }
 

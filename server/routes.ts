@@ -2064,11 +2064,16 @@ Requirements:
 1. Create a unique headline (4-15 words) in **bold markdown** that describes the stone's specific visual characteristics (color, veining, pattern)
 2. Never use phrases like "Elevate Your Space" or "Transform Your Space" - be more specific and descriptive
 3. Base the headline on the actual stone name and visual features you can see
-4. Add exactly one blank line after the headline before starting the body text
+4. IMPORTANT: After the bold headline, add exactly TWO line breaks (one blank line) before starting the body text
 5. Follow with 2-3 descriptive sentences (40-60 words) about the stone's appearance and uses
 6. Focus on concrete visual details: colors, veining patterns, texture, finish quality
 7. Mention practical applications: countertops, backsplashes, flooring
-8. Use professional language that describes what makes this stone unique`;
+8. Use professional language that describes what makes this stone unique
+
+Format example:
+**Your Headline Here**
+
+Your body text starts here with proper spacing.`;
 
       const messages: any[] = [
         {
