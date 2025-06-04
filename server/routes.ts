@@ -2486,9 +2486,9 @@ Your body text starts here with proper spacing.`;
       const lastMonthRevenue = lastMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.totalAmount || 0), 0);
       const monthlyGrowth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
       
-      // Count active and pending quotes (using correct status values)
+      // Count active and pending quotes (using actual status values from database)
       const activeQuotes = allQuotes.filter(quote => 
-        quote.status === 'pending' || quote.status === 'draft' || quote.status === 'sent'
+        quote.status === 'pending' || quote.status === 'approved'
       ).length;
       const pendingQuotes = allQuotes.filter(quote => quote.status === 'pending').length;
       
