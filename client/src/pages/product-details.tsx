@@ -203,8 +203,8 @@ export default function ProductDetails() {
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Product Image */}
-          <div className="space-y-4">
+          {/* Product Image and Gallery */}
+          <div className="space-y-6">
             <div className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden">
               {product.imageUrl ? (
                 <img 
@@ -224,6 +224,38 @@ export default function ProductDetails() {
               <p className="text-sm text-gray-600 text-center">
                 Click image to view full size
               </p>
+            )}
+
+            {/* Installation Gallery - moved here */}
+            {galleryImages.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-4">See {product.name}</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {galleryImages.slice(0, 4).map((image: any) => (
+                    <div 
+                      key={image.id}
+                      className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-300"
+                      onClick={() => openLightbox(image.imageUrl)}
+                    >
+                      <img 
+                        src={image.imageUrl} 
+                        alt={image.title}
+                        className="w-full h-full object-cover"
+                      />
+                      
+                      <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                        <Eye className="h-6 w-6 text-white opacity-0 hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-center mt-3">
+                  <p className="text-xs text-gray-600">
+                    Click any image to view full size. See how {product.name} transforms spaces with its natural beauty.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
@@ -399,37 +431,7 @@ export default function ProductDetails() {
           </div>
         </div>
 
-        {/* Installation Gallery */}
-        {galleryImages.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">See {product.name}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {galleryImages.map((image: any) => (
-                <div 
-                  key={image.id}
-                  className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                  onClick={() => openLightbox(image.imageUrl)}
-                >
-                  <img 
-                    src={image.imageUrl} 
-                    alt={image.title}
-                    className="w-full h-full object-cover"
-                  />
-                  
-                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                    <Eye className="h-8 w-8 text-white opacity-0 hover:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="text-center mt-6">
-              <p className="text-sm text-gray-600">
-                Click any image to view full size. See how {product.name} transforms spaces with its natural beauty.
-              </p>
-            </div>
-          </div>
-        )}
+
 
         {/* Available Slabs */}
         {availableSlabs.length > 0 && (
