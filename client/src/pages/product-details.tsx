@@ -35,6 +35,7 @@ export default function ProductDetails() {
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxTitle, setLightboxTitle] = useState("");
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [similarProductsOffset, setSimilarProductsOffset] = useState(0);
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery({
@@ -67,9 +68,26 @@ export default function ProductDetails() {
   // Fetch similar products using tag-based matching
   const { data: similarProducts = [] } = useQuery({
     queryKey: ["/api/products", id, "similar"],
-    queryFn: () => fetch(`/api/products/${id}/similar?limit=6`).then(res => res.json()),
+    queryFn: () => fetch(`/api/products/${id}/similar?limit=12`).then(res => res.json()),
     enabled: !!id,
   });
+
+  const itemsPerPage = 4;
+  const visibleProducts = similarProducts.slice(similarProductsOffset, similarProductsOffset + itemsPerPage);
+  const canGoNext = similarProductsOffset + itemsPerPage < similarProducts.length;
+  const canGoPrev = similarProductsOffset > 0;
+
+  const handleNext = () => {
+    if (canGoNext) {
+      setSimilarProductsOffset(prev => prev + itemsPerPage);
+    }
+  };
+
+  const handlePrev = () => {
+    if (canGoPrev) {
+      setSimilarProductsOffset(prev => prev - itemsPerPage);
+    }
+  };
 
   // Python-based render mutation
   const pythonRenderMutation = useMutation({
@@ -478,66 +496,81 @@ export default function ProductDetails() {
         {/* Similar Products Section */}
         {similarProducts.length > 0 && (
           <div className="mt-16 border-t pt-12">
-            <div className="mb-8">
+            <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900">
                 Similar Products
               </h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrev}
+                  disabled={!canGoPrev}
+                  className="p-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNext}
+                  disabled={!canGoNext}
+                  className="p-2"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             
-            <div className="space-y-4">
-              {similarProducts.map((similarProduct: any) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {visibleProducts.map((similarProduct: any) => (
                 <Card 
                   key={similarProduct.id}
                   className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                   onClick={() => setLocation(`/product/${similarProduct.id}`)}
                 >
-                  <div className="flex">
-                    <div className="w-48 h-32 bg-gradient-to-br from-gray-200 to-gray-300 relative flex-shrink-0">
-                      {similarProduct.imageUrl ? (
-                        <img 
-                          src={similarProduct.imageUrl} 
-                          alt={similarProduct.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <Package className="h-8 w-8 text-gray-400" />
-                        </div>
-                      )}
-                      
-                      <div className="absolute top-2 right-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {similarProduct.stockQuantity || 0} slabs
-                        </Badge>
+                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative">
+                    {similarProduct.imageUrl ? (
+                      <img 
+                        src={similarProduct.imageUrl} 
+                        alt={similarProduct.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Package className="h-12 w-12 text-gray-400" />
                       </div>
+                    )}
+                    
+                    <div className="absolute top-3 right-3">
+                      <Badge variant="secondary">
+                        {similarProduct.stockQuantity || 0} slabs
+                      </Badge>
                     </div>
-
-                    <CardContent className="p-4 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">{similarProduct.name}</h3>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {similarProduct.supplier} • {similarProduct.finish}
-                        </p>
-                        <div className="text-sm text-gray-600">
-                          {similarProduct.category} • {similarProduct.grade} Grade
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center mt-3">
-                        <span className="font-medium text-lg">${similarProduct.price}/sq ft</span>
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLocation(`/product/${similarProduct.id}`);
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      </div>
-                    </CardContent>
                   </div>
+
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{similarProduct.name}</h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {similarProduct.supplier} • {similarProduct.finish}
+                    </p>
+                    
+                    <div className="flex justify-between items-center text-sm mb-3">
+                      <span className="text-gray-600">{similarProduct.category}</span>
+                      <span className="font-medium">${similarProduct.price}/sq ft</span>
+                    </div>
+                    
+                    <Button 
+                      className="w-full"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLocation(`/product/${similarProduct.id}`);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                  </CardContent>
                 </Card>
               ))}
             </div>
