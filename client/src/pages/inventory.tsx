@@ -265,10 +265,11 @@ export default function Inventory() {
         }
       }
       
-      // Handle gallery images separately
+      // Handle gallery images separately - only create new images for uploads without IDs
       if (galleryImages.length > 0) {
         for (const image of galleryImages) {
-          if (image.url && image.url.startsWith('data:')) {
+          // Only create new gallery images for new uploads (no ID) with base64 data
+          if (image.url && image.url.startsWith('data:') && !image.id) {
             try {
               await fetch(`/api/products/${updatedProduct.id}/gallery`, {
                 method: "POST",
