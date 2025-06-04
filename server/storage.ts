@@ -134,6 +134,7 @@ export interface IStorage {
   
   // Product Tags
   getProductTags(productId: number): Promise<(ProductTag & { tag: Tag })[]>;
+  getAllProductTags(): Promise<(ProductTag & { tag: Tag })[]>;
   addProductTag(productTag: InsertProductTag): Promise<ProductTag>;
   removeProductTag(productId: number, tagId: number): Promise<boolean>;
   getProductsByTag(tagId: number): Promise<Product[]>;
@@ -1586,6 +1587,19 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(tags.name));
 
     return productTagsWithTags.map(row => ({
+      ...row.product_tags,
+      tag: row.tags
+    }));
+  }
+
+  async getAllProductTags(): Promise<(ProductTag & { tag: Tag })[]> {
+    const allProductTagsWithTags = await db
+      .select()
+      .from(productTags)
+      .innerJoin(tags, eq(productTags.tagId, tags.id))
+      .orderBy(asc(tags.name));
+
+    return allProductTagsWithTags.map(row => ({
       ...row.product_tags,
       tag: row.tags
     }));
