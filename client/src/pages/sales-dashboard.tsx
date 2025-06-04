@@ -285,7 +285,7 @@ export default function SalesDashboard() {
   return (
     <div className="flex flex-col h-full">
       <TopBar 
-        title={`Welcome back, ${user?.firstName || user?.username || 'Sales Rep'}!`}
+        title={`Welcome back, ${user?.firstName || user?.username || 'there'}!`}
         subtitle="Your personalized sales dashboard"
       />
       
