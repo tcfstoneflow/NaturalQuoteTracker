@@ -2061,13 +2061,13 @@ Product Details:
 - Finish: ${finish || 'Polished'}
 
 Requirements:
-1. Start with a persuasive, hard-working headline (4-15 words) that captures the stone's essence and appeals to consumers, wrapped in **bold markdown** formatting
-3. Incorporate the stone's specific visual traits into the headline (veining, colors, patterns, texture) to make it more descriptive and unique
-4. Follow with 2-3 descriptive sentences (40-60 words)
-5. Highlight the stone's visual characteristics and unique patterns
-6. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
-7. Use engaging, professional language that appeals to homeowners and designers
-8. Focus on the stone's natural beauty and durability`;
+1. Create a unique headline (4-15 words) in **bold markdown** that describes the stone's specific visual characteristics (color, veining, pattern)
+2. Never use phrases like "Elevate Your Space" or "Transform Your Space" - be more specific and descriptive
+3. Base the headline on the actual stone name and visual features you can see
+4. Follow with 2-3 descriptive sentences (40-60 words) about the stone's appearance and uses
+5. Focus on concrete visual details: colors, veining patterns, texture, finish quality
+6. Mention practical applications: countertops, backsplashes, flooring
+7. Use professional language that describes what makes this stone unique`;
 
       const messages: any[] = [
         {
