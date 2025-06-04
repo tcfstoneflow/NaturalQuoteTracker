@@ -3331,7 +3331,9 @@ Write the description in a tone that's informative yet appealing to both homeown
   app.get("/api/products/:id/tags", requireAuth, requireInventoryAccess, async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
+      console.log(`Fetching tags for product ID: ${productId}`);
       const productTags = await storage.getProductTags(productId);
+      console.log(`Found ${productTags.length} tags for product ${productId}:`, productTags);
       res.json(productTags);
     } catch (error: any) {
       console.error('Get product tags error:', error);
