@@ -376,7 +376,6 @@ export default function PublicInventory() {
           </div>
         </div>
       </div>
-
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8">
         {productsLoading ? (
@@ -427,7 +426,7 @@ export default function PublicInventory() {
                     <div className="flex-1">
                       <CardTitle className="text-xl mb-1">{product.name}</CardTitle>
                       {product.aiHeadline && (
-                        <p className="text-sm text-gray-700 mb-2">{product.aiHeadline}</p>
+                        <p className="text-sm mb-2 text-[#030303]">{product.aiHeadline}</p>
                       )}
                       <CardDescription className="space-y-1">
                         <div className="capitalize">
@@ -665,7 +664,6 @@ export default function PublicInventory() {
           </div>
         </div>
       </div>
-
       {/* Lightbox */}
       {lightboxOpen && (
         <Lightbox
