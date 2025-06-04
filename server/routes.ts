@@ -2474,12 +2474,12 @@ Your body text starts here with proper spacing.`;
       
       // Calculate monthly revenue
       const thisMonthQuotes = allQuotes.filter(quote => 
-        new Date(quote.createdAt) >= startOfMonth && quote.status === 'accepted'
+        new Date(quote.createdAt) >= startOfMonth && (quote.status === 'accepted' || quote.status === 'approved')
       );
       const lastMonthQuotes = allQuotes.filter(quote => 
         new Date(quote.createdAt) >= startOfLastMonth && 
         new Date(quote.createdAt) <= endOfLastMonth && 
-        quote.status === 'accepted'
+        (quote.status === 'accepted' || quote.status === 'approved')
       );
       
       const thisMonthRevenue = thisMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.totalAmount || 0), 0);
