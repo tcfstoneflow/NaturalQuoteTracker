@@ -3265,6 +3265,129 @@ Write the description in a tone that's informative yet appealing to both homeown
     }
   });
 
+  // Tags API endpoints (admin only - internal use)
+  app.get("/api/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
+    try {
+      const tags = await storage.getTags();
+      res.json(tags);
+    } catch (error: any) {
+      console.error('Get tags error:', error);
+      res.status(500).json({ error: "Failed to fetch tags" });
+    }
+  });
+
+  app.post("/api/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: "Tag name is required" });
+      }
+
+      // Check if tag already exists
+      const existingTag = await storage.getTagByName(name);
+      if (existingTag) {
+        return res.status(400).json({ error: "Tag already exists" });
+      }
+
+      const tag = await storage.createTag({ name, description });
+      res.status(201).json(tag);
+    } catch (error: any) {
+      console.error('Create tag error:', error);
+      res.status(500).json({ error: "Failed to create tag" });
+    }
+  });
+
+  app.put("/api/tags/:id", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
+    try {
+      const tagId = parseInt(req.params.id);
+      const { name, description } = req.body;
+
+      const updatedTag = await storage.updateTag(tagId, { name, description });
+      res.json(updatedTag);
+    } catch (error: any) {
+      console.error('Update tag error:', error);
+      res.status(500).json({ error: "Failed to update tag" });
+    }
+  });
+
+  app.delete("/api/tags/:id", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const tagId = parseInt(req.params.id);
+      const success = await storage.deleteTag(tagId);
+      
+      if (success) {
+        res.json({ message: "Tag deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Tag not found" });
+      }
+    } catch (error: any) {
+      console.error('Delete tag error:', error);
+      res.status(500).json({ error: "Failed to delete tag" });
+    }
+  });
+
+  // Product Tags API endpoints
+  app.get("/api/products/:id/tags", requireAuth, requireInventoryAccess, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const productTags = await storage.getProductTags(productId);
+      res.json(productTags);
+    } catch (error: any) {
+      console.error('Get product tags error:', error);
+      res.status(500).json({ error: "Failed to fetch product tags" });
+    }
+  });
+
+  app.post("/api/products/:id/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const { tagId } = req.body;
+
+      if (!tagId) {
+        return res.status(400).json({ error: "Tag ID is required" });
+      }
+
+      const productTag = await storage.addProductTag({ productId, tagId });
+      res.status(201).json(productTag);
+    } catch (error: any) {
+      console.error('Add product tag error:', error);
+      res.status(500).json({ error: "Failed to add product tag" });
+    }
+  });
+
+  app.delete("/api/products/:productId/tags/:tagId", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      const tagId = parseInt(req.params.tagId);
+
+      const success = await storage.removeProductTag(productId, tagId);
+      
+      if (success) {
+        res.json({ message: "Product tag removed successfully" });
+      } else {
+        res.status(404).json({ error: "Product tag not found" });
+      }
+    } catch (error: any) {
+      console.error('Remove product tag error:', error);
+      res.status(500).json({ error: "Failed to remove product tag" });
+    }
+  });
+
+  // Similar products endpoint (uses tags for matching)
+  app.get("/api/products/:id/similar", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 6;
+
+      const similarProducts = await storage.getSimilarProductsByTags(productId, limit);
+      res.json(similarProducts);
+    } catch (error: any) {
+      console.error('Get similar products error:', error);
+      res.status(500).json({ error: "Failed to fetch similar products" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

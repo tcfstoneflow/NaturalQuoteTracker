@@ -1,5 +1,5 @@
 import { 
-  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations,
+  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -11,6 +11,8 @@ import {
   type ProductGalleryImage, type InsertProductGalleryImage,
   type ClientFavorite, type InsertClientFavorite,
   type Consultation, type InsertConsultation,
+  type Tag, type InsertTag,
+  type ProductTag, type InsertProductTag,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -121,6 +123,21 @@ export interface IStorage {
   
   // Consultations
   createConsultation(consultation: InsertConsultation): Promise<Consultation>;
+  
+  // Tags
+  getTags(): Promise<Tag[]>;
+  getTag(id: number): Promise<Tag | undefined>;
+  getTagByName(name: string): Promise<Tag | undefined>;
+  createTag(tag: InsertTag): Promise<Tag>;
+  updateTag(id: number, tag: Partial<InsertTag>): Promise<Tag>;
+  deleteTag(id: number): Promise<boolean>;
+  
+  // Product Tags
+  getProductTags(productId: number): Promise<(ProductTag & { tag: Tag })[]>;
+  addProductTag(productTag: InsertProductTag): Promise<ProductTag>;
+  removeProductTag(productId: number, tagId: number): Promise<boolean>;
+  getProductsByTag(tagId: number): Promise<Product[]>;
+  getSimilarProductsByTags(productId: number, limit?: number): Promise<Product[]>;
   
   // Reports
   getTopSellingProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
@@ -1516,6 +1533,143 @@ export class DatabaseStorage implements IStorage {
       );
 
     return !!favorite;
+  }
+
+  // Tags Implementation
+  async getTags(): Promise<Tag[]> {
+    return await db.select().from(tags).orderBy(asc(tags.name));
+  }
+
+  async getTag(id: number): Promise<Tag | undefined> {
+    const [tag] = await db.select().from(tags).where(eq(tags.id, id));
+    return tag;
+  }
+
+  async getTagByName(name: string): Promise<Tag | undefined> {
+    const [tag] = await db.select().from(tags).where(eq(tags.name, name));
+    return tag;
+  }
+
+  async createTag(tag: InsertTag): Promise<Tag> {
+    const [newTag] = await db
+      .insert(tags)
+      .values(tag)
+      .returning();
+    return newTag;
+  }
+
+  async updateTag(id: number, tag: Partial<InsertTag>): Promise<Tag> {
+    const [updatedTag] = await db
+      .update(tags)
+      .set(tag)
+      .where(eq(tags.id, id))
+      .returning();
+    return updatedTag;
+  }
+
+  async deleteTag(id: number): Promise<boolean> {
+    // First remove all product-tag associations
+    await db.delete(productTags).where(eq(productTags.tagId, id));
+    
+    // Then delete the tag
+    const result = await db.delete(tags).where(eq(tags.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Product Tags Implementation
+  async getProductTags(productId: number): Promise<(ProductTag & { tag: Tag })[]> {
+    const productTagsWithTags = await db
+      .select()
+      .from(productTags)
+      .innerJoin(tags, eq(productTags.tagId, tags.id))
+      .where(eq(productTags.productId, productId))
+      .orderBy(asc(tags.name));
+
+    return productTagsWithTags.map(row => ({
+      ...row.product_tags,
+      tag: row.tags
+    }));
+  }
+
+  async addProductTag(productTag: InsertProductTag): Promise<ProductTag> {
+    // Check if association already exists
+    const existing = await db
+      .select()
+      .from(productTags)
+      .where(
+        and(
+          eq(productTags.productId, productTag.productId),
+          eq(productTags.tagId, productTag.tagId)
+        )
+      );
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const [newProductTag] = await db
+      .insert(productTags)
+      .values(productTag)
+      .returning();
+    return newProductTag;
+  }
+
+  async removeProductTag(productId: number, tagId: number): Promise<boolean> {
+    const result = await db
+      .delete(productTags)
+      .where(
+        and(
+          eq(productTags.productId, productId),
+          eq(productTags.tagId, tagId)
+        )
+      );
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getProductsByTag(tagId: number): Promise<Product[]> {
+    const productsWithTag = await db
+      .select()
+      .from(products)
+      .innerJoin(productTags, eq(products.id, productTags.productId))
+      .where(eq(productTags.tagId, tagId))
+      .orderBy(asc(products.name));
+
+    return productsWithTag.map(row => row.products);
+  }
+
+  async getSimilarProductsByTags(productId: number, limit: number = 6): Promise<Product[]> {
+    // Get all tags for the given product
+    const productTagIds = await db
+      .select({ tagId: productTags.tagId })
+      .from(productTags)
+      .where(eq(productTags.productId, productId));
+
+    if (productTagIds.length === 0) {
+      return []; // No tags, no similar products
+    }
+
+    const tagIds = productTagIds.map(pt => pt.tagId);
+
+    // Find products that share tags with the given product
+    const similarProducts = await db
+      .select({
+        product: products,
+        sharedTagCount: sql<number>`COUNT(DISTINCT ${productTags.tagId})`
+      })
+      .from(products)
+      .innerJoin(productTags, eq(products.id, productTags.productId))
+      .where(
+        and(
+          sql`${productTags.tagId} IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})`,
+          sql`${products.id} != ${productId}`,
+          eq(products.isActive, true)
+        )
+      )
+      .groupBy(products.id, products.name, products.bundleId, products.supplier, products.category, products.grade, products.thickness, products.finish, products.price, products.stockQuantity, products.slabLength, products.slabWidth, products.location, products.imageUrl, products.description, products.isActive, products.createdAt, products.displayOnline, products.ecommercePrice, products.ecommerceDescription, products.ecommerceImages, products.specifications, products.weight, products.dimensions, products.shippingClass, products.minOrderQuantity, products.maxOrderQuantity, products.leadTime)
+      .orderBy(desc(sql`COUNT(DISTINCT ${productTags.tagId})`), asc(products.name))
+      .limit(limit);
+
+    return similarProducts.map(row => row.product);
   }
 }
 
