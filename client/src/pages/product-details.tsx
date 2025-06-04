@@ -59,6 +59,7 @@ export default function ProductDetails() {
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [similarProductsOffset, setSimilarProductsOffset] = useState(0);
   const [slabsExpanded, setSlabsExpanded] = useState(false);
+  const [specsExpanded, setSpecsExpanded] = useState(false);
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery({
@@ -268,7 +269,6 @@ export default function ProductDetails() {
             {/* Installation Gallery - moved here */}
             {galleryImages.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold mb-4">See {product.name}</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {galleryImages.slice(0, 4).map((image: any) => (
                     <div 
@@ -315,34 +315,48 @@ export default function ProductDetails() {
             )}
 
             {/* Product Specifications */}
-            <div className="bg-white border rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-4">Specifications</h3>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                <div>
-                  <span className="text-sm text-gray-600">Supplier:</span>
-                  <div className="font-medium">{product.supplier}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Category:</span>
-                  <div className="font-medium capitalize">{product.category}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Grade:</span>
-                  <div className="font-medium">{product.grade} Grade</div>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Finish:</span>
-                  <div className="font-medium">{product.finish}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Thickness:</span>
-                  <div className="font-medium">{product.thickness}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Location:</span>
-                  <div className="font-medium">{product.location || 'N/A'}</div>
-                </div>
-              </div>
+            <div>
+              <Collapsible open={specsExpanded} onOpenChange={setSpecsExpanded}>
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-between mb-4 text-lg font-semibold h-auto py-3"
+                  >
+                    Specifications
+                    {specsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="bg-white border rounded-lg p-4 mb-4">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                      <div>
+                        <span className="text-sm text-gray-600">Supplier:</span>
+                        <div className="font-medium">{product.supplier}</div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Category:</span>
+                        <div className="font-medium capitalize">{product.category}</div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Grade:</span>
+                        <div className="font-medium">{product.grade} Grade</div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Finish:</span>
+                        <div className="font-medium">{product.finish}</div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Thickness:</span>
+                        <div className="font-medium">{product.thickness}</div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Location:</span>
+                        <div className="font-medium">{product.location || 'N/A'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
 
             {/* Available Slabs */}
