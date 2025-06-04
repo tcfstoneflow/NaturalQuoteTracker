@@ -16,6 +16,9 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import nodemailer from "nodemailer";
+import { apiLimiter, authLimiter, uploadLimiter } from "./rate-limiter";
+import { cache } from "./cache";
+import { config } from "./config";
 
 // Email function for appointment notifications
 async function sendAppointmentEmail(visit: any, type: 'confirmation' | 'update' | 'cancellation') {
@@ -116,9 +119,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })();
   });
 
-  // Authentication routes
-  app.post("/api/auth/login", login);
-  app.post("/api/auth/register", requireAuth, requireRole(['admin']), register);
+  // Authentication routes with rate limiting
+  app.post("/api/auth/login", authLimiter, login);
+  app.post("/api/auth/register", requireAuth, requireRole(['admin']), authLimiter, register);
   app.post("/api/auth/logout", logout);
   app.get("/api/auth/user", requireAuth, getCurrentUser);
 
@@ -3417,37 +3420,8 @@ Your body text starts here with proper spacing.`;
   // Public product-tags endpoint for filtering (renamed to avoid conflicts)
   app.get("/api/public/products/tags", async (req, res) => {
     try {
-      const result = await db.execute(sql`
-        SELECT 
-          pt.id,
-          pt.product_id,
-          pt.tag_id,
-          pt.created_at,
-          t.id as tag_real_id,
-          t.name as tag_name,
-          t.description as tag_description,
-          t.category as tag_category,
-          t.created_at as tag_created_at
-        FROM product_tags pt
-        INNER JOIN tags t ON pt.tag_id = t.id
-        ORDER BY t.name
-      `);
-
-      const productTags = result.rows.map((row: any) => ({
-        id: row.id,
-        productId: row.product_id,
-        tagId: row.tag_id,
-        createdAt: row.created_at,
-        tag: {
-          id: row.tag_real_id,
-          name: row.tag_name,
-          description: row.tag_description,
-          category: row.tag_category,
-          createdAt: row.tag_created_at
-        }
-      }));
-
-      res.json(productTags);
+      const allProductTags = await storage.getAllProductTags();
+      res.json(allProductTags);
     } catch (error: any) {
       console.error('Get public product tags error:', error);
       res.status(500).json({ error: "Failed to fetch all product tags", details: error.message });
