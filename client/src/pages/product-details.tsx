@@ -301,7 +301,7 @@ export default function ProductDetails() {
 
             {/* Description */}
             {product.description && (
-              <div className="border border-gray-200 p-4 rounded-lg">
+              <div className="border border-gray-200 p-4 rounded-lg mt-[2px] mb-[2px]">
                 <div className="text-gray-700 leading-relaxed">
                   {renderDescriptionWithBold(product.description)}
                 </div>
