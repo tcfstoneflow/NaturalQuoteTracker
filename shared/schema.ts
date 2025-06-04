@@ -84,6 +84,7 @@ export const products = pgTable("products", {
   location: text("location"), // storage location
   barcodes: text("barcodes").array(), // array of barcode strings for individual slabs
   imageUrl: text("image_url"),
+  aiHeadline: text("ai_headline"), // AI-generated marketing headline
   isActive: boolean("is_active").notNull().default(true),
   // E-commerce specific fields for counter fixtures
   isEcommerceEnabled: boolean("is_ecommerce_enabled").notNull().default(false),

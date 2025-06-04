@@ -2031,6 +2031,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate AI headlines for existing products
+  app.post('/api/generate-ai-headlines', requireAuth, async (req, res) => {
+    try {
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: 'OpenAI API key not configured' });
+      }
+
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const products = await storage.getProducts();
+      const productsWithoutHeadlines = products.filter((p: any) => !p.aiHeadline);
+      
+      let generated = 0;
+      let failed = 0;
+
+      for (const product of productsWithoutHeadlines) {
+        try {
+          const prompt = `Create a compelling 4-8 word marketing headline for this natural stone product:
+          
+Name: ${product.name}
+Category: ${product.category}
+Grade: ${product.grade}
+Finish: ${product.finish}
+
+Focus on the stone's visual characteristics and appeal. Avoid generic phrases like "Transform Your Space" or "Elevate Your Home". Be specific and descriptive about the stone's unique qualities.
+
+Respond with ONLY the headline, no additional text.`;
+
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 50,
+            temperature: 0.7
+          });
+
+          const headline = response.choices[0].message.content?.trim();
+          
+          if (headline) {
+            await storage.updateProduct(product.id, { aiHeadline: headline });
+            generated++;
+          }
+        } catch (error) {
+          console.error(`Failed to generate headline for product ${product.id}:`, error);
+          failed++;
+        }
+      }
+
+      res.json({ 
+        message: `Generated ${generated} headlines, ${failed} failed`,
+        generated,
+        failed,
+        total: productsWithoutHeadlines.length
+      });
+    } catch (error: any) {
+      console.error('AI headline generation error:', error);
+      res.status(500).json({ error: 'Failed to generate AI headlines' });
+    }
+  });
+
   // AI-powered product description generation
   app.post('/api/generate-product-description', requireAuth, async (req, res) => {
     try {
