@@ -2482,13 +2482,15 @@ Your body text starts here with proper spacing.`;
         quote.status === 'accepted'
       );
       
-      const thisMonthRevenue = thisMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.total), 0);
-      const lastMonthRevenue = lastMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.total), 0);
+      const thisMonthRevenue = thisMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.totalAmount || 0), 0);
+      const lastMonthRevenue = lastMonthQuotes.reduce((sum, quote) => sum + parseFloat(quote.totalAmount || 0), 0);
       const monthlyGrowth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
       
-      // Count active and pending quotes
-      const activeQuotes = allQuotes.filter(quote => quote.status === 'draft' || quote.status === 'sent').length;
-      const pendingQuotes = allQuotes.filter(quote => quote.status === 'sent').length;
+      // Count active and pending quotes (using correct status values)
+      const activeQuotes = allQuotes.filter(quote => 
+        quote.status === 'pending' || quote.status === 'draft' || quote.status === 'sent'
+      ).length;
+      const pendingQuotes = allQuotes.filter(quote => quote.status === 'pending').length;
       
       // Get clients (for sales rep, get their clients)
       let clients;
@@ -2512,6 +2514,22 @@ Your body text starts here with proper spacing.`;
         quote.status === 'sent' && new Date(quote.updatedAt) < weekAgo
       ).length;
       
+      // Get upcoming appointments count
+      const allVisits = await storage.getShowroomVisits();
+      let upcomingAppointments;
+      
+      if (userRole === 'admin') {
+        upcomingAppointments = allVisits.filter(visit => 
+          visit.status === 'scheduled' || visit.status === 'pending'
+        ).length;
+      } else {
+        // For sales reps, count appointments assigned to them
+        upcomingAppointments = allVisits.filter(visit => 
+          (visit.status === 'scheduled' || visit.status === 'pending') &&
+          visit.assignedToUserId === userId
+        ).length;
+      }
+      
       res.json({
         monthlyRevenue: thisMonthRevenue,
         monthlyGrowth: monthlyGrowth,
@@ -2519,7 +2537,8 @@ Your body text starts here with proper spacing.`;
         pendingQuotes,
         totalClients,
         newClientsThisMonth,
-        followUpsDue
+        followUpsDue,
+        upcomingAppointments
       });
     } catch (error: any) {
       console.error('Error getting sales dashboard stats:', error);

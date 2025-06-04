@@ -343,7 +343,7 @@ export default function SalesDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-error-red">
-                  {salesStats?.followUpsDue || 0}
+                  {salesStats?.upcomingAppointments || 0}
                 </div>
                 <p className="text-xs text-gray-600">
                   Total scheduled
@@ -375,9 +375,9 @@ export default function SalesDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium text-sm">${quote.total || '0.00'}</div>
+                          <div className="font-medium text-sm">${parseFloat(quote.totalAmount || 0).toFixed(2)}</div>
                           <Badge 
-                            variant={quote.status === 'sent' ? 'default' : 'secondary'}
+                            variant={quote.status === 'pending' ? 'default' : 'secondary'}
                             className="text-xs"
                           >
                             {quote.status}
