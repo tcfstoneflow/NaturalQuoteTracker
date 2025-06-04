@@ -110,7 +110,10 @@ export default function Inventory() {
   // Fetch product tags when editing a product
   const { data: currentProductTags = [] } = useQuery({
     queryKey: ["/api/products", editingProduct?.id, "tags"],
-    queryFn: () => fetch(`/api/products/${editingProduct?.id}/tags`).then(res => res.json()),
+    queryFn: () => fetch(`/api/products/${editingProduct?.id}/tags`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    }).then(res => res.json()),
     enabled: !!editingProduct?.id,
   });
 
@@ -408,12 +411,14 @@ export default function Inventory() {
     try {
       const response = await fetch(`/api/products/${editingProduct.id}/tags`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tagId }),
       });
       
       if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        await queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        await queryClient.refetchQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
         toast({ title: "Tag added successfully" });
       } else {
         throw new Error("Failed to add tag");
@@ -430,10 +435,13 @@ export default function Inventory() {
     try {
       const response = await fetch(`/api/products/${editingProduct.id}/tags/${tagId}`, {
         method: "DELETE",
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
       });
       
       if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        await queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        await queryClient.refetchQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
         toast({ title: "Tag removed successfully" });
       } else {
         throw new Error("Failed to remove tag");
@@ -450,6 +458,7 @@ export default function Inventory() {
     try {
       const response = await fetch("/api/tags", {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newTagName.trim() }),
       });
