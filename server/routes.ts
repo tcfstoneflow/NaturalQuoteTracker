@@ -613,6 +613,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CRITICAL FIX: Public product-tags endpoint must be before parameterized routes
+  app.get("/api/public/products/tags", async (req, res) => {
+    try {
+      const allProductTags = await storage.getAllProductTags();
+      res.json(allProductTags);
+    } catch (error: any) {
+      console.error('Get public product tags error:', error);
+      res.status(500).json({ error: "Failed to fetch all product tags", details: error.message });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1835,6 +1846,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch slabs", details: error.message });
     }
   });
+
+
 
   // Public Product Details Endpoint for Client Access
   app.get("/api/public/products/:id", async (req, res) => {
