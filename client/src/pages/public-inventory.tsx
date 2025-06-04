@@ -46,7 +46,6 @@ export default function PublicInventory() {
   const [dimensionFilter, setDimensionFilter] = useState("all");
   const [finishFilter, setFinishFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
-  const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
   
@@ -131,9 +130,15 @@ export default function PublicInventory() {
 
   // Enhanced filtering with price range, dimensions, finish, and tags
   const filteredProducts = productsWithSlabs.filter((product: any) => {
+    // Enhanced search that includes product info and tags
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.bundleId?.toLowerCase().includes(searchTerm.toLowerCase());
+                         product.bundleId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         // Search through product tags
+                         (allProductTags || []).some((pt: any) => 
+                           pt.productId === product.id && 
+                           pt.tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+                         );
     
     const matchesCategory = activeTab === "all" || product.category === activeTab;
     
@@ -143,12 +148,11 @@ export default function PublicInventory() {
     
     const matchesFinish = finishFilter === "all" || product.finish === finishFilter;
     
-    // Tag filtering logic
+    // Tag filtering by dropdown selection
     const matchesTag = tagFilter === "all" || 
       (allProductTags || []).some((pt: any) => 
         pt.productId === product.id && 
-        (tagFilter === "all" || pt.tag.id.toString() === tagFilter) &&
-        (tagSearchQuery === "" || pt.tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()))
+        pt.tag.id.toString() === tagFilter
       );
     
     return matchesSearch && matchesCategory && matchesDimension && matchesFinish && matchesTag;
@@ -343,19 +347,7 @@ export default function PublicInventory() {
                 </Select>
               </div>
 
-              {/* Tag Search */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search Tags
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Search tags..."
-                  value={tagSearchQuery}
-                  onChange={(e) => setTagSearchQuery(e.target.value)}
-                  className="w-full"
-                />
-              </div>
+
 
               {/* Sort Options */}
               <div>
