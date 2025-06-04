@@ -417,16 +417,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteClient(id: number): Promise<boolean> {
-    const result = await db.delete(clients).where(eq(clients.id, id));
-    return result.rowCount > 0;
+    try {
+      // Check if client has associated quotes before deletion
+      const clientQuotes = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(quotes)
+        .where(eq(quotes.clientId, id));
+      
+      if (clientQuotes[0].count > 0) {
+        // Soft delete if client has quotes to maintain referential integrity
+        await db
+          .update(clients)
+          .set({ 
+            name: `[DELETED] ${new Date().toISOString()}`,
+            email: `deleted_${id}_${Date.now()}@deleted.local`,
+            isActive: false 
+          })
+          .where(eq(clients.id, id));
+        return true;
+      }
+      
+      const result = await db.delete(clients).where(eq(clients.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Delete client error:', error);
+      return false;
+    }
   }
 
   async searchClients(query: string): Promise<Client[]> {
+    // Sanitize query to prevent SQL injection
+    const sanitizedQuery = query.replace(/[%_]/g, '\\$&');
+    
     return await db
       .select()
       .from(clients)
       .where(
-        sql`${clients.name} ILIKE ${'%' + query + '%'} OR ${clients.email} ILIKE ${'%' + query + '%'} OR ${clients.company} ILIKE ${'%' + query + '%'}`
+        or(
+          sql`${clients.name} ILIKE ${`%${sanitizedQuery}%`}`,
+          sql`${clients.email} ILIKE ${`%${sanitizedQuery}%`}`,
+          sql`${clients.company} ILIKE ${`%${sanitizedQuery}%`}`
+        )
       )
       .orderBy(desc(clients.createdAt));
   }

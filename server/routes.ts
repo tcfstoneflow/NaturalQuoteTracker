@@ -383,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(clients);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
@@ -1862,7 +1862,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send notification email to sales team
       if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST,
           port: parseInt(process.env.SMTP_PORT || '587'),
           secure: false,
