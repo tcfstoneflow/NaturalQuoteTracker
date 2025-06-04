@@ -2058,41 +2058,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 Product Details:
 - Name: ${bundleName}
 - Category: ${category}
-- Supplier: ${supplier || 'Premium supplier'}
-- Grade: ${grade || 'Premium'}
 - Finish: ${finish || 'Polished'}
 
 Requirements:
 1. Start with a persuasive, hard-working headline (4-15 words) that captures the stone's essence and appeals to consumers, wrapped in **bold markdown** formatting
-2. Make the headline compelling and sales-focused - emphasize luxury, beauty, transformation, or emotional appeal
 3. Incorporate the stone's specific visual traits into the headline (veining, colors, patterns, texture) to make it more descriptive and unique
-4. Follow with 2-3 descriptive sentences (60-120 words)
+4. Follow with 2-3 descriptive sentences (40-60 words)
 5. Highlight the stone's visual characteristics and unique patterns
 6. Mention ideal use cases (countertops, backsplashes, flooring, etc.)
 7. Use engaging, professional language that appeals to homeowners and designers
-8. Focus on the stone's natural beauty and durability
-9. Avoid overly technical jargon
-10. CRITICAL: Do NOT use "Elevate Your Space" - this phrase is overused and repetitive
-11. CRITICAL: Do NOT start headlines with "Elevate" - use diverse, creative opening words
-12. Use varied action words: Discover, Unleash, Embrace, Experience, Transform, Create, Capture, etc.
-
-CREATIVE HEADLINE STARTERS (use these instead of "Elevate"):
-**Capture the Essence of Timeless Beauty**
-**Transform Your Kitchen with Dramatic Veining**
-**Discover Luxury in Every Crystalline Detail** 
-**Experience the Power of Natural Elegance**
-**Unleash Bold Patterns in Your Living Space**
-**Create Sophisticated Spaces with Premium Stone**
-**Embrace the Art of Natural Stone Design**
-**Where Luxury Meets Functional Beauty**
-This stunning natural stone features...
-
-Write the description in a tone that's informative yet appealing to both homeowners and interior designers.`;
+8. Focus on the stone's natural beauty and durability`;
 
       const messages: any[] = [
         {
           role: "system",
-          content: "You are an expert in natural stone products with extensive knowledge of geology, interior design, and construction applications. You write compelling product descriptions that help customers understand the beauty and practical benefits of natural stone. CRITICAL INSTRUCTION: Never use the phrase 'Elevate Your Space' or start headlines with 'Elevate' - this is overused and banned. Always use creative, diverse headline starters like 'Discover', 'Transform', 'Experience', 'Capture', 'Unleash', 'Create', or 'Embrace'."
+          content: "You are an expert in natural stone products with extensive knowledge of geology, interior design, and construction applications. You write compelling product descriptions that help customers understand the beauty and practical benefits of natural stone."
         },
         {
           role: "user",
