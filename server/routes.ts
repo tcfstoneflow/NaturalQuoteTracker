@@ -2072,11 +2072,14 @@ Requirements:
 7. Use engaging, professional language that appeals to homeowners and designers
 8. Focus on the stone's natural beauty and durability
 9. Avoid overly technical jargon
+10. Vary headline starters - avoid repetitive phrases like "Elevate Your Space" in every headline
 
 Format examples:
 **Let Carrara's Bold Veins Dance Across Your Kitchen**
-**Transform Your Space with Dramatic Black Granite Beauty**
-**Discover Luxury Where Golden Veins Meet Timeless Elegance**
+**Where Dramatic Black Beauty Meets Timeless Design**
+**Discover Luxury in Every Golden Swirl and Subtle Texture**
+**Unleash the Power of Pure White Marble Sophistication**
+**Embrace Bold Patterns That Transform Any Room**
 This stunning natural stone features...
 
 Write the description in a tone that's informative yet appealing to both homeowners and interior designers.`;
