@@ -154,7 +154,7 @@ export default function ShowroomVisits() {
     
     // Find the assigned sales member name if a user is assigned
     const assignedSalesMember = assignedToUserId && assignedToUserId !== "none" 
-      ? salesManagers.find(sm => sm.id === parseInt(assignedToUserId))?.firstName + " " + salesManagers.find(sm => sm.id === parseInt(assignedToUserId))?.lastName
+      ? salesManagers.find(sm => sm.id === parseInt(assignedToUserId))?.name
       : null;
     
     updateVisitMutation.mutate({
@@ -193,7 +193,7 @@ export default function ShowroomVisits() {
       status: "scheduled",
       assignedToUserId: (newVisit.assignedToUserId && newVisit.assignedToUserId !== "unassigned") ? parseInt(newVisit.assignedToUserId) : null,
       assignedSalesMember: (newVisit.assignedToUserId && newVisit.assignedToUserId !== "unassigned")
-        ? salesManagers.find(sm => sm.id === parseInt(newVisit.assignedToUserId))?.firstName 
+        ? salesManagers.find(sm => sm.id === parseInt(newVisit.assignedToUserId))?.name 
         : null
     });
   };
