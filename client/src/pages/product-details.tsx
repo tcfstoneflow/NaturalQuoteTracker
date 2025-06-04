@@ -232,7 +232,7 @@ export default function ProductDetails() {
                     <div 
                       key={image.id}
                       className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden rounded-lg cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                      onClick={() => openLightbox(image.imageUrl)}
+                      onClick={() => openLightbox(image.imageUrl, image.title || 'Gallery Image')}
                     >
                       <img 
                         src={image.imageUrl} 
@@ -546,14 +546,14 @@ export default function ProductDetails() {
               ))}
             </div>
             
-            {allProducts.filter((p: any) => p.category === product?.category && p.id !== product?.id).length > 3 && (
+            {similarProducts.length > 3 && (
               <div className="text-center mt-8">
                 <Button 
                   variant="outline" 
                   size="lg"
                   onClick={() => setLocation(`/public-inventory?category=${product?.category}`)}
                 >
-                  View {allProducts.filter((p: any) => p.category === product?.category && p.id !== product?.id).length - 3} More {product?.category} Products
+                  View More {product?.category} Products
                 </Button>
               </div>
             )}
