@@ -349,6 +349,66 @@ export default function ProductDetails() {
               </div>
             </div>
 
+            {/* Available Slabs */}
+            {availableSlabs.length > 0 && (
+              <div>
+                <Collapsible open={slabsExpanded} onOpenChange={setSlabsExpanded}>
+                  <CollapsibleTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-between mb-4 text-lg font-semibold h-auto py-3"
+                    >
+                      Available Slabs ({availableSlabs.length})
+                      {slabsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {availableSlabs.map((slab: any) => (
+                      <Card key={slab.id} className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
+                              <h3 className="font-semibold">Slab #{slab.slabNumber}</h3>
+                              <Badge variant="outline">{slab.status}</Badge>
+                            </div>
+                            
+                            <div className="space-y-2 text-sm">
+                              {slab.length && slab.width && (
+                                <div className="flex items-center gap-2">
+                                  <Ruler className="h-4 w-4" />
+                                  <span>{slab.length}" × {slab.width}"</span>
+                                </div>
+                              )}
+                              
+                              {slab.location && (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="h-4 w-4" />
+                                  <span>{slab.location}</span>
+                                </div>
+                              )}
+                              
+                              {slab.reservedDate && (
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4" />
+                                  <span>Reserved: {new Date(slab.reservedDate).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {slab.notes && (
+                              <p className="text-sm text-gray-600 italic">{slab.notes}</p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="space-y-3">
               <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
@@ -466,65 +526,7 @@ export default function ProductDetails() {
 
 
 
-        {/* Available Slabs */}
-        {availableSlabs.length > 0 && (
-          <div className="mt-12">
-            <Collapsible open={slabsExpanded} onOpenChange={setSlabsExpanded}>
-              <CollapsibleTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-between mb-6 text-2xl font-bold h-auto py-4"
-                >
-                  Available Slabs ({availableSlabs.length})
-                  {slabsExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {availableSlabs.map((slab: any) => (
-                <Card key={slab.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold">Slab #{slab.slabNumber}</h3>
-                        <Badge variant="outline">{slab.status}</Badge>
-                      </div>
-                      
-                      <div className="space-y-2 text-sm">
-                        {slab.length && slab.width && (
-                          <div className="flex items-center gap-2">
-                            <Ruler className="h-4 w-4" />
-                            <span>{slab.length}" × {slab.width}"</span>
-                          </div>
-                        )}
-                        
-                        {slab.location && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>{slab.location}</span>
-                          </div>
-                        )}
-                        
-                        {slab.reservedDate && (
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>Reserved: {new Date(slab.reservedDate).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {slab.notes && (
-                        <p className="text-sm text-gray-600 italic">{slab.notes}</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        )}
+
       </div>
     </div>
 
