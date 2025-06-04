@@ -205,8 +205,9 @@ export default function ProductDetails() {
   const availableSlabs = product.slabs?.filter((slab: any) => slab.status === 'available') || [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
+    <div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
         {/* Back Button */}
         <Button 
           variant="outline" 
@@ -492,15 +493,14 @@ export default function ProductDetails() {
             </div>
           </div>
         )}
-
-
+        </div>
       </div>
 
       {/* Similar Products Section - Full Width */}
       {similarProducts.length > 0 && (
         <div className="w-full mt-16 border-t pt-12 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-8">
+          <div className="w-full px-8">
+            <div className="flex justify-between items-center mb-8 max-w-7xl mx-auto">
               <h2 className="text-2xl font-bold text-gray-900">
                 Similar Products
               </h2>
@@ -526,7 +526,8 @@ export default function ProductDetails() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
               {visibleProducts.map((similarProduct: any) => (
                 <Card 
                   key={similarProduct.id}
@@ -577,6 +578,7 @@ export default function ProductDetails() {
                   </CardContent>
                 </Card>
               ))}
+              </div>
             </div>
           </div>
         </div>
