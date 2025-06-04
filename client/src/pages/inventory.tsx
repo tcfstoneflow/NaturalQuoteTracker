@@ -129,9 +129,18 @@ export default function Inventory() {
   // Sync product tags when currentProductTags changes
   useEffect(() => {
     if (currentProductTags) {
+      console.log('Setting product tags:', currentProductTags);
       setProductTags(currentProductTags);
     }
   }, [currentProductTags]);
+
+  // Trigger tags fetch when editing product changes
+  useEffect(() => {
+    if (editingProduct?.id) {
+      console.log('Product selected for editing:', editingProduct.id);
+      refetchTags();
+    }
+  }, [editingProduct?.id, refetchTags]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
