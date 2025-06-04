@@ -442,6 +442,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get client statistics
+  app.get("/api/clients/:id/stats", async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      if (isNaN(clientId)) {
+        return res.status(400).json({ error: 'Invalid client ID' });
+      }
+
+      // Get client details first
+      const client = await storage.getClient(clientId);
+      if (!client) {
+        return res.status(404).json({ error: 'Client not found' });
+      }
+
+      // Get all quotes for this client
+      const quotes = await storage.getQuotes();
+      const clientQuotes = quotes.filter(quote => quote.clientId === clientId);
+      
+      // Calculate total value from quote totals
+      const totalValue = clientQuotes.reduce((sum, quote) => {
+        const quoteTotal = quote.total || 0;
+        return sum + quoteTotal;
+      }, 0);
+
+      // Get appointments for this client (match by email)
+      const visits = await storage.getShowroomVisits();
+      const clientAppointments = visits.filter(visit => 
+        visit.email && visit.email.toLowerCase() === client.email.toLowerCase()
+      );
+
+      res.json({
+        totalQuotes: clientQuotes.length,
+        totalValue: totalValue,
+        appointments: clientAppointments.length
+      });
+    } catch (error) {
+      console.error('Error fetching client stats:', error);
+      res.status(500).json({ error: 'Failed to fetch client statistics' });
+    }
+  });
+
   // Client AI Summary
   app.post("/api/clients/ai-summary", requireAuth, async (req, res) => {
     try {

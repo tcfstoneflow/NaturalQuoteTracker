@@ -108,6 +108,17 @@ export default function SalesDashboard() {
     queryFn: salesDashboardApi.getMyClients,
   });
 
+  // Fetch client statistics when a client is selected
+  const { data: clientStats } = useQuery({
+    queryKey: ["/api/client-stats", selectedClient?.id],
+    queryFn: async () => {
+      if (!selectedClient?.id) return null;
+      const response = await apiRequest('GET', `/api/clients/${selectedClient.id}/stats`);
+      return response.json();
+    },
+    enabled: !!selectedClient?.id,
+  });
+
   // Debug logging
   console.log('Sales Dashboard - myQuotes data:', myQuotes);
   console.log('Sales Dashboard - myQuotes type:', typeof myQuotes);
@@ -673,15 +684,21 @@ export default function SalesDashboard() {
               {/* Client Stats */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <div className="text-lg font-bold text-blue-600">0</div>
+                  <div className="text-lg font-bold text-blue-600">
+                    {clientStats?.totalQuotes || 0}
+                  </div>
                   <div className="text-xs text-gray-600">Total Quotes</div>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <div className="text-lg font-bold text-green-600">$0</div>
+                  <div className="text-lg font-bold text-green-600">
+                    ${clientStats?.totalValue?.toFixed(2) || '0.00'}
+                  </div>
                   <div className="text-xs text-gray-600">Total Value</div>
                 </div>
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <div className="text-lg font-bold text-purple-600">0</div>
+                  <div className="text-lg font-bold text-purple-600">
+                    {clientStats?.appointments || 0}
+                  </div>
                   <div className="text-xs text-gray-600">Appointments</div>
                 </div>
               </div>
