@@ -259,8 +259,6 @@ export default function ProductDetails() {
                 </div>
               )}
             </div>
-            
-
 
             {/* Installation Gallery - moved here */}
             {galleryImages.length > 0 && (
@@ -295,10 +293,8 @@ export default function ProductDetails() {
             <div>
               <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
               <p className="text-lg text-gray-600 mb-4">
-                {product.category} • {product.grade} Grade • {product.finish}
+                {product.category} • {product.grade} Grade • {product.finish} • {product.thickness}
               </p>
-              
-
             </div>
 
             {/* Description */}
