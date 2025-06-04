@@ -84,8 +84,12 @@ export default function RecentQuotes() {
                   </td>
                   <td className="py-4 px-2">
                     <div>
-                      <p className="font-medium text-primary-custom">{quote.client.company || quote.client.name}</p>
-                      <p className="text-sm text-secondary-custom">{quote.client.name}</p>
+                      <p className="font-medium text-primary-custom">
+                        {quote.client ? (quote.client.company || quote.client.name) : 'No Client'}
+                      </p>
+                      <p className="text-sm text-secondary-custom">
+                        {quote.client ? quote.client.name : 'Unknown'}
+                      </p>
                     </div>
                   </td>
                   <td className="py-4 px-2">
