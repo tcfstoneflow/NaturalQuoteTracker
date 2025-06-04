@@ -366,9 +366,13 @@ export default function SalesDashboard() {
                 <div className="space-y-3">
                   {quotesArray.length > 0 ? (
                     quotesArray.slice(0, 5).map((quote: any) => (
-                      <div key={quote.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div 
+                        key={quote.id} 
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors border border-transparent hover:border-blue-200"
+                        onClick={() => setLocation(`/quotes?view=${quote.id}`)}
+                      >
                         <div>
-                          <div className="font-medium text-sm">{quote.quoteNumber}</div>
+                          <div className="font-medium text-sm text-blue-600 hover:text-blue-800">{quote.quoteNumber}</div>
                           <div className="text-xs text-gray-600">{quote.client?.name}</div>
                           <div className="text-xs text-gray-500">
                             {format(new Date(quote.createdAt), "MMM d, yyyy")}
