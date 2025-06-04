@@ -3354,8 +3354,8 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  // Public product tags endpoint for filtering (no auth required) - MUST come before parameterized routes
-  app.get("/api/public/products/tags", async (req, res) => {
+  // Public product-tags endpoint for filtering (renamed to avoid conflicts)
+  app.get("/api/public/product-tags", async (req, res) => {
     try {
       const result = await db.execute(sql`
         SELECT 
@@ -3394,7 +3394,7 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  // Get all product tags for filtering (protected route)
+  // Get all product tags for filtering (protected route) - EXACT match before parameterized
   app.get("/api/products/tags", requireAuth, async (req, res) => {
     try {
       const allProductTags = await storage.getAllProductTags();
@@ -3402,6 +3402,20 @@ Your body text starts here with proper spacing.`;
     } catch (error: any) {
       console.error('Get all product tags error:', error);
       res.status(500).json({ error: "Failed to fetch all product tags" });
+    }
+  });
+
+  // Product Tags API endpoints - parameterized route AFTER exact matches
+  app.get("/api/products/:id/tags", requireAuth, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      console.log(`Fetching tags for product ID: ${productId}`);
+      const productTags = await storage.getProductTags(productId);
+      console.log(`Found ${productTags.length} tags for product ${productId}:`, productTags);
+      res.json(productTags);
+    } catch (error: any) {
+      console.error('Get product tags error:', error);
+      res.status(500).json({ error: "Failed to fetch product tags" });
     }
   });
 
