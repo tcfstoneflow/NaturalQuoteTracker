@@ -46,7 +46,7 @@ function renderDescriptionWithBold(text: string) {
       return part;
     });
     
-    return <div key={`line-${lineIndex}`} className="mb-2">{renderedLine}</div>;
+    return <div key={`line-${lineIndex}`} className="mt-[-2px] mb-[-2px]">{renderedLine}</div>;
   });
 }
 
