@@ -822,6 +822,83 @@ export default function SalesDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Quote Modal */}
+      <Dialog open={isEditingQuote} onOpenChange={setIsEditingQuote}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Quote</DialogTitle>
+            <DialogDescription>
+              Update the quote details below
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Project Name</label>
+              <Input
+                value={quoteEditForm.projectName}
+                onChange={(e) => setQuoteEditForm(prev => ({ ...prev, projectName: e.target.value }))}
+                placeholder="Enter project name"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Status</label>
+              <Select 
+                value={quoteEditForm.status} 
+                onValueChange={(value) => setQuoteEditForm(prev => ({ ...prev, status: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Valid Until</label>
+              <Input
+                type="date"
+                value={quoteEditForm.validUntil}
+                onChange={(e) => setQuoteEditForm(prev => ({ ...prev, validUntil: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Notes</label>
+              <Textarea
+                value={quoteEditForm.notes}
+                onChange={(e) => setQuoteEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Enter quote notes"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setIsEditingQuote(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1"
+                onClick={handleSaveQuote}
+                disabled={updateQuoteMutation.isPending}
+              >
+                {updateQuoteMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
