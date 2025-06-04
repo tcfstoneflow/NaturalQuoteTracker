@@ -78,14 +78,17 @@ export default function SalesDashboard() {
   };
 
   const handleSaveAppointment = () => {
+    // Find the assigned sales member name if a user is assigned
+    const assignedSalesMember = editForm.assignedToUserId && editForm.assignedToUserId !== "none" 
+      ? salesManagers.find((sm: any) => sm.id === parseInt(editForm.assignedToUserId))?.name
+      : null;
+    
     const updateData = {
       ...editForm,
-      assignedToUserId: editForm.assignedToUserId ? parseInt(editForm.assignedToUserId) : null
+      assignedToUserId: editForm.assignedToUserId && editForm.assignedToUserId !== "none" ? parseInt(editForm.assignedToUserId) : null,
+      assignedSalesMember
     };
-    updateAppointmentMutation.mutate({
-      id: selectedAppointment.id,
-      ...updateData
-    });
+    updateAppointmentMutation.mutate(updateData);
   };
   
   // Get sales rep's personalized data
@@ -562,7 +565,7 @@ export default function SalesDashboard() {
                   <SelectValue placeholder={salesManagersLoading ? "Loading..." : "Select sales member"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No assignment</SelectItem>
+                  <SelectItem value="none">No assignment</SelectItem>
                   {!salesManagersLoading && salesManagers.length > 0 && salesManagers.map((manager: any) => {
                     console.log('Rendering manager option:', manager);
                     return (
