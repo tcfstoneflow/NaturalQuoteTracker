@@ -260,11 +260,7 @@ export default function ProductDetails() {
               )}
             </div>
             
-            {product.imageUrl && (
-              <p className="text-sm text-gray-600 text-center">
-                Click image to view full size
-              </p>
-            )}
+
 
             {/* Installation Gallery - moved here */}
             {galleryImages.length > 0 && (
@@ -299,7 +295,7 @@ export default function ProductDetails() {
             <div>
               <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
               <p className="text-lg text-gray-600 mb-4">
-                {product.category} • {product.grade} Grade
+                {product.category} • {product.grade} Grade • {product.finish}
               </p>
               
 
