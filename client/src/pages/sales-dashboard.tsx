@@ -119,6 +119,17 @@ export default function SalesDashboard() {
     enabled: !!selectedClient?.id,
   });
 
+  // Fetch client quotes when a client is selected
+  const { data: clientQuotes } = useQuery({
+    queryKey: ["/api/quotes", selectedClient?.id],
+    queryFn: async () => {
+      if (!selectedClient?.id) return [];
+      const response = await fetch(`/api/quotes?clientId=${selectedClient.id}`);
+      return response.json();
+    },
+    enabled: !!selectedClient?.id,
+  });
+
   // Debug logging
   console.log('Sales Dashboard - myQuotes data:', myQuotes);
   console.log('Sales Dashboard - myQuotes type:', typeof myQuotes);
@@ -702,6 +713,39 @@ export default function SalesDashboard() {
                   <div className="text-xs text-gray-600">Appointments</div>
                 </div>
               </div>
+
+              {/* Client Quotes Section */}
+              {clientQuotes && clientQuotes.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-medium text-gray-900">Recent Quotes</h4>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {clientQuotes.map((quote: any) => (
+                      <div key={quote.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="font-medium text-sm">{quote.quoteNumber}</div>
+                          <div className="text-xs text-gray-600">{quote.projectName}</div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(quote.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium text-sm">
+                            ${parseFloat(quote.totalAmount || 0).toFixed(2)}
+                          </div>
+                          <div className={`text-xs px-2 py-1 rounded-full ${
+                            quote.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            quote.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {quote.status}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-4">
