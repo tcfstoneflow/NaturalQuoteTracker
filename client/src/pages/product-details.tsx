@@ -288,13 +288,15 @@ export default function ProductDetails() {
           </div>
 
           {/* Product Details */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold mb-1">{product.name}</h1>
-              <p className="text-sm text-gray-500 mb-2">{product.location || 'Location not specified'}</p>
-              <p className="text-lg text-gray-600 mb-4">
+              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <p className="text-lg text-gray-600 mb-3">
                 {product.category} • {product.grade} Grade • {product.finish} • {product.thickness}
               </p>
+              <div className="inline-block bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-700 mb-4">
+                {product.location || 'Location not specified'}
+              </div>
             </div>
 
             {/* Description */}
@@ -480,10 +482,6 @@ export default function ProductDetails() {
             />
           </div>
         </div>
-
-
-
-
       </div>
     </div>
 
