@@ -462,7 +462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate total value from quote totals
       const totalValue = clientQuotes.reduce((sum, quote) => {
-        const quoteTotal = quote.total || 0;
+        const quoteTotal = parseFloat(quote.totalAmount) || 0;
         return sum + quoteTotal;
       }, 0);
 
