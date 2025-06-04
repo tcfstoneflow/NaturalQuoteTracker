@@ -30,6 +30,7 @@ import { useState } from "react";
 export default function SalesDashboard() {
   const { user } = useAuth();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
   const [isEditingAppointment, setIsEditingAppointment] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
@@ -324,7 +325,11 @@ export default function SalesDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {clientsArray.length > 0 ? (
                   clientsArray.slice(0, 6).map((client: any) => (
-                    <div key={client.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                    <div 
+                      key={client.id} 
+                      className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => setSelectedClient(client)}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <div className="font-medium">{client.name}</div>
                         <Badge variant="default" className="bg-green-500 text-white">
@@ -334,10 +339,26 @@ export default function SalesDashboard() {
                       <div className="text-sm text-gray-600 mb-2">{client.email}</div>
                       <div className="text-sm text-gray-600 mb-3">{client.company || 'No company'}</div>
                       <div className="flex items-center justify-between">
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `tel:${client.phone}`;
+                          }}
+                        >
                           <Phone className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `mailto:${client.email}`;
+                          }}
+                        >
                           <Mail className="h-3 w-3" />
                         </Button>
                       </div>
@@ -614,6 +635,87 @@ export default function SalesDashboard() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Client Detail Modal */}
+      <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Client Details</DialogTitle>
+            <DialogDescription>
+              Complete client information and interaction history
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedClient && (
+            <div className="space-y-6">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Name</label>
+                  <p className="text-sm text-gray-900">{selectedClient.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Email</label>
+                  <p className="text-sm text-gray-900">{selectedClient.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Phone</label>
+                  <p className="text-sm text-gray-900">{selectedClient.phone || 'Not provided'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Company</label>
+                  <p className="text-sm text-gray-900">{selectedClient.company || 'No company'}</p>
+                </div>
+              </div>
+
+              {/* Client Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="text-lg font-bold text-blue-600">0</div>
+                  <div className="text-xs text-gray-600">Total Quotes</div>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="text-lg font-bold text-green-600">$0</div>
+                  <div className="text-xs text-gray-600">Total Value</div>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <div className="text-lg font-bold text-purple-600">0</div>
+                  <div className="text-xs text-gray-600">Appointments</div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  className="flex-1"
+                  onClick={() => {
+                    window.location.href = `mailto:${selectedClient.email}`;
+                  }}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send Email
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    window.location.href = `tel:${selectedClient.phone}`;
+                  }}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call Client
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setSelectedClient(null)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
