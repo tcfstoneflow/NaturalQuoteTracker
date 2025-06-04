@@ -45,6 +45,8 @@ export default function PublicInventory() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [dimensionFilter, setDimensionFilter] = useState("all");
   const [finishFilter, setFinishFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
   
@@ -98,6 +100,16 @@ export default function PublicInventory() {
   const { data: allSlabs = [] } = useQuery({
     queryKey: ["/api/public/slabs"],
     queryFn: () => fetch(`/api/public/slabs`).then(res => res.json()),
+  });
+
+  // Fetch all tags for filtering
+  const { data: allTags = [] } = useQuery({
+    queryKey: ["/api/public/tags"],
+  });
+
+  // Fetch product tags for filtering
+  const { data: allProductTags = [] } = useQuery({
+    queryKey: ["/api/public/products/tags"],
   });
 
   // Combine products with their slabs
