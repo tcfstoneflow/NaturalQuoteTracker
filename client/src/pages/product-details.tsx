@@ -72,7 +72,7 @@ export default function ProductDetails() {
     enabled: !!id,
   });
 
-  const itemsPerPage = 6; // Show 6 products at a time for better use of space
+  const itemsPerPage = 8; // Show 8 products at a time to fill the full width
   const visibleProducts = similarProducts.slice(similarProductsOffset, similarProductsOffset + itemsPerPage);
   const canGoNext = similarProductsOffset + itemsPerPage < similarProducts.length;
   const canGoPrev = similarProductsOffset > 0;
@@ -493,9 +493,13 @@ export default function ProductDetails() {
           </div>
         )}
 
-        {/* Similar Products Section */}
-        {similarProducts.length > 0 && (
-          <div className="mt-16 border-t pt-12">
+
+      </div>
+
+      {/* Similar Products Section - Full Width */}
+      {similarProducts.length > 0 && (
+        <div className="w-full mt-16 border-t pt-12 bg-gray-50">
+          <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900">
                 Similar Products
@@ -522,7 +526,7 @@ export default function ProductDetails() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 gap-4">
               {visibleProducts.map((similarProduct: any) => (
                 <Card 
                   key={similarProduct.id}
@@ -575,8 +579,8 @@ export default function ProductDetails() {
               ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightboxOpen && (
