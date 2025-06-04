@@ -59,7 +59,6 @@ export default function ProductDetails() {
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [similarProductsOffset, setSimilarProductsOffset] = useState(0);
   const [slabsExpanded, setSlabsExpanded] = useState(false);
-  const [specsExpanded, setSpecsExpanded] = useState(false);
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery({
@@ -291,7 +290,8 @@ export default function ProductDetails() {
           {/* Product Details */}
           <div className="space-y-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-3xl font-bold mb-1">{product.name}</h1>
+              <p className="text-sm text-gray-500 mb-2">{product.location || 'Location not specified'}</p>
               <p className="text-lg text-gray-600 mb-4">
                 {product.category} • {product.grade} Grade • {product.finish} • {product.thickness}
               </p>
@@ -305,51 +305,6 @@ export default function ProductDetails() {
                 </div>
               </div>
             )}
-
-            {/* Product Specifications */}
-            <div>
-              <Collapsible open={specsExpanded} onOpenChange={setSpecsExpanded}>
-                <CollapsibleTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between mb-4 text-lg font-semibold h-auto py-3"
-                  >
-                    Specifications
-                    {specsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="bg-white border rounded-lg p-4 mb-4">
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                      <div>
-                        <span className="text-sm text-gray-600">Supplier:</span>
-                        <div className="font-medium">{product.supplier}</div>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Category:</span>
-                        <div className="font-medium capitalize">{product.category}</div>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Grade:</span>
-                        <div className="font-medium">{product.grade} Grade</div>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Finish:</span>
-                        <div className="font-medium">{product.finish}</div>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Thickness:</span>
-                        <div className="font-medium">{product.thickness}</div>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Location:</span>
-                        <div className="font-medium">{product.location || 'N/A'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
 
             {/* Available Slabs */}
             {availableSlabs.length > 0 && (
