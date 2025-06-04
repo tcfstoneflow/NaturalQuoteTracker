@@ -67,6 +67,30 @@ export default function SalesDashboard() {
     tax: 0,
     totalAmount: 0
   });
+
+  // Quick Actions state
+  const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
+  const [isScheduleFollowUpOpen, setIsScheduleFollowUpOpen] = useState(false);
+  const [newClientForm, setNewClientForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    notes: ''
+  });
+  const [followUpForm, setFollowUpForm] = useState({
+    clientId: '',
+    name: '',
+    email: '',
+    phone: '',
+    preferredDate: '',
+    preferredTime: '',
+    message: ''
+  });
   
   const queryClient = useQueryClient();
 
@@ -80,6 +104,50 @@ export default function SalesDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/sales-dashboard/pending-showroom-visits"] });
       setIsEditingAppointment(false);
       setSelectedAppointment(null);
+    },
+  });
+
+  // Mutation for creating new client
+  const createClientMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('POST', '/api/clients', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-dashboard/my-clients"] });
+      setIsNewClientDialogOpen(false);
+      setNewClientForm({
+        name: '',
+        email: '',
+        phone: '',
+        company: '',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        notes: ''
+      });
+    },
+  });
+
+  // Mutation for scheduling follow-up
+  const scheduleFollowUpMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('POST', '/api/showroom-visits', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-dashboard/pending-showroom-visits"] });
+      setIsScheduleFollowUpOpen(false);
+      setFollowUpForm({
+        clientId: '',
+        name: '',
+        email: '',
+        phone: '',
+        preferredDate: '',
+        preferredTime: '',
+        message: ''
+      });
     },
   });
 
@@ -526,16 +594,18 @@ export default function SalesDashboard() {
               <CardDescription>Streamline your daily tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button className="bg-accent-blue hover:bg-accent-blue text-white h-auto py-4 flex-col">
-                  <Target className="h-6 w-6 mb-2" />
-                  <span>Create New Quote</span>
-                </Button>
-                <Button className="bg-accent-orange hover:bg-accent-orange text-white h-auto py-4 flex-col">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  onClick={() => setIsNewClientDialogOpen(true)}
+                  className="bg-accent-orange hover:bg-accent-orange/90 text-white h-auto py-4 flex-col"
+                >
                   <Users className="h-6 w-6 mb-2" />
                   <span>Add New Client</span>
                 </Button>
-                <Button className="bg-success-green hover:bg-success-green text-white h-auto py-4 flex-col">
+                <Button 
+                  onClick={() => setIsScheduleFollowUpOpen(true)}
+                  className="bg-success-green hover:bg-success-green/90 text-white h-auto py-4 flex-col"
+                >
                   <Calendar className="h-6 w-6 mb-2" />
                   <span>Schedule Follow-up</span>
                 </Button>
@@ -1128,6 +1198,211 @@ export default function SalesDashboard() {
               >
                 <Send className="h-4 w-4 mr-2" />
                 {updateQuoteMutation.isPending ? 'Saving...' : 'Save & Send'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Client Modal */}
+      <Dialog open={isNewClientDialogOpen} onOpenChange={setIsNewClientDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Client</DialogTitle>
+            <DialogDescription>
+              Create a new client record for your sales pipeline
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Name *</label>
+                <Input
+                  value={newClientForm.name}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Client name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Company</label>
+                <Input
+                  value={newClientForm.company}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, company: e.target.value }))}
+                  placeholder="Company name"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Email *</label>
+                <Input
+                  type="email"
+                  value={newClientForm.email}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={newClientForm.phone}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Address</label>
+              <Input
+                value={newClientForm.address}
+                onChange={(e) => setNewClientForm(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Street address"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium">City</label>
+                <Input
+                  value={newClientForm.city}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="City"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">State</label>
+                <Input
+                  value={newClientForm.state}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, state: e.target.value }))}
+                  placeholder="TX"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">ZIP</label>
+                <Input
+                  value={newClientForm.zipCode}
+                  onChange={(e) => setNewClientForm(prev => ({ ...prev, zipCode: e.target.value }))}
+                  placeholder="12345"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Notes</label>
+              <Textarea
+                value={newClientForm.notes}
+                onChange={(e) => setNewClientForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Additional notes about the client"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsNewClientDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-accent-orange hover:bg-accent-orange/90"
+                onClick={() => createClientMutation.mutate(newClientForm)}
+                disabled={createClientMutation.isPending || !newClientForm.name || !newClientForm.email}
+              >
+                {createClientMutation.isPending ? 'Creating...' : 'Create Client'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Follow-up Modal */}
+      <Dialog open={isScheduleFollowUpOpen} onOpenChange={setIsScheduleFollowUpOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Follow-up</DialogTitle>
+            <DialogDescription>
+              Schedule a follow-up appointment or call
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Client Name *</label>
+              <Input
+                value={followUpForm.name}
+                onChange={(e) => setFollowUpForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Client name"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Email *</label>
+                <Input
+                  type="email"
+                  value={followUpForm.email}
+                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={followUpForm.phone}
+                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Preferred Date</label>
+                <Input
+                  type="date"
+                  value={followUpForm.preferredDate}
+                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, preferredDate: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Preferred Time</label>
+                <Input
+                  type="time"
+                  value={followUpForm.preferredTime}
+                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, preferredTime: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Message</label>
+              <Textarea
+                value={followUpForm.message}
+                onChange={(e) => setFollowUpForm(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Purpose of follow-up or additional notes"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsScheduleFollowUpOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-success-green hover:bg-success-green/90"
+                onClick={() => scheduleFollowUpMutation.mutate(followUpForm)}
+                disabled={scheduleFollowUpMutation.isPending || !followUpForm.name || !followUpForm.email}
+              >
+                {scheduleFollowUpMutation.isPending ? 'Scheduling...' : 'Schedule Follow-up'}
               </Button>
             </div>
           </div>
