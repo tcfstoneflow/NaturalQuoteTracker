@@ -39,9 +39,9 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
   
-  const isAdmin = user?.user?.role === 'admin';
-  const isInventorySpecialist = user?.user?.role === 'inventory_specialist';
-  const isSalesRep = user?.user?.role === 'sales_rep';
+  const isAdmin = user?.role === 'admin';
+  const isInventorySpecialist = user?.role === 'inventory_specialist';
+  const isSalesRep = user?.role === 'sales_rep';
   
   // Filter navigation based on user role
   const getVisibleNavigation = () => {
@@ -54,9 +54,9 @@ export default function Sidebar() {
         ['/', '/inventory', '/reports', '/sql-query'].includes(item.href)
       );
     } else if (isSalesRep) {
-      // Sales reps can see dashboard, sales dashboard, clients, quotes, showroom visits, and reports
+      // Sales reps can see sales dashboard, clients, quotes, showroom visits, and reports (no main dashboard)
       return navigation.filter(item => 
-        ['/', '/sales-dashboard', '/clients', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
+        ['/sales-dashboard', '/clients', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
       );
     }
     return navigation;
@@ -158,33 +158,33 @@ export default function Sidebar() {
       <div className="p-4 border-t border-neutral-200">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
-            {user?.user?.avatarUrl ? (
+            {user?.avatarUrl ? (
               <img 
-                src={user.user.avatarUrl} 
+                src={user.avatarUrl} 
                 alt="Profile" 
                 className="w-full h-full object-cover"
               />
             ) : (
               <span className="text-white text-sm font-medium">
-                {user?.user?.firstName && user?.user?.lastName 
-                  ? `${user.user.firstName.charAt(0)}${user.user.lastName.charAt(0)}`
-                  : user?.user?.username?.charAt(0)?.toUpperCase() || 'U'
+                {user?.firstName && user?.lastName 
+                  ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
+                  : user?.username?.charAt(0)?.toUpperCase() || 'U'
                 }
               </span>
             )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-primary-custom truncate">
-              {user?.user?.firstName && user?.user?.lastName 
-                ? `${user.user.firstName} ${user.user.lastName}`
-                : user?.user?.username || 'User'
+              {user?.firstName && user?.lastName 
+                ? `${user.firstName} ${user.lastName}`
+                : user?.username || 'User'
               }
             </p>
             <p className="text-xs text-secondary-custom truncate">
-              {user?.user?.role === 'admin' ? 'Administrator' :
-               user?.user?.role === 'sales_rep' ? 'Sales Representative' :
-               user?.user?.role === 'inventory_specialist' ? 'Inventory Specialist' :
-               user?.user?.role === 'sales_manager' ? 'Sales Manager' : 'User'}
+              {user?.role === 'admin' ? 'Administrator' :
+               user?.role === 'sales_rep' ? 'Sales Representative' :
+               user?.role === 'inventory_specialist' ? 'Inventory Specialist' :
+               user?.role === 'sales_manager' ? 'Sales Manager' : 'User'}
             </p>
           </div>
           <Link href="/settings" className="text-secondary-custom hover:text-primary">
