@@ -1595,14 +1595,29 @@ export class DatabaseStorage implements IStorage {
   async getAllProductTags(): Promise<(ProductTag & { tag: Tag })[]> {
     try {
       const allProductTagsWithTags = await db
-        .select()
+        .select({
+          id: productTags.id,
+          productId: productTags.productId,
+          tagId: productTags.tagId,
+          createdAt: productTags.createdAt,
+          tag: {
+            id: tags.id,
+            name: tags.name,
+            description: tags.description,
+            category: tags.category,
+            createdAt: tags.createdAt
+          }
+        })
         .from(productTags)
         .innerJoin(tags, eq(productTags.tagId, tags.id))
         .orderBy(asc(tags.name));
 
       return allProductTagsWithTags.map(row => ({
-        ...row.product_tags,
-        tag: row.tags
+        id: row.id,
+        productId: row.productId,
+        tagId: row.tagId,
+        createdAt: row.createdAt,
+        tag: row.tag
       }));
     } catch (error) {
       console.error('Error fetching all product tags:', error);
