@@ -3354,21 +3354,47 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  // Product Tags API endpoints
-  app.get("/api/products/:id/tags", requireAuth, async (req, res) => {
+  // Public product tags endpoint for filtering (no auth required) - MUST come before parameterized routes
+  app.get("/api/public/products/tags", async (req, res) => {
     try {
-      const productId = parseInt(req.params.id);
-      console.log(`Fetching tags for product ID: ${productId}`);
-      const productTags = await storage.getProductTags(productId);
-      console.log(`Found ${productTags.length} tags for product ${productId}:`, productTags);
+      const result = await db.execute(sql`
+        SELECT 
+          pt.id,
+          pt.product_id,
+          pt.tag_id,
+          pt.created_at,
+          t.id as tag_real_id,
+          t.name as tag_name,
+          t.description as tag_description,
+          t.category as tag_category,
+          t.created_at as tag_created_at
+        FROM product_tags pt
+        INNER JOIN tags t ON pt.tag_id = t.id
+        ORDER BY t.name
+      `);
+
+      const productTags = result.rows.map((row: any) => ({
+        id: row.id,
+        productId: row.product_id,
+        tagId: row.tag_id,
+        createdAt: row.created_at,
+        tag: {
+          id: row.tag_real_id,
+          name: row.tag_name,
+          description: row.tag_description,
+          category: row.tag_category,
+          createdAt: row.tag_created_at
+        }
+      }));
+
       res.json(productTags);
     } catch (error: any) {
-      console.error('Get product tags error:', error);
-      res.status(500).json({ error: "Failed to fetch product tags" });
+      console.error('Get public product tags error:', error);
+      res.status(500).json({ error: "Failed to fetch all product tags", details: error.message });
     }
   });
 
-  // Get all product tags for filtering
+  // Get all product tags for filtering (protected route)
   app.get("/api/products/tags", requireAuth, async (req, res) => {
     try {
       const allProductTags = await storage.getAllProductTags();
@@ -3376,46 +3402,6 @@ Your body text starts here with proper spacing.`;
     } catch (error: any) {
       console.error('Get all product tags error:', error);
       res.status(500).json({ error: "Failed to fetch all product tags" });
-    }
-  });
-
-  // Public product tags endpoint for filtering (no auth required)
-  app.get("/api/public/products/tags", async (req, res) => {
-    try {
-      const result = await db
-        .select({
-          id: productTags.id,
-          productId: productTags.productId,
-          tagId: productTags.tagId,
-          createdAt: productTags.createdAt,
-          tagName: tags.name,
-          tagDescription: tags.description,
-          tagCategory: tags.category,
-          tagCreatedAt: tags.createdAt,
-          tagId2: tags.id
-        })
-        .from(productTags)
-        .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .orderBy(asc(tags.name));
-
-      const formattedResult = result.map(row => ({
-        id: row.id,
-        productId: row.productId,
-        tagId: row.tagId,
-        createdAt: row.createdAt,
-        tag: {
-          id: row.tagId2,
-          name: row.tagName,
-          description: row.tagDescription,
-          category: row.tagCategory,
-          createdAt: row.tagCreatedAt
-        }
-      }));
-
-      res.json(formattedResult);
-    } catch (error: any) {
-      console.error('Get public product tags error:', error);
-      res.status(500).json({ error: "Failed to fetch all product tags", details: error.message });
     }
   });
 
