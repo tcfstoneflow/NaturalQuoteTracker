@@ -72,6 +72,9 @@ export default function SalesDashboard() {
       assignedSalesMember: selectedAppointment.assignedSalesMember || ''
     });
     setIsEditingAppointment(true);
+    
+    // Force refetch sales managers when opening edit modal
+    queryClient.invalidateQueries({ queryKey: ["/api/sales-dashboard/sales-managers"] });
   };
 
   const handleSaveAppointment = () => {
@@ -120,11 +123,10 @@ export default function SalesDashboard() {
     queryFn: salesDashboardApi.getPendingShowroomVisits,
   });
 
-  // Get sales managers for assignment
+  // Get sales managers for assignment - always fetch since we might need them
   const { data: salesManagers = [], isLoading: salesManagersLoading } = useQuery({
     queryKey: ["/api/sales-dashboard/sales-managers"],
     queryFn: salesDashboardApi.getSalesManagers,
-    enabled: isEditingAppointment,
   });
 
   return (
