@@ -289,11 +289,7 @@ export default function ProductDetails() {
                   ))}
                 </div>
                 
-                <div className="text-center mt-3">
-                  <p className="text-xs text-gray-600">
-                    Click any image to view full size. See how {product.name} transforms spaces with its natural beauty.
-                  </p>
-                </div>
+
               </div>
             )}
           </div>
@@ -352,15 +348,6 @@ export default function ProductDetails() {
                 </div>
               </div>
             </div>
-
-            {/* Social Sharing - Collapsed */}
-            <CollapsibleShare
-              url={window.location.href}
-              title={product.name}
-              description={`${product.category} from ${product.supplier} - ${product.grade} grade with ${product.finish} finish`}
-              imageUrl={product.imageUrl || undefined}
-              price={`$${product.price}`}
-            />
 
             {/* Action Buttons */}
             <div className="space-y-3">
@@ -457,6 +444,15 @@ export default function ProductDetails() {
                 </Form>
               </DialogContent>
             </Dialog>
+
+            {/* Social Sharing - Collapsed */}
+            <CollapsibleShare
+              url={window.location.href}
+              title={product.name}
+              description={`${product.category} from ${product.supplier} - ${product.grade} grade with ${product.finish} finish`}
+              imageUrl={product.imageUrl || undefined}
+              price={`$${product.price}`}
+            />
             
             <FavoriteButton 
               productId={product.id}
