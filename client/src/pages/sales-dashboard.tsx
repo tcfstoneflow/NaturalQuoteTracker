@@ -31,7 +31,9 @@ export default function SalesDashboard() {
   const { user } = useAuth();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isEditingAppointment, setIsEditingAppointment] = useState(false);
+  const [isEditingQuote, setIsEditingQuote] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
@@ -42,6 +44,13 @@ export default function SalesDashboard() {
     status: '',
     assignedToUserId: '',
     assignedSalesMember: ''
+  });
+
+  const [quoteEditForm, setQuoteEditForm] = useState({
+    projectName: '',
+    status: '',
+    notes: '',
+    validUntil: ''
   });
   
   const queryClient = useQueryClient();
@@ -57,6 +66,20 @@ export default function SalesDashboard() {
       setIsEditingAppointment(false);
       setSelectedAppointment(null);
     },
+  });
+
+  // Mutation for updating quotes
+  const updateQuoteMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('PUT', `/api/quotes/${selectedQuote.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes', selectedClient?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/client-stats', selectedClient?.id] });
+      setIsEditingQuote(false);
+      setSelectedQuote(null);
+    }
   });
 
   // Handle edit appointment
@@ -90,6 +113,22 @@ export default function SalesDashboard() {
       assignedSalesMember
     };
     updateAppointmentMutation.mutate(updateData);
+  };
+
+  // Handle edit quote
+  const handleEditQuote = (quote: any) => {
+    setSelectedQuote(quote);
+    setQuoteEditForm({
+      projectName: quote.projectName || '',
+      status: quote.status || 'pending',
+      notes: quote.notes || '',
+      validUntil: quote.validUntil ? new Date(quote.validUntil).toISOString().split('T')[0] : ''
+    });
+    setIsEditingQuote(true);
+  };
+
+  const handleSaveQuote = () => {
+    updateQuoteMutation.mutate(quoteEditForm);
   };
   
   // Get sales rep's personalized data
@@ -720,7 +759,11 @@ export default function SalesDashboard() {
                   <h4 className="font-medium text-gray-900">Recent Quotes</h4>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {clientQuotes.map((quote: any) => (
-                      <div key={quote.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div 
+                        key={quote.id} 
+                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                        onClick={() => handleEditQuote(quote)}
+                      >
                         <div>
                           <div className="font-medium text-sm">{quote.quoteNumber}</div>
                           <div className="text-xs text-gray-600">{quote.projectName}</div>
