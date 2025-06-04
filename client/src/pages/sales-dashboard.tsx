@@ -553,29 +553,35 @@ export default function SalesDashboard() {
               <label className="text-sm font-medium text-gray-700">Assign Sales Member</label>
               <Select 
                 value={editForm.assignedToUserId} 
-                onValueChange={(value) => setEditForm(prev => ({ ...prev, assignedToUserId: value }))}
+                onValueChange={(value) => {
+                  console.log('Sales member selected:', value);
+                  setEditForm(prev => ({ ...prev, assignedToUserId: value }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={salesManagersLoading ? "Loading..." : "Select sales member"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">No assignment</SelectItem>
-                  {salesManagersLoading ? (
-                    <SelectItem value="loading" disabled>Loading...</SelectItem>
-                  ) : (
-                    salesManagers.map((manager: any) => (
+                  {!salesManagersLoading && salesManagers.length > 0 && salesManagers.map((manager: any) => {
+                    console.log('Rendering manager option:', manager);
+                    return (
                       <SelectItem key={manager.id} value={manager.id.toString()}>
                         {manager.name}
                       </SelectItem>
-                    ))
+                    );
+                  })}
+                  {salesManagersLoading && (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
                   )}
                 </SelectContent>
               </Select>
-              {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-gray-500 mt-1">
-                  Debug: {salesManagers.length} sales managers loaded, Loading: {salesManagersLoading ? 'true' : 'false'}
-                </div>
-              )}
+              <div className="text-xs text-gray-500 mt-1">
+                Debug: {salesManagers.length} managers loaded, Loading: {salesManagersLoading ? 'true' : 'false'}
+                {salesManagers.length > 0 && (
+                  <div>Names: {salesManagers.map((m: any) => m.name).join(', ')}</div>
+                )}
+              </div>
             </div>
 
             <div>
