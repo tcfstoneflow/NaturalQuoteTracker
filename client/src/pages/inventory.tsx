@@ -100,6 +100,7 @@ export default function Inventory() {
     tag: { id: number; name: string; description?: string };
   }>>([]);
   const [newTagName, setNewTagName] = useState("");
+  const [selectedTagId, setSelectedTagId] = useState<string>("");
 
   // Fetch available tags for the tags dropdown
   const { data: availableTags = [] } = useQuery({
@@ -427,6 +428,7 @@ export default function Inventory() {
       if (response.ok) {
         await refetchTags();
         queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
+        setSelectedTagId(""); // Clear the selection
         toast({ title: "Tag added successfully" });
       } else {
         throw new Error("Failed to add tag");
@@ -1153,25 +1155,35 @@ export default function Inventory() {
                       {/* Add Existing Tag */}
                       <div className="space-y-2">
                         <Label className="text-sm">Add Existing Tag</Label>
-                        <Select onValueChange={(value) => addTagToProduct(parseInt(value))}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a tag to add" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableTags
-                              .filter((tag: any) => !productTags.some(pt => pt.tag.id === tag.id))
-                              .map((tag: any) => (
-                                <SelectItem key={tag.id} value={tag.id.toString()}>
-                                  {tag.name}
-                                  {tag.description && (
-                                    <span className="text-xs text-gray-500 ml-2">
-                                      - {tag.description}
-                                    </span>
-                                  )}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex gap-2">
+                          <Select value={selectedTagId} onValueChange={setSelectedTagId}>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Select a tag to add" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableTags
+                                .filter((tag: any) => !productTags.some(pt => pt.tag.id === tag.id))
+                                .map((tag: any) => (
+                                  <SelectItem key={tag.id} value={tag.id.toString()}>
+                                    {tag.name}
+                                    {tag.description && (
+                                      <span className="text-xs text-gray-500 ml-2">
+                                        - {tag.description}
+                                      </span>
+                                    )}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            type="button"
+                            size="sm"
+                            onClick={() => selectedTagId && addTagToProduct(parseInt(selectedTagId))}
+                            disabled={!selectedTagId}
+                          >
+                            Add
+                          </Button>
+                        </div>
                       </div>
                       
                       {/* Create New Tag */}
