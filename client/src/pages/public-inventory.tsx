@@ -431,7 +431,7 @@ export default function PublicInventory() {
                       )}
                       <CardDescription className="space-y-1">
                         <div className="capitalize">
-                          {product.category} • {product.grade} Grade
+                          {product.category} • {product.grade} Grade • {product.thickness}
                         </div>
                       </CardDescription>
                     </div>
@@ -440,11 +440,6 @@ export default function PublicInventory() {
 
                 <CardContent className="p-4 pt-0">
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Ruler className="h-4 w-4 mr-2" />
-                      Thickness: {product.thickness}
-                    </div>
-                    
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-600">Finish:</span>
@@ -497,6 +492,7 @@ export default function PublicInventory() {
                         title={product.name}
                         description={`${product.category} - ${product.grade} grade with ${product.finish} finish`}
                         price={`$${product.price}`}
+                        size="sm"
                         className="flex-1"
                       />
                     </div>

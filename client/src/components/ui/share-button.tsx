@@ -16,6 +16,7 @@ interface ShareButtonProps {
   description?: string;
   price?: string;
   className?: string;
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function ShareButton({ url, title, description, price, className }: ShareButtonProps) {
