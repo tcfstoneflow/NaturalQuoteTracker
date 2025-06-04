@@ -113,7 +113,7 @@ export default function Inventory() {
 
   // Fetch all tags for filtering
   const { data: allTags = [] } = useQuery({
-    queryKey: ["/api/tags"],
+    queryKey: ["/api/public/tags"],
   });
 
   // Fetch product tags when editing a product
@@ -543,7 +543,7 @@ export default function Inventory() {
 
   // Fetch product tags for filtering
   const { data: allProductTags = [] } = useQuery({
-    queryKey: ["/api/products/tags"],
+    queryKey: ["/api/public/products/tags"],
   });
 
   const filteredAndSortedProducts = (products as Product[])?.filter((product: Product) => {
@@ -762,6 +762,8 @@ export default function Inventory() {
               setSupplierFilter("all");
               setStockFilter("all");
               setPriceRangeFilter("all");
+              setTagFilter("all");
+              setTagSearchQuery("");
               setSortBy("name");
               setSortDirection("asc");
             }}

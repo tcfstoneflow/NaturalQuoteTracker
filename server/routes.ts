@@ -3284,6 +3284,17 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Public tags endpoint for filtering (no auth required)
+  app.get("/api/public/tags", async (req, res) => {
+    try {
+      const tags = await storage.getTags();
+      res.json(tags);
+    } catch (error: any) {
+      console.error('Get public tags error:', error);
+      res.status(500).json({ error: "Failed to fetch tags" });
+    }
+  });
+
   app.post("/api/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
     try {
       const { name, description, category } = req.body;
@@ -3364,6 +3375,17 @@ Your body text starts here with proper spacing.`;
       res.json(allProductTags);
     } catch (error: any) {
       console.error('Get all product tags error:', error);
+      res.status(500).json({ error: "Failed to fetch all product tags" });
+    }
+  });
+
+  // Public product tags endpoint for filtering (no auth required)
+  app.get("/api/public/products/tags", async (req, res) => {
+    try {
+      const allProductTags = await storage.getAllProductTags();
+      res.json(allProductTags);
+    } catch (error: any) {
+      console.error('Get public product tags error:', error);
       res.status(500).json({ error: "Failed to fetch all product tags" });
     }
   });
