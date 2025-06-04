@@ -2072,14 +2072,19 @@ Requirements:
 7. Use engaging, professional language that appeals to homeowners and designers
 8. Focus on the stone's natural beauty and durability
 9. Avoid overly technical jargon
-10. Vary headline starters - avoid repetitive phrases like "Elevate Your Space" in every headline
+10. CRITICAL: Do NOT use "Elevate Your Space" - this phrase is overused and repetitive
+11. CRITICAL: Do NOT start headlines with "Elevate" - use diverse, creative opening words
+12. Use varied action words: Discover, Unleash, Embrace, Experience, Transform, Create, Capture, etc.
 
-Format examples:
-**Let Carrara's Bold Veins Dance Across Your Kitchen**
-**Where Dramatic Black Beauty Meets Timeless Design**
-**Discover Luxury in Every Golden Swirl and Subtle Texture**
-**Unleash the Power of Pure White Marble Sophistication**
-**Embrace Bold Patterns That Transform Any Room**
+CREATIVE HEADLINE STARTERS (use these instead of "Elevate"):
+**Capture the Essence of Timeless Beauty**
+**Transform Your Kitchen with Dramatic Veining**
+**Discover Luxury in Every Crystalline Detail** 
+**Experience the Power of Natural Elegance**
+**Unleash Bold Patterns in Your Living Space**
+**Create Sophisticated Spaces with Premium Stone**
+**Embrace the Art of Natural Stone Design**
+**Where Luxury Meets Functional Beauty**
 This stunning natural stone features...
 
 Write the description in a tone that's informative yet appealing to both homeowners and interior designers.`;
@@ -2087,7 +2092,7 @@ Write the description in a tone that's informative yet appealing to both homeown
       const messages: any[] = [
         {
           role: "system",
-          content: "You are an expert in natural stone products with extensive knowledge of geology, interior design, and construction applications. You write compelling product descriptions that help customers understand the beauty and practical benefits of natural stone."
+          content: "You are an expert in natural stone products with extensive knowledge of geology, interior design, and construction applications. You write compelling product descriptions that help customers understand the beauty and practical benefits of natural stone. CRITICAL INSTRUCTION: Never use the phrase 'Elevate Your Space' or start headlines with 'Elevate' - this is overused and banned. Always use creative, diverse headline starters like 'Discover', 'Transform', 'Experience', 'Capture', 'Unleash', 'Create', or 'Embrace'."
         },
         {
           role: "user",
