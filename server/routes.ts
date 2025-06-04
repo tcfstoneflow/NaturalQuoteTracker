@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users/:id/avatar", requireAuth, requireRole(['admin']), avatarUpload.single('avatar'), async (req, res) => {
+  app.post("/api/users/:id/avatar", requireAuth, requireRole(['admin']), uploadLimiter, avatarUpload.single('avatar'), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       
@@ -544,10 +544,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Products
-  app.get("/api/products", async (req, res) => {
+  // Products with caching and rate limiting
+  app.get("/api/products", apiLimiter, async (req, res) => {
     try {
       const { category, search } = req.query;
+      const cacheKey = `products:${category || 'all'}:${search || 'none'}`;
+      
+      // Check cache first
+      const cached = cache.getProduct(cacheKey);
+      if (cached) {
+        return res.json(cached);
+      }
+      
       let products = await storage.getProducts();
       
       // Filter by category if specified
@@ -565,6 +573,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       
+      // Cache the filtered results
+      cache.setProduct(cacheKey, products);
       res.json(products);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -647,6 +657,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const product = await storage.createProduct(productData);
       
+      // Invalidate products cache after creating new product
+      cache.invalidateProducts();
+      
       // Trigger AI rendering if imageUrl was provided
       if (productData.imageUrl) {
         // Run AI processing in background to avoid blocking the response
@@ -712,6 +725,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!success) {
         return res.status(404).json({ error: "Product not found" });
       }
+      
+      // Invalidate products cache after deleting product
+      cache.invalidateProducts();
       
       res.status(204).send();
     } catch (error) {
