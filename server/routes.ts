@@ -3382,11 +3382,40 @@ Your body text starts here with proper spacing.`;
   // Public product tags endpoint for filtering (no auth required)
   app.get("/api/public/products/tags", async (req, res) => {
     try {
-      const allProductTags = await storage.getAllProductTags();
-      res.json(allProductTags);
+      const result = await db
+        .select({
+          id: productTags.id,
+          productId: productTags.productId,
+          tagId: productTags.tagId,
+          createdAt: productTags.createdAt,
+          tagName: tags.name,
+          tagDescription: tags.description,
+          tagCategory: tags.category,
+          tagCreatedAt: tags.createdAt,
+          tagId2: tags.id
+        })
+        .from(productTags)
+        .innerJoin(tags, eq(productTags.tagId, tags.id))
+        .orderBy(asc(tags.name));
+
+      const formattedResult = result.map(row => ({
+        id: row.id,
+        productId: row.productId,
+        tagId: row.tagId,
+        createdAt: row.createdAt,
+        tag: {
+          id: row.tagId2,
+          name: row.tagName,
+          description: row.tagDescription,
+          category: row.tagCategory,
+          createdAt: row.tagCreatedAt
+        }
+      }));
+
+      res.json(formattedResult);
     } catch (error: any) {
       console.error('Get public product tags error:', error);
-      res.status(500).json({ error: "Failed to fetch all product tags" });
+      res.status(500).json({ error: "Failed to fetch all product tags", details: error.message });
     }
   });
 

@@ -1594,36 +1594,34 @@ export class DatabaseStorage implements IStorage {
 
   async getAllProductTags(): Promise<(ProductTag & { tag: Tag })[]> {
     try {
-      // First check if there are any product tags
-      const count = await db.select({ count: sql`count(*)` }).from(productTags);
-      if (!count[0] || parseInt(count[0].count as string) === 0) {
-        return [];
-      }
+      const result = await db.execute(sql`
+        SELECT 
+          pt.id,
+          pt.product_id as "productId",
+          pt.tag_id as "tagId", 
+          pt.created_at as "createdAt",
+          t.id as "tag_id",
+          t.name as "tag_name",
+          t.description as "tag_description",
+          t.category as "tag_category",
+          t.created_at as "tag_createdAt"
+        FROM product_tags pt
+        INNER JOIN tags t ON pt.tag_id = t.id
+        ORDER BY t.name
+      `);
 
-      const allProductTagsWithTags = await db
-        .select({
-          id: productTags.id,
-          productId: productTags.productId,
-          tagId: productTags.tagId,
-          createdAt: productTags.createdAt,
-          tag: {
-            id: tags.id,
-            name: tags.name,
-            description: tags.description,
-            category: tags.category,
-            createdAt: tags.createdAt
-          }
-        })
-        .from(productTags)
-        .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .orderBy(asc(tags.name));
-
-      return allProductTagsWithTags.map(row => ({
+      return result.rows.map((row: any) => ({
         id: row.id,
         productId: row.productId,
         tagId: row.tagId,
         createdAt: row.createdAt,
-        tag: row.tag
+        tag: {
+          id: row.tag_id,
+          name: row.tag_name,
+          description: row.tag_description,
+          category: row.tag_category,
+          createdAt: row.tag_createdAt
+        }
       }));
     } catch (error) {
       console.error('Error fetching all product tags:', error);
