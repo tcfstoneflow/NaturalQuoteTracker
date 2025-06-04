@@ -204,6 +204,17 @@ export const productGalleryImages = pgTable("product_gallery_images", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// User profiles for the public favorites system
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  fullName: text("full_name").notNull(),
+  phone: text("phone"),
+  company: text("company"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Consultation requests from the favorites page
 export const consultations = pgTable("consultations", {
   id: serial("id").primaryKey(),
@@ -488,6 +499,12 @@ export const insertProductGalleryImageSchema = createInsertSchema(productGallery
   createdAt: true,
 });
 
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertConsultationSchema = createInsertSchema(consultations).omit({
   id: true,
   createdAt: true,
@@ -568,6 +585,9 @@ export type InsertProductGalleryImage = z.infer<typeof insertProductGalleryImage
 
 export type ClientFavorite = typeof clientFavorites.$inferSelect;
 export type InsertClientFavorite = z.infer<typeof insertClientFavoriteSchema>;
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 
 export type Consultation = typeof consultations.$inferSelect;
 export type InsertConsultation = z.infer<typeof insertConsultationSchema>;
