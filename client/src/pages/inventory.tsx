@@ -143,6 +143,11 @@ export default function Inventory() {
     }
   }, [editingProduct?.id, refetchTags]);
 
+  // Debug formData.description changes
+  useEffect(() => {
+    console.log('FormData description changed:', formData.description);
+  }, [formData.description]);
+
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
   });
@@ -177,7 +182,8 @@ export default function Inventory() {
       }
 
       const data = await response.json();
-      setFormData({ ...formData, description: data.description });
+      console.log('Generated description:', data.description);
+      setFormData(prev => ({ ...prev, description: data.description }));
       toast({
         title: "Description Generated",
         description: "AI-powered product description has been created.",
