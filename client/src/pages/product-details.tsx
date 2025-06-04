@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Lightbox } from "@/components/ui/lightbox";
-import { SocialShare } from "@/components/ui/social-share";
+import { SocialShare, CollapsibleShare } from "@/components/ui/social-share";
 import { FavoriteButton } from "@/components/ui/favorite-button";
 
 const quoteRequestSchema = z.object({
@@ -329,8 +329,8 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* Social Sharing */}
-            <SocialShare
+            {/* Social Sharing - Collapsed */}
+            <CollapsibleShare
               url={window.location.href}
               title={product.name}
               description={`${product.category} from ${product.supplier} - ${product.grade} grade with ${product.finish} finish`}

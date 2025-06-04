@@ -183,3 +183,41 @@ export function FloatingShareButton({ url, title, description, imageUrl }: Socia
     </div>
   );
 }
+
+// Collapsible share component for inline use
+export function CollapsibleShare({ url, title, description, imageUrl, price }: SocialShareProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!isExpanded) {
+    return (
+      <Button
+        onClick={() => setIsExpanded(true)}
+        variant="outline"
+        className="w-full"
+      >
+        <Share2 className="h-4 w-4 mr-2" />
+        Share
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Button
+        onClick={() => setIsExpanded(false)}
+        variant="outline"
+        className="w-full"
+      >
+        <Share2 className="h-4 w-4 mr-2" />
+        Hide Share Options
+      </Button>
+      <SocialShare 
+        url={url} 
+        title={title} 
+        description={description} 
+        imageUrl={imageUrl}
+        price={price}
+      />
+    </div>
+  );
+}
