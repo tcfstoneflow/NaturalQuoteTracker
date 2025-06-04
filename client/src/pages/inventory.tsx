@@ -108,13 +108,21 @@ export default function Inventory() {
   });
 
   // Fetch product tags when editing a product
-  const { data: currentProductTags = [] } = useQuery({
+  const { data: currentProductTags = [], refetch: refetchTags } = useQuery({
     queryKey: ["/api/products", editingProduct?.id, "tags"],
-    queryFn: () => fetch(`/api/products/${editingProduct?.id}/tags`, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
-    }).then(res => res.json()),
+    queryFn: async () => {
+      const response = await fetch(`/api/products/${editingProduct?.id}/tags`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch tags');
+      }
+      return response.json();
+    },
     enabled: !!editingProduct?.id,
+    refetchOnWindowFocus: false,
+    staleTime: 0, // Always refetch when needed
   });
 
   // Sync product tags when currentProductTags changes
@@ -417,8 +425,8 @@ export default function Inventory() {
       });
       
       if (response.ok) {
-        await queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
-        await queryClient.refetchQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        await refetchTags();
+        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
         toast({ title: "Tag added successfully" });
       } else {
         throw new Error("Failed to add tag");
@@ -440,8 +448,8 @@ export default function Inventory() {
       });
       
       if (response.ok) {
-        await queryClient.invalidateQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
-        await queryClient.refetchQueries({ queryKey: ["/api/products", editingProduct.id, "tags"] });
+        await refetchTags();
+        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
         toast({ title: "Tag removed successfully" });
       } else {
         throw new Error("Failed to remove tag");
