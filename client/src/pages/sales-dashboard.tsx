@@ -115,7 +115,7 @@ export default function SalesDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Follow-ups Due</CardTitle>
+                <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
                 <Clock className="h-4 w-4 text-error-red" />
               </CardHeader>
               <CardContent>
@@ -123,7 +123,7 @@ export default function SalesDashboard() {
                   {salesStats?.followUpsDue || 0}
                 </div>
                 <p className="text-xs text-gray-600">
-                  Action needed today
+                  Total scheduled
                 </p>
               </CardContent>
             </Card>
@@ -171,24 +171,27 @@ export default function SalesDashboard() {
               </CardContent>
             </Card>
 
-            {/* Upcoming Follow-ups */}
+            {/* Upcoming Appointments */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-error-red" />
-                  Today's Follow-ups
+                  Upcoming Appointments
                 </CardTitle>
-                <CardDescription>Clients requiring attention today</CardDescription>
+                <CardDescription>All scheduled client appointments</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {pendingVisits?.slice(0, 5).map((visit: any) => (
+                  {pendingVisits?.slice(0, 10).map((visit: any) => (
                     <div key={visit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{visit.clientName}</div>
-                        <div className="text-xs text-gray-600">{visit.requestType}</div>
+                        <div className="font-medium text-sm">{visit.clientName || visit.name}</div>
+                        <div className="text-xs text-gray-600">{visit.requestType || 'Showroom Visit'}</div>
                         <div className="text-xs text-gray-500">
-                          Requested: {format(new Date(visit.createdAt), "MMM d")}
+                          {visit.requestedDate ? 
+                            `Scheduled: ${format(new Date(visit.requestedDate), "MMM d, yyyy")}` :
+                            `Requested: ${format(new Date(visit.createdAt), "MMM d, yyyy")}`
+                          }
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -202,7 +205,7 @@ export default function SalesDashboard() {
                     </div>
                   )) || (
                     <div className="text-center py-4 text-gray-500">
-                      No follow-ups scheduled for today
+                      No upcoming appointments scheduled
                     </div>
                   )}
                 </div>
