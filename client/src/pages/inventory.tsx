@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2 } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2, Copy } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -326,6 +326,56 @@ export default function Inventory() {
     },
     onError: () => {
       toast({ title: "Failed to delete bundle", variant: "destructive" });
+    },
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: async (product: Product) => {
+      // Create a new bundle ID by appending timestamp
+      const timestamp = Date.now().toString().slice(-4);
+      const newBundleId = `${product.bundleId}-COPY-${timestamp}`;
+      
+      const duplicatedProduct = {
+        bundleId: newBundleId,
+        name: `${product.name} - Copy`,
+        description: product.description,
+        supplier: product.supplier,
+        category: product.category,
+        grade: product.grade,
+        thickness: product.thickness,
+        finish: product.finish,
+        price: parseFloat(product.price) || 0,
+        unit: product.unit,
+        stockQuantity: 0, // Start with 0 stock for duplicated items
+        slabLength: product.slabLength ? parseFloat(product.slabLength.toString()) : null,
+        slabWidth: product.slabWidth ? parseFloat(product.slabWidth.toString()) : null,
+        location: product.location,
+        imageUrl: product.imageUrl
+      };
+
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(duplicatedProduct),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to duplicate bundle");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({ title: "Bundle duplicated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to duplicate bundle", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
@@ -1488,14 +1538,25 @@ export default function Inventory() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(product)}
+                            title="Edit bundle"
                           >
                             <Pencil size={14} />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => duplicateMutation.mutate(product)}
+                            disabled={duplicateMutation.isPending}
+                            title="Duplicate bundle"
+                          >
+                            <Copy size={14} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => deleteMutation.mutate(product.id)}
                             disabled={deleteMutation.isPending}
+                            title="Delete bundle"
                           >
                             <Trash2 size={14} />
                           </Button>
