@@ -1594,6 +1594,12 @@ export class DatabaseStorage implements IStorage {
 
   async getAllProductTags(): Promise<(ProductTag & { tag: Tag })[]> {
     try {
+      // First check if there are any product tags
+      const count = await db.select({ count: sql`count(*)` }).from(productTags);
+      if (!count[0] || parseInt(count[0].count as string) === 0) {
+        return [];
+      }
+
       const allProductTagsWithTags = await db
         .select({
           id: productTags.id,

@@ -3390,6 +3390,61 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Auto-tag products based on their characteristics (development helper)
+  app.post("/api/auto-tag-products", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      const tags = await storage.getTags();
+      
+      let associationsCreated = 0;
+      
+      for (const product of products) {
+        const productName = product.name.toLowerCase();
+        const productCategory = product.category?.toLowerCase() || '';
+        const productFinish = product.finish?.toLowerCase() || '';
+        
+        // Create associations based on product characteristics
+        for (const tag of tags) {
+          const tagName = tag.name.toLowerCase();
+          let shouldAssociate = false;
+          
+          // Logic to associate tags with products
+          if (tagName.includes('white') && (productName.includes('white') || productName.includes('alaska') || productName.includes('cristalloo'))) {
+            shouldAssociate = true;
+          } else if (tagName.includes('black') && productName.includes('black')) {
+            shouldAssociate = true;
+          } else if (tagName.includes('granite') && productCategory === 'granite') {
+            shouldAssociate = true;
+          } else if (tagName.includes('marble') && productCategory === 'marble') {
+            shouldAssociate = true;
+          } else if (tagName.includes('quartzite') && productCategory === 'quartzite') {
+            shouldAssociate = true;
+          } else if (tagName.includes('veined') && (productName.includes('vein') || productName.includes('carrera'))) {
+            shouldAssociate = true;
+          } else if (tagName.includes('speckled') && productName.includes('speckl')) {
+            shouldAssociate = true;
+          } else if (tagName.includes('earthy') && (productName.includes('earth') || productName.includes('brown') || productName.includes('natural'))) {
+            shouldAssociate = true;
+          }
+          
+          if (shouldAssociate) {
+            try {
+              await storage.addProductTag({ productId: product.id, tagId: tag.id });
+              associationsCreated++;
+            } catch (error) {
+              // Association might already exist, continue
+            }
+          }
+        }
+      }
+      
+      res.json({ message: `Created ${associationsCreated} product-tag associations` });
+    } catch (error: any) {
+      console.error('Auto-tag error:', error);
+      res.status(500).json({ error: "Failed to auto-tag products" });
+    }
+  });
+
   app.post("/api/products/:id/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
