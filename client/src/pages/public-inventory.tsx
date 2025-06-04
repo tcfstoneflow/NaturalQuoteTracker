@@ -108,7 +108,7 @@ export default function PublicInventory() {
 
   // Fetch product tags for filtering
   const { data: allProductTags = [] } = useQuery({
-    queryKey: ["/api/public/products/tags"],
+    queryKey: ["/api/public/product-tags"],
   });
 
   // Combine products with their slabs
