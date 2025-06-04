@@ -117,6 +117,31 @@ export const products = pgTable("products", {
   nameIdx: index("products_name_idx").on(table.name),
 }));
 
+// Tags system for products
+export const tags = pgTable("tags", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  category: text("category"), // "color", "pattern", "finish", "style", etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  nameIdx: index("tags_name_idx").on(table.name),
+  categoryIdx: index("tags_category_idx").on(table.category),
+}));
+
+// Many-to-many relationship between products and tags
+export const productTags = pgTable("product_tags", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").references(() => products.id, { onDelete: "cascade" }).notNull(),
+  tagId: integer("tag_id").references(() => tags.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  productTagIdx: index("product_tags_product_idx").on(table.productId),
+  tagProductIdx: index("product_tags_tag_idx").on(table.tagId),
+  // Unique constraint to prevent duplicate tag assignments
+  uniqueProductTag: index("product_tags_unique_idx").on(table.productId, table.tagId),
+}));
+
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),
   quoteNumber: text("quote_number").notNull().unique(),
@@ -538,6 +563,16 @@ export const insertClientFavoriteSchema = createInsertSchema(clientFavorites).om
   createdAt: true,
 });
 
+export const insertTagSchema = createInsertSchema(tags).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertProductTagSchema = createInsertSchema(productTags).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -594,6 +629,12 @@ export type InsertConsultation = z.infer<typeof insertConsultationSchema>;
 
 export type MfaCode = typeof mfaCodes.$inferSelect;
 export type InsertMfaCode = typeof mfaCodes.$inferInsert;
+
+export type Tag = typeof tags.$inferSelect;
+export type InsertTag = z.infer<typeof insertTagSchema>;
+
+export type ProductTag = typeof productTags.$inferSelect;
+export type InsertProductTag = z.infer<typeof insertProductTagSchema>;
 
 // Extended types for API responses
 export type QuoteWithDetails = Quote & {
