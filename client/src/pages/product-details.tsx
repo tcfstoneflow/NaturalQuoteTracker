@@ -64,15 +64,12 @@ export default function ProductDetails() {
     };
   }, [product]);
 
-  // Fetch similar products (same category)
-  const { data: allProducts = [] } = useQuery({
-    queryKey: ["/api/products"],
-    enabled: !!product?.category,
+  // Fetch similar products using tag-based matching
+  const { data: similarProducts = [] } = useQuery({
+    queryKey: ["/api/products", id, "similar"],
+    queryFn: () => fetch(`/api/products/${id}/similar?limit=6`).then(res => res.json()),
+    enabled: !!id,
   });
-
-  const similarProducts = allProducts
-    .filter((p: any) => p.category === product?.category && p.id !== product?.id)
-    .slice(0, 3);
 
   // Python-based render mutation
   const pythonRenderMutation = useMutation({
