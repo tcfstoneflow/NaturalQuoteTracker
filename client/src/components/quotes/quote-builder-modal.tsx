@@ -47,6 +47,16 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const [ccProcessingFee, setCcProcessingFee] = useState(false);
   const [salesRepId, setSalesRepId] = useState("");
   
+  // New client creation state
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
+  const [newClientData, setNewClientData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    address: ""
+  });
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -168,6 +178,33 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       toast({
         title: "Error",
         description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createClientMutation = useMutation({
+    mutationFn: clientsApi.create,
+    onSuccess: (newClient: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+      setClientId(newClient.id.toString());
+      setIsNewClientModalOpen(false);
+      setNewClientData({
+        name: "",
+        email: "",
+        phone: "",
+        company: "",
+        address: ""
+      });
+      toast({
+        title: "Client Created",
+        description: "New client has been created and selected",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create client",
         variant: "destructive",
       });
     },
@@ -311,7 +348,8 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const totals = calculateTotals();
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-primary">
@@ -324,11 +362,20 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="client">Select Client *</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={clientId} onValueChange={(value) => {
+                if (value === "create_new") {
+                  setIsNewClientModalOpen(true);
+                } else {
+                  setClientId(value);
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a client..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="create_new" className="text-blue-600 font-medium border-b">
+                    + Create New Client
+                  </SelectItem>
                   {clients?.map((client: any) => (
                     <SelectItem key={client.id} value={client.id.toString()}>
                       {client.company ? `${client.company} - ${client.name}` : client.name}
@@ -530,5 +577,80 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Create New Client Modal */}
+    <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create New Client</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="newClientName">Name *</Label>
+            <Input
+              id="newClientName"
+              value={newClientData.name}
+              onChange={(e) => setNewClientData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Enter client name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="newClientEmail">Email *</Label>
+            <Input
+              id="newClientEmail"
+              type="email"
+              value={newClientData.email}
+              onChange={(e) => setNewClientData(prev => ({ ...prev, email: e.target.value }))}
+              placeholder="Enter email address"
+            />
+          </div>
+          <div>
+            <Label htmlFor="newClientPhone">Phone</Label>
+            <Input
+              id="newClientPhone"
+              value={newClientData.phone}
+              onChange={(e) => setNewClientData(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="Enter phone number"
+            />
+          </div>
+          <div>
+            <Label htmlFor="newClientCompany">Company</Label>
+            <Input
+              id="newClientCompany"
+              value={newClientData.company}
+              onChange={(e) => setNewClientData(prev => ({ ...prev, company: e.target.value }))}
+              placeholder="Enter company name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="newClientAddress">Address</Label>
+            <Textarea
+              id="newClientAddress"
+              value={newClientData.address}
+              onChange={(e) => setNewClientData(prev => ({ ...prev, address: e.target.value }))}
+              placeholder="Enter address"
+              rows={3}
+            />
+          </div>
+          <div className="flex space-x-4 pt-4">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setIsNewClientModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1 bg-accent-orange hover:bg-accent-orange text-white"
+              onClick={() => createClientMutation.mutate(newClientData)}
+              disabled={createClientMutation.isPending || !newClientData.name || !newClientData.email}
+            >
+              {createClientMutation.isPending ? "Creating..." : "Create Client"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
