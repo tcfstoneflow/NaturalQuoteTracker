@@ -365,68 +365,161 @@ export default function SalesDashboard() {
       
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Performance Overview */}
+          {/* Enhanced Performance Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">This Month's Sales</CardTitle>
-                <DollarSign className="h-4 w-4 text-success-green" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-success-green">
-                  ${salesStats?.monthlyRevenue || "0"}
+            {/* Total Revenue */}
+            <Card className="relative overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                    <div className="flex items-baseline space-x-2">
+                      <p className="text-3xl font-bold text-gray-900">
+                        ${(salesStats?.monthlyRevenue || 0).toLocaleString()}
+                      </p>
+                      <DollarSign className="h-5 w-5 text-green-500" />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">Approved quotes only</p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-600">
-                  {salesStats?.monthlyGrowth >= 0 ? '+' : ''}{salesStats?.monthlyGrowth || 0}% from last month
-                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Quotes</CardTitle>
-                <Target className="h-4 w-4 text-accent-blue" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-accent-blue">
-                  {salesStats?.activeQuotes || 0}
+            {/* Conversion Rate */}
+            <Card className="relative overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
+                    <div className="flex items-baseline space-x-2">
+                      <p className="text-3xl font-bold text-blue-600">
+                        {quotesArray.length > 0 
+                          ? ((quotesArray.filter(q => q.status === 'approved' || q.status === 'accepted').length / quotesArray.length) * 100).toFixed(1)
+                          : 0}%
+                      </p>
+                      <TrendingUp className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">Quote to approval rate</p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-600">
-                  {salesStats?.pendingQuotes || 0} pending approval
-                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">My Clients</CardTitle>
-                <Users className="h-4 w-4 text-accent-orange" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-accent-orange">
-                  {clientsArray.length}
+            {/* Average Quote Value */}
+            <Card className="relative overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Average Quote Value</p>
+                    <div className="flex items-baseline space-x-2">
+                      <p className="text-3xl font-bold text-gray-900">
+                        ${quotesArray.length > 0 
+                          ? (quotesArray.reduce((sum, quote) => sum + parseFloat(quote.totalAmount || 0), 0) / quotesArray.length).toLocaleString(undefined, {maximumFractionDigits: 0})
+                          : 0}
+                      </p>
+                      <FileText className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">Across all quotes</p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-600">
-                  {salesStats?.newClientsThisMonth || 0} new this month
-                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
-                <Clock className="h-4 w-4 text-error-red" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-error-red">
-                  {salesStats?.upcomingAppointments || 0}
+            {/* This Month */}
+            <Card className="relative overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">This Month</p>
+                    <div className="flex items-baseline space-x-2">
+                      <p className="text-3xl font-bold text-purple-600">
+                        {quotesArray.filter(q => {
+                          const quoteDate = new Date(q.createdAt);
+                          const now = new Date();
+                          return quoteDate.getMonth() === now.getMonth() && quoteDate.getFullYear() === now.getFullYear();
+                        }).length}
+                      </p>
+                      <Calendar className="h-5 w-5 text-purple-500" />
+                    </div>
+                    <div className="flex items-center space-x-1 mt-1">
+                      <p className="text-sm text-gray-500">quotes</p>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {quotesArray.filter(q => q.status === 'pending').length} pending
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-600">
-                  Total scheduled
-                </p>
               </CardContent>
             </Card>
           </div>
+
+          {/* Quote Status Distribution */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Quote Status Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {/* Pending */}
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-yellow-600 mb-2">
+                    {quotesArray.filter(q => q.status === 'pending').length}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 mb-1">Pending</div>
+                  <div className="text-xs text-gray-500">
+                    {quotesArray.length > 0 
+                      ? ((quotesArray.filter(q => q.status === 'pending').length / quotesArray.length) * 100).toFixed(1)
+                      : 0}%
+                  </div>
+                </div>
+
+                {/* Approved */}
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-green-600 mb-2">
+                    {quotesArray.filter(q => q.status === 'approved' || q.status === 'accepted').length}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 mb-1">Approved</div>
+                  <div className="text-xs text-gray-500">
+                    {quotesArray.length > 0 
+                      ? ((quotesArray.filter(q => q.status === 'approved' || q.status === 'accepted').length / quotesArray.length) * 100).toFixed(1)
+                      : 0}%
+                  </div>
+                </div>
+
+                {/* Rejected */}
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-red-600 mb-2">
+                    {quotesArray.filter(q => q.status === 'rejected').length}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 mb-1">Rejected</div>
+                  <div className="text-xs text-gray-500">
+                    {quotesArray.length > 0 
+                      ? ((quotesArray.filter(q => q.status === 'rejected').length / quotesArray.length) * 100).toFixed(1)
+                      : 0}%
+                  </div>
+                </div>
+
+                {/* Expired */}
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-gray-600 mb-2">
+                    {quotesArray.filter(q => {
+                      if (!q.validUntil) return false;
+                      return new Date(q.validUntil) < new Date() && q.status === 'pending';
+                    }).length}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 mb-1">Expired</div>
+                  <div className="text-xs text-gray-500">
+                    {quotesArray.length > 0 
+                      ? ((quotesArray.filter(q => {
+                          if (!q.validUntil) return false;
+                          return new Date(q.validUntil) < new Date() && q.status === 'pending';
+                        }).length / quotesArray.length) * 100).toFixed(1)
+                      : 0}%
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Quotes */}
