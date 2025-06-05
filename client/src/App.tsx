@@ -76,7 +76,15 @@ function Router() {
                   <Route path="/inventory" component={Inventory} />
                   <Route path="/counter-fixtures" component={CounterFixtures} />
                   <Route path="/quotes" component={Quotes} />
-                  <Route path="/reports" component={Reports} />
+                  <Route path="/reports">
+                    {() => {
+                      // Protect reports page from sales reps
+                      if (user?.role === 'sales_rep') {
+                        return <NotFound />;
+                      }
+                      return <Reports />;
+                    }}
+                  </Route>
                   <Route path="/sql-query" component={SQLQuery} />
                   <Route path="/user-management" component={UserManagement} />
                   <Route path="/showroom-visits" component={ShowroomVisits} />

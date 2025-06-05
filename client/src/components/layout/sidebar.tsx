@@ -54,9 +54,9 @@ export default function Sidebar() {
         ['/', '/inventory', '/reports', '/sql-query'].includes(item.href)
       );
     } else if (isSalesRep) {
-      // Sales reps can see sales dashboard, clients, quotes, showroom visits, and reports (no main dashboard)
+      // Sales reps can see sales dashboard, clients, quotes, and showroom visits (no main dashboard or reports)
       return navigation.filter(item => 
-        ['/sales-dashboard', '/clients', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
+        ['/sales-dashboard', '/clients', '/quotes', '/showroom-visits'].includes(item.href)
       );
     }
     return navigation;
