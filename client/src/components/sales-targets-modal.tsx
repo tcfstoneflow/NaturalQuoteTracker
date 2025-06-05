@@ -235,8 +235,8 @@ export default function SalesTargetsModal({ children }: SalesTargetsModalProps) 
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm flex items-center justify-between">
                         <span>Quarterly Target Progress</span>
-                        <Badge variant={targetsProgress.quarterly.progress.revenue >= 100 ? "default" : "secondary"}>
-                          {getProgressStatus(targetsProgress.quarterly.progress.revenue)}
+                        <Badge variant={(targetsProgress as any).quarterly.progress.revenue >= 100 ? "default" : "secondary"}>
+                          {getProgressStatus((targetsProgress as any).quarterly.progress.revenue)}
                         </Badge>
                       </CardTitle>
                     </CardHeader>
@@ -244,49 +244,49 @@ export default function SalesTargetsModal({ children }: SalesTargetsModalProps) 
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span>Revenue</span>
-                          <span>{formatCurrency(targetsProgress.quarterly.actual.revenue)} / {formatCurrency(parseFloat(targetsProgress.quarterly.target.revenueTarget))}</span>
+                          <span>{formatCurrency((targetsProgress as any).quarterly.actual.revenue)} / {formatCurrency(parseFloat((targetsProgress as any).quarterly.target.revenueTarget))}</span>
                         </div>
                         <Progress 
-                          value={Math.min(targetsProgress.quarterly.progress.revenue, 100)} 
+                          value={Math.min((targetsProgress as any).quarterly.progress.revenue, 100)} 
                           className="h-2"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {targetsProgress.quarterly.progress.revenue.toFixed(1)}% complete
+                          {(targetsProgress as any).quarterly.progress.revenue.toFixed(1)}% complete
                         </div>
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span>Quotes</span>
-                          <span>{targetsProgress.quarterly.actual.quotes} / {targetsProgress.quarterly.target.quotesTarget}</span>
+                          <span>{(targetsProgress as any).quarterly.actual.quotes} / {(targetsProgress as any).quarterly.target.quotesTarget}</span>
                         </div>
                         <Progress 
-                          value={Math.min(targetsProgress.quarterly.progress.quotes, 100)} 
+                          value={Math.min((targetsProgress as any).quarterly.progress.quotes, 100)} 
                           className="h-2"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {targetsProgress.quarterly.progress.quotes.toFixed(1)}% complete
+                          {(targetsProgress as any).quarterly.progress.quotes.toFixed(1)}% complete
                         </div>
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span>Conversion Rate</span>
-                          <span>{targetsProgress.quarterly.actual.conversion.toFixed(1)}% / {parseFloat(targetsProgress.quarterly.target.conversionTarget)}%</span>
+                          <span>{(targetsProgress as any).quarterly.actual.conversion.toFixed(1)}% / {parseFloat((targetsProgress as any).quarterly.target.conversionTarget)}%</span>
                         </div>
                         <Progress 
-                          value={Math.min(targetsProgress.quarterly.progress.conversion, 100)} 
+                          value={Math.min((targetsProgress as any).quarterly.progress.conversion, 100)} 
                           className="h-2"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {targetsProgress.quarterly.progress.conversion.toFixed(1)}% of target
+                          {(targetsProgress as any).quarterly.progress.conversion.toFixed(1)}% of target
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 )}
 
-                {!targetsProgress.monthly?.target && !targetsProgress.quarterly?.target && (
+                {!(targetsProgress as any).monthly?.target && !(targetsProgress as any).quarterly?.target && (
                   <Card>
                     <CardContent className="pt-6 text-center text-gray-500">
                       <Target className="h-12 w-12 mx-auto mb-2 opacity-50" />
