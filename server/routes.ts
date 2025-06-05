@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/user", requireAuth, getCurrentUser);
 
   // User management routes (admin only)
-  app.get("/api/users", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.get("/api/users", requireAuth, requireRole(['admin', 'sales_manager', 'sales_rep']), async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
