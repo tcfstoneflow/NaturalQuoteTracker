@@ -30,6 +30,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import TopBar from "@/components/layout/topbar";
+import SalesTargetsModal from "@/components/sales-targets-modal";
 import { useState } from "react";
 
 export default function SalesDashboard() {
@@ -714,11 +715,17 @@ export default function SalesDashboard() {
                 </Button>
                 <Button 
                   onClick={() => setIsReportsModalOpen(true)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white h-auto py-4 flex-col sm:col-span-2 xl:col-span-1"
+                  className="bg-blue-500 hover:bg-blue-600 text-white h-auto py-4 flex-col"
                 >
                   <TrendingUp className="h-6 w-6 mb-2" />
                   <span>View Reports</span>
                 </Button>
+                <SalesTargetsModal>
+                  <Button className="bg-purple-500 hover:bg-purple-600 text-white h-auto py-4 flex-col sm:col-span-2 xl:col-span-1">
+                    <Target className="h-6 w-6 mb-2" />
+                    <span>Performance Goals</span>
+                  </Button>
+                </SalesTargetsModal>
               </div>
             </CardContent>
           </Card>

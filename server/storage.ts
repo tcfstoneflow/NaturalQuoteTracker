@@ -1731,6 +1731,67 @@ export class DatabaseStorage implements IStorage {
 
     return similarProducts.map(row => row.product);
   }
+
+  // Sales Targets implementation
+  async getSalesTargets(): Promise<SalesTarget[]> {
+    return await db.select().from(salesTargets).orderBy(desc(salesTargets.createdAt));
+  }
+
+  async getSalesTargetsByUser(userId: number): Promise<SalesTarget[]> {
+    return await db
+      .select()
+      .from(salesTargets)
+      .where(eq(salesTargets.userId, userId))
+      .orderBy(desc(salesTargets.year), desc(salesTargets.period));
+  }
+
+  async getSalesTarget(userId: number, targetType: string, year: number, period: number): Promise<SalesTarget | undefined> {
+    const [target] = await db
+      .select()
+      .from(salesTargets)
+      .where(
+        and(
+          eq(salesTargets.userId, userId),
+          eq(salesTargets.targetType, targetType),
+          eq(salesTargets.year, year),
+          eq(salesTargets.period, period)
+        )
+      );
+    return target || undefined;
+  }
+
+  async getSalesTargetById(id: number): Promise<SalesTarget | undefined> {
+    const [target] = await db.select().from(salesTargets).where(eq(salesTargets.id, id));
+    return target || undefined;
+  }
+
+  async createSalesTarget(target: InsertSalesTarget): Promise<SalesTarget> {
+    const [newTarget] = await db
+      .insert(salesTargets)
+      .values({
+        ...target,
+        updatedAt: new Date()
+      })
+      .returning();
+    return newTarget;
+  }
+
+  async updateSalesTarget(id: number, updates: Partial<InsertSalesTarget>): Promise<SalesTarget> {
+    const [updatedTarget] = await db
+      .update(salesTargets)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(salesTargets.id, id))
+      .returning();
+    return updatedTarget;
+  }
+
+  async deleteSalesTarget(id: number): Promise<boolean> {
+    const result = await db.delete(salesTargets).where(eq(salesTargets.id, id));
+    return (result.rowCount || 0) > 0;
+  }
 }
 
 export const storage = new DatabaseStorage();
