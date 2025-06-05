@@ -76,7 +76,7 @@ export default function SalesDashboard() {
     email: '',
     phone: '',
     company: '',
-    salesManagerId: '',
+    salesManagerId: 'none',
     address: '',
     city: '',
     state: '',
@@ -122,7 +122,7 @@ export default function SalesDashboard() {
         email: '',
         phone: '',
         company: '',
-        salesManagerId: '',
+        salesManagerId: 'none',
         address: '',
         city: '',
         state: '',
@@ -1257,13 +1257,13 @@ export default function SalesDashboard() {
               <label className="text-sm font-medium">Sales Manager</label>
               <Select 
                 value={newClientForm.salesManagerId} 
-                onValueChange={(value) => setNewClientForm(prev => ({ ...prev, salesManagerId: value }))}
+                onValueChange={(value) => setNewClientForm(prev => ({ ...prev, salesManagerId: value === "none" ? "" : value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="No Sales Manager" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Sales Manager</SelectItem>
+                  <SelectItem value="none">No Sales Manager</SelectItem>
                   {salesManagers?.data?.map((manager: any) => (
                     <SelectItem key={manager.id} value={manager.id.toString()}>
                       {manager.firstName} {manager.lastName}
