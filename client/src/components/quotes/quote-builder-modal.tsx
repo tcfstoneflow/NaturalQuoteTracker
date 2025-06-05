@@ -216,7 +216,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const addLineItem = () => {
     setLineItems([...lineItems, {
       productId: 0,
-      quantity: "",
+      quantity: "1",
       unitPrice: "",
       totalPrice: "0",
     }]);
