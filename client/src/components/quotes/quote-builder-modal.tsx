@@ -129,6 +129,9 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/recent-quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-dashboard/my-quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-dashboard/recent-activities'] });
       toast({
         title: "Quote Created",
         description: "Quote has been saved as draft",
