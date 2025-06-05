@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { clientsApi, productsApi, quotesApi } from "@/lib/api";
 import { Plus, Trash2, FileText, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface QuoteBuilderModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Fetch clients and products
   const { data: clients } = useQuery({
@@ -97,13 +99,20 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         setNotes("");
         setLineItems([]);
         setCcProcessingFee(false);
-        setSalesRepId("");
+        
+        // Pre-populate sales rep field if current user is a sales rep
+        if (user?.role === 'sales_rep') {
+          setSalesRepId(user.id.toString());
+        } else {
+          setSalesRepId("");
+        }
+        
         const defaultDate = new Date();
         defaultDate.setDate(defaultDate.getDate() + 30);
         setValidUntil(defaultDate.toISOString().split('T')[0]);
       }
     }
-  }, [isOpen, editQuote]);
+  }, [isOpen, editQuote, user]);
 
   const createQuoteMutation = useMutation({
     mutationFn: quotesApi.create,
