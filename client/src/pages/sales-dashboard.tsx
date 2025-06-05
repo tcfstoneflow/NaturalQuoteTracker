@@ -539,40 +539,56 @@ export default function SalesDashboard() {
                 <CardDescription>Your current progress towards sales targets</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Monthly Progress */}
                   {(targetsProgress as any).monthly?.target && (
-                    <div className="space-y-3">
+                    <div className="space-y-4 p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-100">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm">Monthly Target</h4>
+                        <div>
+                          <h4 className="font-semibold text-sm text-gray-900">Monthly Target</h4>
+                          <p className="text-xs text-gray-500">
+                            {(() => {
+                              const now = new Date();
+                              const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                              const daysLeft = Math.ceil((endOfMonth.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                              return daysLeft > 0 ? `${daysLeft} days remaining` : 'Target period ended';
+                            })()}
+                          </p>
+                        </div>
                         <Badge variant={(targetsProgress as any).monthly.progress.revenue >= 100 ? "default" : "secondary"}>
                           {(targetsProgress as any).monthly.progress.revenue >= 100 ? "Achieved" : 
                            (targetsProgress as any).monthly.progress.revenue >= 80 ? "On Track" : "Needs Focus"}
                         </Badge>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span>Revenue</span>
-                            <span>{Math.min((targetsProgress as any).monthly.progress.revenue, 100).toFixed(0)}%</span>
+                          <div className="flex justify-between text-xs mb-2">
+                            <span className="font-medium">Revenue Progress</span>
+                            <span className="font-mono">{Math.min((targetsProgress as any).monthly.progress.revenue, 100).toFixed(0)}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-200 rounded-full h-3">
                             <div 
-                              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${Math.min((targetsProgress as any).monthly.progress.revenue, 100)}%` }}
                             />
                           </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            ${(targetsProgress as any).monthly.actual.revenue.toLocaleString()} / ${parseFloat((targetsProgress as any).monthly.target.revenueTarget).toLocaleString()}
+                          </div>
                         </div>
                         <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span>Quotes</span>
-                            <span>{Math.min((targetsProgress as any).monthly.progress.quotes, 100).toFixed(0)}%</span>
+                          <div className="flex justify-between text-xs mb-2">
+                            <span className="font-medium">Quotes Progress</span>
+                            <span className="font-mono">{Math.min((targetsProgress as any).monthly.progress.quotes, 100).toFixed(0)}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-200 rounded-full h-3">
                             <div 
-                              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${Math.min((targetsProgress as any).monthly.progress.quotes, 100)}%` }}
                             />
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {(targetsProgress as any).monthly.actual.quotes} / {(targetsProgress as any).monthly.target.quotesTarget} quotes
                           </div>
                         </div>
                       </div>
@@ -581,37 +597,55 @@ export default function SalesDashboard() {
 
                   {/* Quarterly Progress */}
                   {(targetsProgress as any).quarterly?.target && (
-                    <div className="space-y-3">
+                    <div className="space-y-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm">Quarterly Target</h4>
+                        <div>
+                          <h4 className="font-semibold text-sm text-gray-900">Quarterly Target</h4>
+                          <p className="text-xs text-gray-500">
+                            {(() => {
+                              const now = new Date();
+                              const currentQuarter = Math.floor(now.getMonth() / 3);
+                              const quarterEndMonth = (currentQuarter + 1) * 3;
+                              const endOfQuarter = new Date(now.getFullYear(), quarterEndMonth, 0);
+                              const daysLeft = Math.ceil((endOfQuarter.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                              return daysLeft > 0 ? `${daysLeft} days remaining` : 'Target period ended';
+                            })()}
+                          </p>
+                        </div>
                         <Badge variant={(targetsProgress as any).quarterly.progress.revenue >= 100 ? "default" : "secondary"}>
                           {(targetsProgress as any).quarterly.progress.revenue >= 100 ? "Achieved" : 
                            (targetsProgress as any).quarterly.progress.revenue >= 80 ? "On Track" : "Needs Focus"}
                         </Badge>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span>Revenue</span>
-                            <span>{Math.min((targetsProgress as any).quarterly.progress.revenue, 100).toFixed(0)}%</span>
+                          <div className="flex justify-between text-xs mb-2">
+                            <span className="font-medium">Revenue Progress</span>
+                            <span className="font-mono">{Math.min((targetsProgress as any).quarterly.progress.revenue, 100).toFixed(0)}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-200 rounded-full h-3">
                             <div 
-                              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-green-500 to-emerald-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${Math.min((targetsProgress as any).quarterly.progress.revenue, 100)}%` }}
                             />
                           </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            ${(targetsProgress as any).quarterly.actual.revenue.toLocaleString()} / ${parseFloat((targetsProgress as any).quarterly.target.revenueTarget).toLocaleString()}
+                          </div>
                         </div>
                         <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span>Quotes</span>
-                            <span>{Math.min((targetsProgress as any).quarterly.progress.quotes, 100).toFixed(0)}%</span>
+                          <div className="flex justify-between text-xs mb-2">
+                            <span className="font-medium">Quotes Progress</span>
+                            <span className="font-mono">{Math.min((targetsProgress as any).quarterly.progress.quotes, 100).toFixed(0)}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-200 rounded-full h-3">
                             <div 
-                              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-teal-500 to-cyan-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${Math.min((targetsProgress as any).quarterly.progress.quotes, 100)}%` }}
                             />
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {(targetsProgress as any).quarterly.actual.quotes} / {(targetsProgress as any).quarterly.target.quotesTarget} quotes
                           </div>
                         </div>
                       </div>
