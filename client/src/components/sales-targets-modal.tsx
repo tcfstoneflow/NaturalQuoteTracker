@@ -30,6 +30,25 @@ interface SalesTargetsModalProps {
   children: React.ReactNode;
 }
 
+interface TargetProgress {
+  target: any;
+  actual: {
+    revenue: number;
+    quotes: number;
+    conversion: number;
+  };
+  progress: {
+    revenue: number;
+    quotes: number;
+    conversion: number;
+  };
+}
+
+interface TargetsProgressData {
+  monthly?: TargetProgress;
+  quarterly?: TargetProgress;
+}
+
 export default function SalesTargetsModal({ children }: SalesTargetsModalProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -48,9 +67,10 @@ export default function SalesTargetsModal({ children }: SalesTargetsModalProps) 
   });
 
   // Get current targets and progress
-  const { data: targetsProgress, isLoading } = useQuery({
+  const { data: targetsProgress, isLoading } = useQuery<TargetsProgressData>({
     queryKey: ["/api/sales-targets/progress"],
     enabled: open,
+    retry: 1,
   });
 
   // Get all targets for the user
@@ -68,6 +88,7 @@ export default function SalesTargetsModal({ children }: SalesTargetsModalProps) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales-targets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales-targets/progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-targets/current"] });
       form.reset();
       toast({
         title: "Sales target created",
@@ -149,16 +170,16 @@ export default function SalesTargetsModal({ children }: SalesTargetsModalProps) 
                 <div className="h-32 bg-gray-100 rounded animate-pulse" />
                 <div className="h-32 bg-gray-100 rounded animate-pulse" />
               </div>
-            ) : targetsProgress ? (
+            ) : targetsProgress && typeof targetsProgress === 'object' && Object.keys(targetsProgress).length > 0 ? (
               <div className="space-y-4">
                 {/* Monthly Progress */}
-                {targetsProgress.monthly?.target && (
+                {(targetsProgress as any).monthly?.target && (
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm flex items-center justify-between">
                         <span>Monthly Target Progress</span>
-                        <Badge variant={targetsProgress.monthly.progress.revenue >= 100 ? "default" : "secondary"}>
-                          {getProgressStatus(targetsProgress.monthly.progress.revenue)}
+                        <Badge variant={(targetsProgress as any).monthly.progress.revenue >= 100 ? "default" : "secondary"}>
+                          {getProgressStatus((targetsProgress as any).monthly.progress.revenue)}
                         </Badge>
                       </CardTitle>
                     </CardHeader>
@@ -166,42 +187,42 @@ export default function SalesTargetsModal({ children }: SalesTargetsModalProps) 
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span>Revenue</span>
-                          <span>{formatCurrency(targetsProgress.monthly.actual.revenue)} / {formatCurrency(parseFloat(targetsProgress.monthly.target.revenueTarget))}</span>
+                          <span>{formatCurrency((targetsProgress as any).monthly.actual.revenue)} / {formatCurrency(parseFloat((targetsProgress as any).monthly.target.revenueTarget))}</span>
                         </div>
                         <Progress 
-                          value={Math.min(targetsProgress.monthly.progress.revenue, 100)} 
+                          value={Math.min((targetsProgress as any).monthly.progress.revenue, 100)} 
                           className="h-2"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {targetsProgress.monthly.progress.revenue.toFixed(1)}% complete
+                          {(targetsProgress as any).monthly.progress.revenue.toFixed(1)}% complete
                         </div>
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span>Quotes</span>
-                          <span>{targetsProgress.monthly.actual.quotes} / {targetsProgress.monthly.target.quotesTarget}</span>
+                          <span>{(targetsProgress as any).monthly.actual.quotes} / {(targetsProgress as any).monthly.target.quotesTarget}</span>
                         </div>
                         <Progress 
-                          value={Math.min(targetsProgress.monthly.progress.quotes, 100)} 
+                          value={Math.min((targetsProgress as any).monthly.progress.quotes, 100)} 
                           className="h-2"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {targetsProgress.monthly.progress.quotes.toFixed(1)}% complete
+                          {(targetsProgress as any).monthly.progress.quotes.toFixed(1)}% complete
                         </div>
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span>Conversion Rate</span>
-                          <span>{targetsProgress.monthly.actual.conversion.toFixed(1)}% / {parseFloat(targetsProgress.monthly.target.conversionTarget)}%</span>
+                          <span>{(targetsProgress as any).monthly.actual.conversion.toFixed(1)}% / {parseFloat((targetsProgress as any).monthly.target.conversionTarget)}%</span>
                         </div>
                         <Progress 
-                          value={Math.min(targetsProgress.monthly.progress.conversion, 100)} 
+                          value={Math.min((targetsProgress as any).monthly.progress.conversion, 100)} 
                           className="h-2"
                         />
                         <div className="text-xs text-gray-500 mt-1">
-                          {targetsProgress.monthly.progress.conversion.toFixed(1)}% of target
+                          {(targetsProgress as any).monthly.progress.conversion.toFixed(1)}% of target
                         </div>
                       </div>
                     </CardContent>
@@ -209,7 +230,7 @@ export default function SalesTargetsModal({ children }: SalesTargetsModalProps) 
                 )}
 
                 {/* Quarterly Progress */}
-                {targetsProgress.quarterly?.target && (
+                {(targetsProgress as any).quarterly?.target && (
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm flex items-center justify-between">
