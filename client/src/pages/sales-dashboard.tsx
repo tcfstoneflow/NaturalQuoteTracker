@@ -604,24 +604,26 @@ export default function SalesDashboard() {
               <CardDescription>Streamline your daily tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Button 
-                  onClick={() => setIsNewClientDialogOpen(true)}
-                  className="bg-accent-orange hover:bg-accent-orange/90 text-white h-auto py-4 flex-col"
-                >
-                  <Users className="h-6 w-6 mb-2" />
-                  <span>Add New Client</span>
-                </Button>
-                <Button 
-                  onClick={() => setIsScheduleFollowUpOpen(true)}
-                  className="bg-success-green hover:bg-success-green/90 text-white h-auto py-4 flex-col"
-                >
-                  <Calendar className="h-6 w-6 mb-2" />
-                  <span>Schedule Follow-up</span>
-                </Button>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Button 
+                    onClick={() => setIsNewClientDialogOpen(true)}
+                    className="bg-accent-orange hover:bg-accent-orange/90 text-white h-auto py-4 flex-col"
+                  >
+                    <Users className="h-6 w-6 mb-2" />
+                    <span>Add New Client</span>
+                  </Button>
+                  <Button 
+                    onClick={() => setIsScheduleFollowUpOpen(true)}
+                    className="bg-success-green hover:bg-success-green/90 text-white h-auto py-4 flex-col"
+                  >
+                    <Calendar className="h-6 w-6 mb-2" />
+                    <span>Schedule Follow-up</span>
+                  </Button>
+                </div>
                 <Button 
                   onClick={() => setIsReportsModalOpen(true)}
-                  className="bg-accent-blue hover:bg-accent-blue/90 text-white h-auto py-4 flex-col"
+                  className="w-full bg-accent-blue hover:bg-accent-blue/90 text-white h-auto py-4 flex-col"
                 >
                   <TrendingUp className="h-6 w-6 mb-2" />
                   <span>View Reports</span>
