@@ -604,7 +604,7 @@ export default function SalesDashboard() {
               <CardDescription>Streamline your daily tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Button 
                   onClick={() => setIsNewClientDialogOpen(true)}
                   className="bg-accent-orange hover:bg-accent-orange/90 text-white h-auto py-4 flex-col"
