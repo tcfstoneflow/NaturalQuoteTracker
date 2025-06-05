@@ -83,7 +83,7 @@ export default function Quotes() {
 
   // Get URL parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const highlightId = urlParams.get('highlight');
+  const highlightId = urlParams.get('highlight') || urlParams.get('view');
 
   // Check if user has permission for a specific action based on role templates
   const hasPermission = (module: string, action: string) => {
