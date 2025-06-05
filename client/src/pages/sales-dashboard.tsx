@@ -832,7 +832,7 @@ export default function SalesDashboard() {
               <CardDescription>Streamline your daily tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button 
                   onClick={() => setIsNewClientDialogOpen(true)}
                   className="bg-accent-orange hover:bg-accent-orange/90 text-white h-auto py-4 flex-col"
@@ -855,7 +855,7 @@ export default function SalesDashboard() {
                   <span>View Reports</span>
                 </Button>
                 <SalesTargetsModal>
-                  <Button className="bg-purple-500 hover:bg-purple-600 text-white h-auto py-4 flex-col sm:col-span-2 xl:col-span-1">
+                  <Button className="bg-purple-500 hover:bg-purple-600 text-white h-auto py-4 flex-col">
                     <Target className="h-6 w-6 mb-2" />
                     <span>Performance Goals</span>
                   </Button>
