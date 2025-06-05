@@ -404,6 +404,22 @@ export const productReviews = pgTable("product_reviews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Sales targets table
+export const salesTargets = pgTable("sales_targets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  targetType: text("target_type").notNull(), // "monthly", "quarterly"
+  year: integer("year").notNull(),
+  period: integer("period").notNull(), // 1-12 for months, 1-4 for quarters
+  revenueTarget: decimal("revenue_target", { precision: 12, scale: 2 }).notNull(),
+  quotesTarget: integer("quotes_target").notNull(), // number of quotes to create
+  conversionTarget: decimal("conversion_target", { precision: 5, scale: 2 }).notNull(), // percentage
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userPeriodIdx: index("sales_targets_user_period_idx").on(table.userId, table.targetType, table.year, table.period),
+}));
+
 // E-commerce relations
 export const ecommerceOrdersRelations = relations(ecommerceOrders, ({ many, one }) => ({
   orderItems: many(ecommerceOrderItems),
@@ -436,6 +452,20 @@ export const productReviewsRelations = relations(productReviews, ({ one }) => ({
     fields: [productReviews.productId],
     references: [products.id],
   }),
+}));
+
+export const salesTargetsRelations = relations(salesTargets, ({ one }) => ({
+  user: one(users, {
+    fields: [salesTargets.userId],
+    references: [users.id],
+  }),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  quotes: many(quotes),
+  clients: many(clients),
+  showroomVisits: many(showroomVisits),
+  salesTargets: many(salesTargets),
 }));
 
 // Insert schemas
@@ -537,6 +567,21 @@ export const insertConsultationSchema = createInsertSchema(consultations).omit({
   updatedAt: true,
 });
 
+export const insertSalesTargetSchema = createInsertSchema(salesTargets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  revenueTarget: z.union([z.string(), z.number()]).transform(val => {
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return num.toString();
+  }),
+  conversionTarget: z.union([z.string(), z.number()]).transform(val => {
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return num.toString();
+  }),
+});
+
 // E-commerce schemas
 export const insertEcommerceOrderSchema = createInsertSchema(ecommerceOrders).omit({
   id: true,
@@ -603,6 +648,9 @@ export type InsertSlab = z.infer<typeof insertSlabSchema>;
 
 export type EcommerceOrder = typeof ecommerceOrders.$inferSelect;
 export type InsertEcommerceOrder = z.infer<typeof insertEcommerceOrderSchema>;
+
+export type SalesTarget = typeof salesTargets.$inferSelect;
+export type InsertSalesTarget = z.infer<typeof insertSalesTargetSchema>;
 
 export type EcommerceOrderItem = typeof ecommerceOrderItems.$inferSelect;
 export type InsertEcommerceOrderItem = z.infer<typeof insertEcommerceOrderItemSchema>;
