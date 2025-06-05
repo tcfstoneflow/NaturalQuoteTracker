@@ -146,6 +146,22 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     queryFn: quotesApi.getAll,
   });
 
+  // Filter quotes based on user role
+  const filteredQuotesByRole = quotes?.filter((quote: any) => {
+    // Admins and managers can see all quotes
+    if (user?.role === 'admin' || user?.role === 'sales_manager') {
+      return true;
+    }
+    
+    // Sales reps can only see quotes they created
+    if (user?.role === 'sales_rep') {
+      return quote.createdBy === user?.id;
+    }
+    
+    // Default: show all quotes for other roles
+    return true;
+  }) || [];
+
   const { data: users } = useQuery({
     queryKey: ['/api/users'],
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
@@ -153,8 +169,8 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
 
   // Handle URL parameters to auto-open specific quotes
   useEffect(() => {
-    if (highlightId && quotes) {
-      const quoteToHighlight = quotes.find((q: any) => q.id === parseInt(highlightId));
+    if (highlightId && filteredQuotesByRole) {
+      const quoteToHighlight = filteredQuotesByRole.find((q: any) => q.id === parseInt(highlightId));
       if (quoteToHighlight) {
         setSelectedQuote(quoteToHighlight);
         setIsViewModalOpen(true);
@@ -163,7 +179,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
         window.history.replaceState({}, '', newUrl);
       }
     }
-  }, [highlightId, quotes]);
+  }, [highlightId, filteredQuotesByRole]);
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) => 
@@ -297,7 +313,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     }
   };
 
-  const filteredQuotes = quotes?.filter((quote: any) => {
+  const filteredQuotes = filteredQuotesByRole?.filter((quote: any) => {
     const matchesSearch = quote.quoteNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          quote.client?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          quote.client?.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
