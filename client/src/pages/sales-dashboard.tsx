@@ -318,6 +318,12 @@ export default function SalesDashboard() {
     }
   });
 
+  // Get sales targets progress for constant tracking
+  const { data: targetsProgress } = useQuery({
+    queryKey: ["/api/sales-targets/progress"],
+    retry: 1,
+  });
+
   // Get all products for quote items
   const { data: allProducts } = useQuery({
     queryKey: ['/api/products'],
@@ -521,6 +527,100 @@ export default function SalesDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Performance Tracker Widget */}
+          {targetsProgress && typeof targetsProgress === 'object' && Object.keys(targetsProgress).length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-purple-500" />
+                  Performance Tracker
+                </CardTitle>
+                <CardDescription>Your current progress towards sales targets</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Monthly Progress */}
+                  {(targetsProgress as any).monthly?.target && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm">Monthly Target</h4>
+                        <Badge variant={(targetsProgress as any).monthly.progress.revenue >= 100 ? "default" : "secondary"}>
+                          {(targetsProgress as any).monthly.progress.revenue >= 100 ? "Achieved" : 
+                           (targetsProgress as any).monthly.progress.revenue >= 80 ? "On Track" : "Needs Focus"}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Revenue</span>
+                            <span>{Math.min((targetsProgress as any).monthly.progress.revenue, 100).toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${Math.min((targetsProgress as any).monthly.progress.revenue, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Quotes</span>
+                            <span>{Math.min((targetsProgress as any).monthly.progress.quotes, 100).toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${Math.min((targetsProgress as any).monthly.progress.quotes, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quarterly Progress */}
+                  {(targetsProgress as any).quarterly?.target && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm">Quarterly Target</h4>
+                        <Badge variant={(targetsProgress as any).quarterly.progress.revenue >= 100 ? "default" : "secondary"}>
+                          {(targetsProgress as any).quarterly.progress.revenue >= 100 ? "Achieved" : 
+                           (targetsProgress as any).quarterly.progress.revenue >= 80 ? "On Track" : "Needs Focus"}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Revenue</span>
+                            <span>{Math.min((targetsProgress as any).quarterly.progress.revenue, 100).toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${Math.min((targetsProgress as any).quarterly.progress.revenue, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Quotes</span>
+                            <span>{Math.min((targetsProgress as any).quarterly.progress.quotes, 100).toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${Math.min((targetsProgress as any).quarterly.progress.quotes, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Quotes */}
