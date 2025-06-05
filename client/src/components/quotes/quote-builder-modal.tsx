@@ -350,12 +350,12 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-primary">
-            {editQuote ? "Edit Quote" : "Create New Quote"}
-          </DialogTitle>
-        </DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-primary">
+              {editQuote ? "Edit Quote" : "Create New Quote"}
+            </DialogTitle>
+          </DialogHeader>
 
         <div className="space-y-6">
           {/* Client Selection and Project Details */}
