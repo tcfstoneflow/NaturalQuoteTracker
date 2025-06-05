@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema } from "@shared/schema";
+import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema } from "@shared/schema";
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";
@@ -3329,6 +3329,195 @@ Your body text starts here with proper spacing.`;
       doc.end();
     });
   }
+
+  // Sales Targets API endpoints
+  app.get('/api/sales-targets', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      let targets;
+      if (userRole === 'admin') {
+        // Admins can see all sales targets
+        targets = await storage.getSalesTargets();
+      } else {
+        // Sales reps see only their own targets
+        targets = await storage.getSalesTargetsByUser(userId);
+      }
+      
+      res.json(targets);
+    } catch (error: any) {
+      console.error('Error getting sales targets:', error);
+      res.status(500).json({ error: 'Failed to get sales targets' });
+    }
+  });
+
+  app.get('/api/sales-targets/current', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const currentQuarter = Math.ceil(currentMonth / 3);
+      
+      // Get current month and quarter targets
+      const monthlyTarget = await storage.getSalesTarget(userId, 'monthly', currentYear, currentMonth);
+      const quarterlyTarget = await storage.getSalesTarget(userId, 'quarterly', currentYear, currentQuarter);
+      
+      res.json({
+        monthly: monthlyTarget,
+        quarterly: quarterlyTarget
+      });
+    } catch (error: any) {
+      console.error('Error getting current sales targets:', error);
+      res.status(500).json({ error: 'Failed to get current sales targets' });
+    }
+  });
+
+  app.post('/api/sales-targets', requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      // Only allow admins to set targets for other users
+      const targetUserId = userRole === 'admin' && req.body.userId ? req.body.userId : userId;
+      
+      const validatedData = insertSalesTargetSchema.parse({
+        ...req.body,
+        userId: targetUserId
+      });
+      
+      const target = await storage.createSalesTarget(validatedData);
+      res.json(target);
+    } catch (error: any) {
+      console.error('Error creating sales target:', error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put('/api/sales-targets/:id', requireAuth, async (req: any, res) => {
+    try {
+      const targetId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      // Check if user owns the target or is admin
+      const existingTarget = await storage.getSalesTargetById(targetId);
+      if (!existingTarget) {
+        return res.status(404).json({ error: 'Sales target not found' });
+      }
+      
+      if (userRole !== 'admin' && existingTarget.userId !== userId) {
+        return res.status(403).json({ error: 'Not authorized to update this target' });
+      }
+      
+      const validatedData = insertSalesTargetSchema.partial().parse(req.body);
+      const target = await storage.updateSalesTarget(targetId, validatedData);
+      res.json(target);
+    } catch (error: any) {
+      console.error('Error updating sales target:', error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/sales-targets/:id', requireAuth, async (req: any, res) => {
+    try {
+      const targetId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      
+      // Check if user owns the target or is admin
+      const existingTarget = await storage.getSalesTargetById(targetId);
+      if (!existingTarget) {
+        return res.status(404).json({ error: 'Sales target not found' });
+      }
+      
+      if (userRole !== 'admin' && existingTarget.userId !== userId) {
+        return res.status(403).json({ error: 'Not authorized to delete this target' });
+      }
+      
+      await storage.deleteSalesTarget(targetId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error deleting sales target:', error);
+      res.status(500).json({ error: 'Failed to delete sales target' });
+    }
+  });
+
+  app.get('/api/sales-targets/progress/:userId?', requireAuth, async (req: any, res) => {
+    try {
+      const requestedUserId = req.params.userId ? parseInt(req.params.userId) : null;
+      const currentUserId = req.user.id;
+      const userRole = req.user.role;
+      
+      // Determine which user's progress to get
+      let targetUserId = currentUserId;
+      if (requestedUserId && userRole === 'admin') {
+        targetUserId = requestedUserId;
+      } else if (requestedUserId && userRole !== 'admin') {
+        return res.status(403).json({ error: 'Not authorized to view other users progress' });
+      }
+      
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const currentQuarter = Math.ceil(currentMonth / 3);
+      
+      // Get targets
+      const monthlyTarget = await storage.getSalesTarget(targetUserId, 'monthly', currentYear, currentMonth);
+      const quarterlyTarget = await storage.getSalesTarget(targetUserId, 'quarterly', currentYear, currentQuarter);
+      
+      // Get actual performance
+      const quotes = await storage.getQuotes();
+      const userQuotes = quotes.filter(quote => quote.createdBy === targetUserId);
+      
+      // Calculate monthly progress
+      const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
+      const monthlyQuotes = userQuotes.filter(quote => new Date(quote.createdAt) >= startOfMonth);
+      const monthlyApprovedQuotes = monthlyQuotes.filter(quote => quote.status === 'approved' || quote.status === 'accepted');
+      const monthlyRevenue = monthlyApprovedQuotes.reduce((sum, quote) => sum + parseFloat(quote.totalAmount || 0), 0);
+      const monthlyConversion = monthlyQuotes.length > 0 ? (monthlyApprovedQuotes.length / monthlyQuotes.length) * 100 : 0;
+      
+      // Calculate quarterly progress
+      const startOfQuarter = new Date(currentYear, (currentQuarter - 1) * 3, 1);
+      const quarterlyQuotes = userQuotes.filter(quote => new Date(quote.createdAt) >= startOfQuarter);
+      const quarterlyApprovedQuotes = quarterlyQuotes.filter(quote => quote.status === 'approved' || quote.status === 'accepted');
+      const quarterlyRevenue = quarterlyApprovedQuotes.reduce((sum, quote) => sum + parseFloat(quote.totalAmount || 0), 0);
+      const quarterlyConversion = quarterlyQuotes.length > 0 ? (quarterlyApprovedQuotes.length / quarterlyQuotes.length) * 100 : 0;
+      
+      res.json({
+        monthly: {
+          target: monthlyTarget,
+          actual: {
+            revenue: monthlyRevenue,
+            quotes: monthlyQuotes.length,
+            conversion: monthlyConversion
+          },
+          progress: {
+            revenue: monthlyTarget ? (monthlyRevenue / parseFloat(monthlyTarget.revenueTarget)) * 100 : 0,
+            quotes: monthlyTarget ? (monthlyQuotes.length / monthlyTarget.quotesTarget) * 100 : 0,
+            conversion: monthlyTarget ? (monthlyConversion / parseFloat(monthlyTarget.conversionTarget)) * 100 : 0
+          }
+        },
+        quarterly: {
+          target: quarterlyTarget,
+          actual: {
+            revenue: quarterlyRevenue,
+            quotes: quarterlyQuotes.length,
+            conversion: quarterlyConversion
+          },
+          progress: {
+            revenue: quarterlyTarget ? (quarterlyRevenue / parseFloat(quarterlyTarget.revenueTarget)) * 100 : 0,
+            quotes: quarterlyTarget ? (quarterlyQuotes.length / quarterlyTarget.quotesTarget) * 100 : 0,
+            conversion: quarterlyTarget ? (quarterlyConversion / parseFloat(quarterlyTarget.conversionTarget)) * 100 : 0
+          }
+        }
+      });
+    } catch (error: any) {
+      console.error('Error getting sales target progress:', error);
+      res.status(500).json({ error: 'Failed to get sales target progress' });
+    }
+  });
 
   // Notifications endpoints
   app.post('/api/notifications/mark-read', requireAuth, async (req: any, res) => {

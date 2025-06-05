@@ -1,5 +1,5 @@
 import { 
-  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags,
+  users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags, salesTargets,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -13,6 +13,7 @@ import {
   type Consultation, type InsertConsultation,
   type Tag, type InsertTag,
   type ProductTag, type InsertProductTag,
+  type SalesTarget, type InsertSalesTarget,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -144,6 +145,15 @@ export interface IStorage {
   getTopSellingProducts(startDate: Date, endDate: Date, limit?: number): Promise<any[]>;
   getProductQuotesByDate(productId: number, date: string): Promise<any[]>;
   getSalesManagerQuotesByDate(managerId: number, date: string): Promise<any[]>;
+  
+  // Sales Targets
+  getSalesTargets(): Promise<SalesTarget[]>;
+  getSalesTargetsByUser(userId: number): Promise<SalesTarget[]>;
+  getSalesTarget(userId: number, targetType: string, year: number, period: number): Promise<SalesTarget | undefined>;
+  getSalesTargetById(id: number): Promise<SalesTarget | undefined>;
+  createSalesTarget(target: InsertSalesTarget): Promise<SalesTarget>;
+  updateSalesTarget(id: number, updates: Partial<InsertSalesTarget>): Promise<SalesTarget>;
+  deleteSalesTarget(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
