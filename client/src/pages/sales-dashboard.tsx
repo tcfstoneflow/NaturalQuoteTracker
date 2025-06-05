@@ -71,6 +71,8 @@ export default function SalesDashboard() {
   // Quick Actions state
   const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
   const [isScheduleFollowUpOpen, setIsScheduleFollowUpOpen] = useState(false);
+  const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
+  const [reportsPeriod, setReportsPeriod] = useState('Month');
   const [newClientForm, setNewClientForm] = useState({
     name: '',
     email: '',
@@ -346,6 +348,12 @@ export default function SalesDashboard() {
     queryFn: salesDashboardApi.getSalesManagers,
   });
 
+  // Top selling products query for reports
+  const { data: topSellingProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["/api/dashboard/top-selling-products"],
+    enabled: isReportsModalOpen,
+  });
+
 
 
   return (
@@ -596,7 +604,7 @@ export default function SalesDashboard() {
               <CardDescription>Streamline your daily tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button 
                   onClick={() => setIsNewClientDialogOpen(true)}
                   className="bg-accent-orange hover:bg-accent-orange/90 text-white h-auto py-4 flex-col"
@@ -610,6 +618,13 @@ export default function SalesDashboard() {
                 >
                   <Calendar className="h-6 w-6 mb-2" />
                   <span>Schedule Follow-up</span>
+                </Button>
+                <Button 
+                  onClick={() => setIsReportsModalOpen(true)}
+                  className="bg-accent-blue hover:bg-accent-blue/90 text-white h-auto py-4 flex-col"
+                >
+                  <TrendingUp className="h-6 w-6 mb-2" />
+                  <span>View Reports</span>
                 </Button>
               </div>
             </CardContent>
@@ -1424,6 +1439,94 @@ export default function SalesDashboard() {
               >
                 {scheduleFollowUpMutation.isPending ? 'Scheduling...' : 'Schedule Follow-up'}
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Top Selling Products Reports Modal */}
+      <Dialog open={isReportsModalOpen} onOpenChange={setIsReportsModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Top Selling Products
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Period Filter */}
+            <div className="flex gap-2">
+              {['Day', 'Week', 'Month', 'Year'].map((period) => (
+                <Button
+                  key={period}
+                  variant={reportsPeriod === period ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setReportsPeriod(period)}
+                  className={reportsPeriod === period ? "bg-blue-500 text-white" : ""}
+                >
+                  {period}
+                </Button>
+              ))}
+            </div>
+
+            <div className="text-sm text-gray-600">
+              Last 30 Days
+            </div>
+
+            {/* Products List */}
+            <div className="space-y-3">
+              {productsLoading ? (
+                <div className="text-center py-8">Loading...</div>
+              ) : topSellingProducts.length > 0 ? (
+                topSellingProducts.slice(0, 4).map((product: any, index: number) => (
+                  <div key={product.productId} className="flex items-center gap-4 p-4 border rounded-lg">
+                    {/* Rank Circle */}
+                    <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+                      {index + 1}
+                    </div>
+
+                    {/* Product Image Placeholder */}
+                    <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gray-300 rounded"></div>
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex-grow">
+                      <h3 className="font-semibold text-lg">{product.productName || product.name}</h3>
+                      <div className="text-sm text-gray-600">
+                        {product.bundleId} • {product.category}
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex gap-6 text-center">
+                      <div>
+                        <div className="text-green-600 font-bold">${product.totalRevenue?.toLocaleString() || '0'}</div>
+                        <div className="text-xs text-gray-500">Revenue</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center">
+                          <div className="w-2 h-2 bg-blue-500 rounded"></div>
+                        </div>
+                        <span className="font-bold">{product.totalQuantity || product.quantity || 0}</span>
+                        <div className="text-xs text-gray-500">Qty</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-4 h-4 bg-purple-100 rounded flex items-center justify-center">
+                          <div className="w-2 h-2 bg-purple-500 rounded"></div>
+                        </div>
+                        <span className="font-bold">{product.orderCount || 1}</span>
+                        <div className="text-xs text-gray-500">Orders</div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No sales data available for the selected period
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
