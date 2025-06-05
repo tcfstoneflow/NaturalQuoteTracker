@@ -299,8 +299,8 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
 
   const filteredQuotes = quotes?.filter((quote: any) => {
     const matchesSearch = quote.quoteNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         quote.client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         quote.client.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         quote.client?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         quote.client?.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          quote.projectName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
     const matchesCreatedBy = createdByFilter === "all" || quote.createdBy?.toString() === createdByFilter;
@@ -414,9 +414,9 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                         <TableCell>
                           <div>
                             <p className="font-medium text-primary-custom">
-                              {quote.client.company || quote.client.name}
+                              {quote.client?.company || quote.client?.name || 'No Client'}
                             </p>
-                            <p className="text-sm text-secondary-custom">{quote.client.name}</p>
+                            <p className="text-sm text-secondary-custom">{quote.client?.name || 'Unknown'}</p>
                           </div>
                         </TableCell>
                         <TableCell>
