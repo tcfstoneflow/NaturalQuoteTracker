@@ -412,13 +412,31 @@ export default function PublicInventory() {
                     </div>
                   )}
                   
-                  <div className="absolute top-3 right-3 pointer-events-none z-10">
+                  <div className="absolute top-3 right-3 pointer-events-none z-10 flex flex-col gap-2">
                     <Badge 
                       variant="default"
                       className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
                     >
                       {product.slabs?.filter((slab: any) => slab.status === 'available').length || product.stockQuantity || 0} slabs
                     </Badge>
+                    {/* Location pills - show unique locations from available slabs */}
+                    {product.slabs && product.slabs.length > 0 && (
+                      <div className="flex flex-col gap-1">
+                        {Array.from(new Set(
+                          product.slabs
+                            .filter((slab: any) => slab.status === 'available' && slab.location)
+                            .map((slab: any) => slab.location)
+                        )).slice(0, 3).map((location: string, index: number) => (
+                          <Badge 
+                            key={index}
+                            variant="secondary"
+                            className="bg-gray-100 text-gray-700 border border-gray-300 text-xs shadow-sm"
+                          >
+                            {location}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
