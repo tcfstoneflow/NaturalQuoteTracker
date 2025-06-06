@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
@@ -8,11 +8,21 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const client = new Client({
+// Use connection pool instead of single client for better connection management
+export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
-// Connect the client
-client.connect().catch(console.error);
+// Handle pool errors gracefully
+pool.on('error', (err) => {
+  console.error('Database pool error:', err);
+});
 
-export const db = drizzle(client, { schema });
+pool.on('connect', () => {
+  console.log('Database pool connection established');
+});
+
+export const db = drizzle(pool, { schema });

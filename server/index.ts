@@ -155,10 +155,15 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
     
-    // Start scheduled maintenance tasks in development mode too for testing
+    // Start scheduled maintenance tasks only after database is stable
     setTimeout(() => {
-      taskScheduler.start();
-      log('Scheduled maintenance tasks started');
-    }, 5000); // Wait 5 seconds after server start
+      try {
+        taskScheduler.start();
+        log('Scheduled maintenance tasks started');
+      } catch (error) {
+        console.error('Failed to start scheduled tasks:', error);
+        log('Scheduled maintenance tasks failed to start - will retry later');
+      }
+    }, 10000); // Wait 10 seconds for database to stabilize
   });
 })();

@@ -123,13 +123,23 @@ class TaskScheduler {
 
   private scheduleInterval(name: string, intervalMs: number, task: () => Promise<void>) {
     const interval = setInterval(async () => {
-      await task();
+      try {
+        await task();
+      } catch (error) {
+        console.error(`Scheduled task ${name} failed:`, error);
+      }
     }, intervalMs);
     
     this.intervals.set(name, interval);
     
-    // Run immediately on startup
-    task();
+    // Run immediately on startup with error handling
+    setTimeout(async () => {
+      try {
+        await task();
+      } catch (error) {
+        console.error(`Initial run of scheduled task ${name} failed:`, error);
+      }
+    }, 1000);
   }
 }
 
