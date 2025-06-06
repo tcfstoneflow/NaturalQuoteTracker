@@ -263,7 +263,15 @@ export default function PublicInventory() {
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <CardTitle className="text-xl mb-1">{product.name}</CardTitle>
+                      <div className="flex items-center gap-2 mb-1">
+                        <CardTitle className="text-xl">{product.name}</CardTitle>
+                        {product.slabs && product.slabs.length > 0 && product.slabs[0].productionLocation && (
+                          <Badge variant="secondary" className="text-xs font-normal">
+                            <Globe2 className="h-3 w-3 mr-1" />
+                            {product.slabs[0].productionLocation}
+                          </Badge>
+                        )}
+                      </div>
                       <CardDescription className="space-y-1">
                         <div className="capitalize">
                           {product.category} • {product.grade} Grade
