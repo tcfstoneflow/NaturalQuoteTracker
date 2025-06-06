@@ -181,7 +181,8 @@ export const slabs = pgTable("slabs", {
   length: decimal("length", { precision: 8, scale: 2 }), // length in inches
   width: decimal("width", { precision: 8, scale: 2 }), // width in inches
   barcode: text("barcode"),
-  location: text("location"),
+  location: text("location"), // storage location
+  productionLocation: text("production_location"), // quarry/production origin
   notes: text("notes"),
   soldDate: timestamp("sold_date"),
   deliveredDate: timestamp("delivered_date"),
