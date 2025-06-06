@@ -59,9 +59,9 @@ export default function PublicInventory() {
   // Fetch slabs for each product
   const slabQueries = products.map((product: any) => 
     useQuery({
-      queryKey: ["/api/public/slabs", product.id],
-      queryFn: () => fetch(`/api/public/slabs?productId=${product.id}`).then(res => res.json()),
-      enabled: !!product.id,
+      queryKey: ["/api/public/slabs", product.bundleId],
+      queryFn: () => fetch(`/api/public/slabs?bundleId=${encodeURIComponent(product.bundleId || '')}`).then(res => res.json()),
+      enabled: !!product.bundleId,
     })
   );
 
