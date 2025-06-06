@@ -300,6 +300,15 @@ export default function PublicInventory() {
                           {product.slabs?.filter((slab: any) => slab.status === 'available').length || product.stockQuantity || 0}
                         </div>
                       </div>
+                      {product.slabs && product.slabs.length > 0 && product.slabs[0].productionLocation && (
+                        <div className="col-span-2">
+                          <span className="text-gray-600">Origin:</span>
+                          <div className="font-medium flex items-center">
+                            <Globe2 className="h-3 w-3 mr-1" />
+                            {product.slabs[0].productionLocation}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

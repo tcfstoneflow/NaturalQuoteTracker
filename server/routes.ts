@@ -1890,6 +1890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           length: slab.length,
           width: slab.width,
           location: slab.location,
+          productionLocation: slab.productionLocation,
           barcode: slab.barcode,
           status: slab.status
         }));
