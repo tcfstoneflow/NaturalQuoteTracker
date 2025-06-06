@@ -66,10 +66,14 @@ export default function PublicInventory() {
   );
 
   useEffect(() => {
-    const productsWithSlabData = products.map((product: any, index: number) => ({
-      ...product,
-      slabs: slabQueries[index]?.data || []
-    }));
+    const productsWithSlabData = products.map((product: any, index: number) => {
+      const slabData = slabQueries[index]?.data || [];
+      console.log(`Product ${product.name} slabs:`, slabData);
+      return {
+        ...product,
+        slabs: slabData
+      };
+    });
     setProductsWithSlabs(productsWithSlabData);
   }, [products, ...slabQueries.map(q => q.data)]);
 
