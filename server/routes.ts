@@ -1892,7 +1892,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           location: slab.location,
           productionLocation: slab.productionLocation,
           barcode: slab.barcode,
-          status: slab.status
+          status: slab.status,
+          bundleId: slab.bundleId
         }));
       res.json(publicSlabs);
     } catch (error: any) {
