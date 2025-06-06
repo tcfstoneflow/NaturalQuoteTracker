@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Filter, Package, Ruler, MapPin, Globe, Eye, Calendar, Phone, Mail } from "lucide-react";
+import { Search, Filter, Package, Ruler, MapPin, Globe2, Eye, Calendar, Phone, Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -430,7 +430,7 @@ export default function PublicInventory() {
                               )}
                               {slab.productionLocation && (
                                 <div className="flex items-center text-xs text-gray-600">
-                                  <Globe className="h-3 w-3 mr-1" />
+                                  <Globe2 className="h-3 w-3 mr-1" />
                                   Origin: {slab.productionLocation}
                                 </div>
                               )}
