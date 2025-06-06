@@ -412,10 +412,11 @@ export default function PublicInventory() {
                     </div>
                   )}
                   
-                  <div className="absolute top-3 right-3 pointer-events-none">
-                    <Badge variant={
-                      (product.slabs?.filter((slab: any) => slab.status === 'available').length || product.stockQuantity || 0) > 5 ? "default" : "secondary"
-                    }>
+                  <div className="absolute top-3 right-3 pointer-events-none z-10">
+                    <Badge 
+                      variant="default"
+                      className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                    >
                       {product.slabs?.filter((slab: any) => slab.status === 'available').length || product.stockQuantity || 0} slabs
                     </Badge>
                   </div>
