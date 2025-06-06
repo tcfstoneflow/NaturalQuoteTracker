@@ -420,41 +420,27 @@ export default function PublicInventory() {
                       {product.slabs?.filter((slab: any) => slab.status === 'available' || slab.status === 'Available').length || product.stockQuantity || 0} slabs
                     </Badge>
                     {/* Location pills - show unique locations from available slabs */}
-                    {product.slabs && product.slabs.length > 0 && (() => {
-                      // Debug logging
-                      if (product.name === 'Alaska White') {
-                        console.log('Setting product tags:', product.slabs.map((s: any) => ({ 
-                          status: s.status, 
-                          location: s.location,
-                          hasLocation: !!s.location,
-                          locationTrimmed: s.location?.trim()
-                        })));
-                      }
-                      
-                      const availableLocations = Array.from(new Set(
-                        product.slabs
-                          .filter((slab: any) => 
-                            (slab.status === 'available' || slab.status === 'Available') && 
-                            slab.location && 
-                            slab.location.trim() !== ''
-                          )
-                          .map((slab: any) => slab.location.trim())
-                      )).slice(0, 3);
-                      
-                      return availableLocations.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {availableLocations.map((location: string, index: number) => (
-                            <Badge 
-                              key={index}
-                              variant="secondary"
-                              className="bg-gray-100 text-gray-700 border border-gray-300 text-xs shadow-sm"
-                            >
-                              {location}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : null;
-                    })()}
+                    {product.slabs && Array.isArray(product.slabs) && (
+                      <div className="flex flex-col gap-1">
+                        {Array.from(new Set(
+                          product.slabs
+                            .filter((slab: any) => 
+                              (slab.status?.toLowerCase() === 'available') && 
+                              slab.location && 
+                              String(slab.location).trim() !== ''
+                            )
+                            .map((slab: any) => String(slab.location).trim())
+                        )).slice(0, 3).map((location: any, index: number) => (
+                          <Badge 
+                            key={index}
+                            variant="secondary"
+                            className="bg-gray-100 text-gray-700 border border-gray-300 text-xs shadow-sm"
+                          >
+                            {location}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
