@@ -40,16 +40,19 @@ export default function Reports() {
   const { data: quotes, isLoading: quotesLoading } = useQuery({
     queryKey: ['/api/quotes'],
     queryFn: quotesApi.getAll,
+    select: (data) => Array.isArray(data) ? data : [],
   });
 
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ['/api/clients'],
     queryFn: () => clientsApi.getAll(),
+    select: (data) => Array.isArray(data) ? data : [],
   });
 
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ['/api/products'],
     queryFn: productsApi.getAll,
+    select: (data) => Array.isArray(data) ? data : [],
   });
 
   const isLoading = statsLoading || quotesLoading || clientsLoading || productsLoading;
@@ -109,23 +112,26 @@ export default function Reports() {
   const calculateMetrics = () => {
     if (!quotes || !clients || !products) return null;
 
+    // Ensure quotes is an array
+    const quotesArray = Array.isArray(quotes) ? quotes : [];
+    
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
 
-    const monthlyQuotes = quotes.filter((quote: any) => {
+    const monthlyQuotes = quotesArray.filter((quote: any) => {
       const quoteDate = new Date(quote.createdAt);
       return quoteDate.getMonth() === currentMonth && quoteDate.getFullYear() === currentYear;
     });
 
-    const approvedQuotes = quotes.filter((quote: any) => quote.status === 'approved');
-    const pendingQuotes = quotes.filter((quote: any) => quote.status === 'pending');
-    const conversionRate = quotes.length > 0 ? (approvedQuotes.length / quotes.length) * 100 : 0;
+    const approvedQuotes = quotesArray.filter((quote: any) => quote.status === 'approved');
+    const pendingQuotes = quotesArray.filter((quote: any) => quote.status === 'pending');
+    const conversionRate = quotesArray.length > 0 ? (approvedQuotes.length / quotesArray.length) * 100 : 0;
 
     const totalRevenue = approvedQuotes.reduce((sum: number, quote: any) => 
       sum + parseFloat(quote.totalAmount), 0);
 
-    const averageQuoteValue = quotes.length > 0 
-      ? quotes.reduce((sum: number, quote: any) => sum + parseFloat(quote.totalAmount), 0) / quotes.length
+    const averageQuoteValue = quotesArray.length > 0 
+      ? quotesArray.reduce((sum: number, quote: any) => sum + parseFloat(quote.totalAmount), 0) / quotesArray.length
       : 0;
 
     const topClients = clients
