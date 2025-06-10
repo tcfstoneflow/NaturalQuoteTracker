@@ -49,28 +49,30 @@ export default function TopProducts() {
       <CardContent>
         <div className="space-y-4">
           {products?.map((product: any) => (
-            <div key={product.id} className="flex items-center space-x-4">
-              <img 
-                src={product.imageUrl || getProductImage(product.category)}
-                alt={product.name}
-                className="w-16 h-16 rounded-lg object-cover"
-              />
-              <div className="flex-1">
-                <h4 className="font-medium text-primary-custom">{product.name}</h4>
-                <p className="text-sm text-secondary-custom">
-                  {product.grade?.charAt(0).toUpperCase() + product.grade?.slice(1)} Grade • {product.thickness}
-                </p>
-                <p className="text-sm font-medium text-success-green">
-                  ${parseFloat(product.price).toFixed(0)}/{product.unit}
-                </p>
+            <Link key={product.id} href={`/products/${product.id}`}>
+              <div className="flex items-center space-x-4 p-2 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer">
+                <img 
+                  src={product.imageUrl || getProductImage(product.category)}
+                  alt={product.name}
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+                <div className="flex-1">
+                  <h4 className="font-medium text-primary-custom hover:text-accent-orange transition-colors">{product.name}</h4>
+                  <p className="text-sm text-secondary-custom">
+                    {product.grade?.charAt(0).toUpperCase() + product.grade?.slice(1)} Grade • {product.thickness}
+                  </p>
+                  <p className="text-sm font-medium text-success-green">
+                    ${parseFloat(product.price).toFixed(0)}/{product.unit}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-primary-custom">
+                    {product.salesCount || 0}
+                  </p>
+                  <p className="text-xs text-secondary-custom">sold</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-primary-custom">
-                  {product.salesCount || 0}
-                </p>
-                <p className="text-xs text-secondary-custom">sold</p>
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
       </CardContent>
