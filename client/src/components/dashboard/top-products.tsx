@@ -49,7 +49,7 @@ export default function TopProducts() {
       <CardContent>
         <div className="space-y-4">
           {products?.map((product: any) => (
-            <Link key={product.id} href={`/products/${product.id}`}>
+            <Link key={product.id} href={`/product/${product.id}`}>
               <div className="flex items-center space-x-4 p-2 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer">
                 <img 
                   src={product.imageUrl || getProductImage(product.category)}
