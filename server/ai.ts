@@ -75,8 +75,22 @@ Respond with JSON in this format:
       confidence: Math.max(0, Math.min(1, result.confidence || 0)),
       warnings: result.warnings || []
     };
-  } catch (error) {
-    throw new Error(`Failed to translate query: ${error.message}`);
+  } catch (error: any) {
+    // Handle specific OpenAI API errors
+    if (error.status === 429) {
+      throw new Error("AI service usage limit reached. Please try again later or contact your administrator about increasing the quota.");
+    }
+    if (error.status === 401) {
+      throw new Error("AI service authentication failed. Please contact your administrator to check the API configuration.");
+    }
+    if (error.status === 402) {
+      throw new Error("AI service billing issue detected. Please contact your administrator to resolve payment or quota issues.");
+    }
+    if (error.code === 'insufficient_quota') {
+      throw new Error("AI service quota exceeded. Please contact your administrator to increase the usage limit.");
+    }
+    
+    throw new Error(`AI service unavailable: ${error.message || 'Unknown error'}`);
   }
 }
 
@@ -97,7 +111,21 @@ export async function analyzeSQLResult(query: string, results: any[]): Promise<s
     });
 
     return response.choices[0].message.content || "Unable to analyze results";
-  } catch (error) {
-    throw new Error(`Failed to analyze results: ${error.message}`);
+  } catch (error: any) {
+    // Handle specific OpenAI API errors
+    if (error.status === 429) {
+      throw new Error("AI service usage limit reached. Please try again later or contact your administrator about increasing the quota.");
+    }
+    if (error.status === 401) {
+      throw new Error("AI service authentication failed. Please contact your administrator to check the API configuration.");
+    }
+    if (error.status === 402) {
+      throw new Error("AI service billing issue detected. Please contact your administrator to resolve payment or quota issues.");
+    }
+    if (error.code === 'insufficient_quota') {
+      throw new Error("AI service quota exceeded. Please contact your administrator to increase the usage limit.");
+    }
+    
+    throw new Error(`AI analysis unavailable: ${error.message || 'Unknown error'}`);
   }
 }

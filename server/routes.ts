@@ -1843,7 +1843,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await translateNaturalLanguageToSQL(naturalQuery);
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('AI translation error:', error);
+      // Return the enhanced error message from the AI module
       res.status(500).json({ error: error.message });
     }
   });
@@ -1864,14 +1866,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const results = await storage.executeQuery(query);
-      const analysis = await analyzeSQLResult(query, results);
+      
+      // Try to get AI analysis, but don't fail if AI is unavailable
+      let analysis = "Query executed successfully";
+      try {
+        analysis = await analyzeSQLResult(query, results);
+      } catch (aiError: any) {
+        console.error('AI analysis error:', aiError);
+        // Include AI error information in response but don't fail the query
+        analysis = `Query executed successfully. ${aiError.message}`;
+      }
       
       res.json({ 
         results, 
         analysis,
         rowCount: results.length 
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('SQL execution error:', error);
       res.status(500).json({ error: error.message });
     }
   });
