@@ -1,0 +1,13 @@
+Phase,Task,Description
+PHASE 1: Database Design & Setup,Define and Create Core Tables,"Create core tables using SQL schema: Suppliers, Materials, Blocks, Slabs, Invoices, InvoiceSlabs, Contacts, Personas, TCF_Employee, Profiles"
+PHASE 1: Database Design & Setup,Import Data,Import slab and supporting data using generated INSERT scripts
+PHASE 2: Authentication and Access Control,Implement Login System,Build login screen and authenticate TCF_Employee using Username and PasswordHash
+PHASE 2: Authentication and Access Control,Restrict Access Based on Roles,"Use ProfileID to control access levels for Admin, Sales, Warehouse, and Viewer roles"
+PHASE 3: Inventory & Invoicing System,Build Slab Search Interface,"Create searchable interface to filter slabs by number, material, location, and status"
+PHASE 3: Inventory & Invoicing System,Create Invoice Builder,Allow slabs to be added to invoices and mark status as 'Hold'
+PHASE 4: CRM and Contact Management,Contact Database,"Add and manage contacts with filtering by persona, name, and email"
+PHASE 5: Admin & Expansion,Admin Dashboard,"Enable admins to manage employees, assign profiles, and view logs"
+PHASE 5: Admin & Expansion,Add Permissions Table,Create ProfilePermissions table for fine-grained feature control
+PHASE 6: Optional Enhancements,Mobile-friendly UI,Optimize UI for warehouse use on tablets or phones
+PHASE 6: Optional Enhancements,PDF/Printable Invoices,Allow invoice downloads or printouts in PDF format
+PHASE 6: Optional Enhancements,Reporting and Analytics,"Add dashboards for inventory levels, sales trends, and supplier performance"
