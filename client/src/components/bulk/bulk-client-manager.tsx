@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Download, Edit, Trash2, Plus, Save, X } from "lucide-react";
+import { Upload, Download, Edit, Trash2, Plus, Save, X, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
@@ -41,6 +41,21 @@ export default function BulkClientManager() {
   const [bulkEditData, setBulkEditData] = useState<BulkEditData>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Check user authentication and role
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/user', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) return null;
+      return response.json();
+    },
+  });
+
+  const isAdmin = user?.user?.role === 'admin';
 
   // Fetch clients
   const { data: clients = [], isLoading } = useQuery({
@@ -201,6 +216,29 @@ export default function BulkClientManager() {
 
   if (isLoading) {
     return <div>Loading clients...</div>;
+  }
+
+  // Show access restricted message for non-admin users
+  if (!isAdmin) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            <span>Bulk Client Management</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Shield className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Admin Access Required</h3>
+            <p className="text-gray-600">
+              Bulk client import, export, and editing operations are restricted to administrators only.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

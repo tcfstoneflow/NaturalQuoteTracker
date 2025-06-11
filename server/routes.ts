@@ -586,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk client edit
-  app.patch("/api/clients/bulk-edit", requireAuth, async (req, res) => {
+  app.patch("/api/clients/bulk-edit", requireAuth, requireRole(['admin']), async (req, res) => {
     try {
       const { clientIds, updates } = req.body;
       
@@ -623,7 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk client import with CSV parsing
-  app.post("/api/clients/bulk-import", requireAuth, async (req, res) => {
+  app.post("/api/clients/bulk-import", requireAuth, requireRole(['admin']), async (req, res) => {
     try {
       const { csvData } = req.body;
       
