@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import QuoteBuilderModal from "@/components/quotes/quote-builder-modal";
+import { RoleSwitcher } from "@/components/layout/role-switcher";
 
 interface TopBarProps {
   title: string;
@@ -133,6 +134,9 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-custom" size={16} />
               </div>
             )}
+            
+            {/* Role Switcher for Dev Users */}
+            <RoleSwitcher />
             
             {/* Quick Actions */}
             {!hideNewQuoteButton && (

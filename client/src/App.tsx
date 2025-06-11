@@ -25,6 +25,7 @@ import CounterFixtures from "@/pages/counter-fixtures";
 import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
 import Sidebar from "@/components/layout/sidebar";
+import { RoleSwitcherProvider } from "@/components/layout/role-switcher";
 
 // Component to handle role-based default routing
 function DefaultRoute() {
@@ -65,11 +66,12 @@ function Router() {
       {isAuthenticated ? (
         <Route path="*">
           {() => (
-            <div className="flex h-screen">
-              <Sidebar />
-              <main className="flex-1 overflow-y-auto">
-                <Switch>
-                  <Route path="/" component={DefaultRoute} />
+            <RoleSwitcherProvider>
+              <div className="flex h-screen">
+                <Sidebar />
+                <main className="flex-1 overflow-y-auto">
+                  <Switch>
+                    <Route path="/" component={DefaultRoute} />
                   <Route path="/dashboard" component={Dashboard} />
                   <Route path="/sales-dashboard" component={SalesDashboard} />
                   <Route path="/clients" component={Clients} />

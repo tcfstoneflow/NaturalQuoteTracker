@@ -52,7 +52,10 @@ export function requireRole(roles: string[]) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (!roles.includes(req.user.role)) {
+    // Dev role has all admin privileges
+    const userRole = req.user.role === 'dev' ? 'admin' : req.user.role;
+    
+    if (!roles.includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
@@ -67,7 +70,10 @@ export function requireInventoryAccess() {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (!['admin', 'inventory_specialist'].includes(req.user.role)) {
+    const allowedRoles = ['admin', 'inventory_specialist'];
+    const userRole = req.user.role === 'dev' ? 'admin' : req.user.role;
+    
+    if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient inventory permissions' });
     }
 
