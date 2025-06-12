@@ -11,18 +11,25 @@ if (!process.env.DATABASE_URL) {
 // Use connection pool instead of single client for better connection management
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  max: 20,
+  min: 2,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 10000,
+  allowExitOnIdle: false,
 });
 
-// Handle pool errors gracefully
+// Handle pool errors gracefully with retry logic
 pool.on('error', (err) => {
   console.error('Database pool error:', err);
+  // Don't exit process on pool errors, let it recover
 });
 
 pool.on('connect', () => {
   console.log('Database pool connection established');
+});
+
+pool.on('remove', () => {
+  console.log('Database connection removed from pool');
 });
 
 export const db = drizzle(pool, { schema });

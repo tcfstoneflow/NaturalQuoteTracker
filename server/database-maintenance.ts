@@ -145,10 +145,34 @@ export async function generateHealthReport(): Promise<{
     const metrics: Record<string, any> = {};
     const recommendations: string[] = [];
 
-    // Count total records
-    const [productCount] = await db.select({ count: sql<number>`count(*)` }).from(products);
-    const [quoteCount] = await db.select({ count: sql<number>`count(*)` }).from(quotes);
-    const [slabCount] = await db.select({ count: sql<number>`count(*)` }).from(slabs);
+    // Use Promise.allSettled to handle connection issues gracefully
+    const [productCountResult, quoteCountResult, slabCountResult] = await Promise.allSettled([
+      db.select({ count: sql<number>`count(*)` }).from(products),
+      db.select({ count: sql<number>`count(*)` }).from(quotes),
+      db.select({ count: sql<number>`count(*)` }).from(slabs)
+    ]);
+
+    // Handle results safely
+    if (productCountResult.status === 'fulfilled' && productCountResult.value.length > 0) {
+      metrics.totalProducts = productCountResult.value[0].count;
+    } else {
+      metrics.totalProducts = 0;
+      recommendations.push('Unable to fetch product count - database connection issue');
+    }
+
+    if (quoteCountResult.status === 'fulfilled' && quoteCountResult.value.length > 0) {
+      metrics.totalQuotes = quoteCountResult.value[0].count;
+    } else {
+      metrics.totalQuotes = 0;
+      recommendations.push('Unable to fetch quote count - database connection issue');
+    }
+
+    if (slabCountResult.status === 'fulfilled' && slabCountResult.value.length > 0) {
+      metrics.totalSlabs = slabCountResult.value[0].count;
+    } else {
+      metrics.totalSlabs = 0;
+      recommendations.push('Unable to fetch slab count - database connection issue');
+    }
 
     metrics.totalProducts = productCount.count;
     metrics.totalQuotes = quoteCount.count;

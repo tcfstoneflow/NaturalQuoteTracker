@@ -19,6 +19,39 @@ import {
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, gte, lte, count } from "drizzle-orm";
 
+// Database operation retry utility
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  let lastError: Error | undefined;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Don't retry on certain errors
+      if (error.code === '23505' || error.code === '23503') { // Unique constraint or foreign key violations
+        throw error;
+      }
+      
+      console.warn(`Database operation failed (attempt ${attempt}/${maxRetries}):`, error.message);
+      
+      if (attempt === maxRetries) {
+        break;
+      }
+      
+      // Wait before retrying with exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+    }
+  }
+  
+  throw lastError || new Error('Operation failed after retries');
+}
+
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
@@ -1584,7 +1617,7 @@ export class DatabaseStorage implements IStorage {
 
   // Tags Implementation
   async getTags(): Promise<Tag[]> {
-    return await db.select().from(tags).orderBy(asc(tags.name));
+    return await withRetry(() => db.select().from(tags).orderBy(asc(tags.name)));
   }
 
   async getTag(id: number): Promise<Tag | undefined> {
