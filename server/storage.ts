@@ -1830,6 +1830,136 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(salesTargets).where(eq(salesTargets.id, id));
     return (result.rowCount || 0) > 0;
   }
+
+  // Sales Rep Profile methods
+  async getSalesRepProfile(userId: number): Promise<SalesRepProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(salesRepProfiles)
+      .where(eq(salesRepProfiles.userId, userId));
+    return profile || undefined;
+  }
+
+  async getSalesRepProfileBySlug(slug: string): Promise<SalesRepProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(salesRepProfiles)
+      .where(eq(salesRepProfiles.urlSlug, slug));
+    return profile || undefined;
+  }
+
+  async createSalesRepProfile(profileData: InsertSalesRepProfile): Promise<SalesRepProfile> {
+    const [profile] = await db
+      .insert(salesRepProfiles)
+      .values(profileData)
+      .returning();
+    return profile;
+  }
+
+  async updateSalesRepProfile(userId: number, updates: Partial<InsertSalesRepProfile>): Promise<SalesRepProfile | undefined> {
+    const [profile] = await db
+      .update(salesRepProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(salesRepProfiles.userId, userId))
+      .returning();
+    return profile || undefined;
+  }
+
+  // Sales Rep Favorite Slabs methods
+  async getSalesRepFavoriteSlabs(salesRepId: number): Promise<(SalesRepFavoriteSlab & { product: Product })[]> {
+    return await db
+      .select({
+        id: salesRepFavoriteSlabs.id,
+        salesRepId: salesRepFavoriteSlabs.salesRepId,
+        productId: salesRepFavoriteSlabs.productId,
+        displayOrder: salesRepFavoriteSlabs.displayOrder,
+        notes: salesRepFavoriteSlabs.notes,
+        isActive: salesRepFavoriteSlabs.isActive,
+        createdAt: salesRepFavoriteSlabs.createdAt,
+        product: products
+      })
+      .from(salesRepFavoriteSlabs)
+      .innerJoin(products, eq(salesRepFavoriteSlabs.productId, products.id))
+      .where(and(
+        eq(salesRepFavoriteSlabs.salesRepId, salesRepId),
+        eq(salesRepFavoriteSlabs.isActive, true)
+      ))
+      .orderBy(salesRepFavoriteSlabs.displayOrder, salesRepFavoriteSlabs.createdAt);
+  }
+
+  async addSalesRepFavoriteSlab(favoriteData: InsertSalesRepFavoriteSlab): Promise<SalesRepFavoriteSlab> {
+    const [favorite] = await db
+      .insert(salesRepFavoriteSlabs)
+      .values(favoriteData)
+      .returning();
+    return favorite;
+  }
+
+  async removeSalesRepFavoriteSlab(salesRepId: number, productId: number): Promise<boolean> {
+    const result = await db
+      .delete(salesRepFavoriteSlabs)
+      .where(and(
+        eq(salesRepFavoriteSlabs.salesRepId, salesRepId),
+        eq(salesRepFavoriteSlabs.productId, productId)
+      ));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Sales Rep Portfolio methods
+  async getSalesRepPortfolioImages(salesRepId: number): Promise<SalesRepPortfolioImage[]> {
+    return await db
+      .select()
+      .from(salesRepPortfolioImages)
+      .where(and(
+        eq(salesRepPortfolioImages.salesRepId, salesRepId),
+        eq(salesRepPortfolioImages.isActive, true)
+      ))
+      .orderBy(salesRepPortfolioImages.displayOrder, salesRepPortfolioImages.createdAt);
+  }
+
+  async addSalesRepPortfolioImage(imageData: InsertSalesRepPortfolioImage): Promise<SalesRepPortfolioImage> {
+    const [image] = await db
+      .insert(salesRepPortfolioImages)
+      .values(imageData)
+      .returning();
+    return image;
+  }
+
+  async deleteSalesRepPortfolioImage(id: number, salesRepId: number): Promise<boolean> {
+    const result = await db
+      .delete(salesRepPortfolioImages)
+      .where(and(
+        eq(salesRepPortfolioImages.id, id),
+        eq(salesRepPortfolioImages.salesRepId, salesRepId)
+      ));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Sales Rep Appointments methods
+  async createSalesRepAppointment(appointmentData: InsertSalesRepAppointment): Promise<SalesRepAppointment> {
+    const [appointment] = await db
+      .insert(salesRepAppointments)
+      .values(appointmentData)
+      .returning();
+    return appointment;
+  }
+
+  async getSalesRepAppointments(salesRepId: number): Promise<SalesRepAppointment[]> {
+    return await db
+      .select()
+      .from(salesRepAppointments)
+      .where(eq(salesRepAppointments.salesRepId, salesRepId))
+      .orderBy(desc(salesRepAppointments.appointmentDate));
+  }
+
+  async updateAppointmentStatus(id: number, status: string): Promise<SalesRepAppointment | undefined> {
+    const [appointment] = await db
+      .update(salesRepAppointments)
+      .set({ status })
+      .where(eq(salesRepAppointments.id, id))
+      .returning();
+    return appointment || undefined;
+  }
 }
 
 export const storage = new DatabaseStorage();
