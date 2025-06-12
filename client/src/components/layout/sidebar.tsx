@@ -37,6 +37,10 @@ const adminNavigation = [
   { name: "System Health", href: "/system-health", icon: Activity },
 ];
 
+const salesRepNavigation = [
+  { name: "My Profile", href: "/sales-rep-profile", icon: User },
+];
+
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
@@ -116,6 +120,39 @@ export default function Sidebar() {
                 </div>
               </li>
               {adminNavigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = location === item.href;
+                
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                        isActive
+                          ? "text-primary bg-blue-50"
+                          : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span>{item.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </>
+          )}
+          
+          {/* Sales Rep navigation */}
+          {isSalesRep && (
+            <>
+              <li className="pt-4">
+                <div className="px-4 py-2">
+                  <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">
+                    Profile
+                  </p>
+                </div>
+              </li>
+              {salesRepNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location === item.href;
                 

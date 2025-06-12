@@ -63,6 +63,7 @@ function Router() {
       <Route path="/public-inventory" component={PublicInventory} />
       <Route path="/product/:id" component={ProductDetails} />
       <Route path="/favorites" component={ClientFavorites} />
+      <Route path="/sales-rep/:slug" component={SalesRepProfile} />
       
       {/* Admin/Staff routes - require authentication */}
       {isAuthenticated ? (
@@ -93,6 +94,7 @@ function Router() {
                   <Route path="/showroom-visits" component={ShowroomVisits} />
                   <Route path="/slab-management/:productId" component={SlabManagement} />
                   <Route path="/all-slabs" component={AllSlabs} />
+                  <Route path="/sales-rep-profile" component={SalesRepManagement} />
                   <Route path="/settings" component={Settings} />
                   <Route path="/system-health" component={SystemHealth} />
                   <Route component={NotFound} />
