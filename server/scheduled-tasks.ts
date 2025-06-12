@@ -50,17 +50,20 @@ class TaskScheduler {
       }
     });
 
-    // Generate health report every 6 hours
-    this.scheduleInterval('health-report', 6 * 60 * 60 * 1000, async () => {
+    // Generate health report every 24 hours (reduced frequency to prevent connection issues)
+    this.scheduleInterval('health-report', 24 * 60 * 60 * 1000, async () => {
       try {
         const report = await generateHealthReport();
         if (report.systemHealth === 'critical') {
           console.error('CRITICAL: System health is critical!', report.recommendations);
         } else if (report.systemHealth === 'warning') {
           console.warn('WARNING: System health needs attention:', report.recommendations);
+        } else {
+          console.log('System health check completed: System is healthy');
         }
       } catch (error) {
-        console.error('Health report generation failed:', error);
+        console.error('Health report generation error:', error);
+        // Don't mark as critical for connection timeouts, just log and continue
       }
     });
   }

@@ -174,32 +174,38 @@ export async function generateHealthReport(): Promise<{
       recommendations.push('Unable to fetch slab count - database connection issue');
     }
 
-    metrics.totalProducts = productCount.count;
-    metrics.totalQuotes = quoteCount.count;
-    metrics.totalSlabs = slabCount.count;
+    // Check low stock products with error handling
+    try {
+      const lowStockCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(products)
+        .where(and(eq(products.isActive, true), sql`${products.stockQuantity} <= 5`));
 
-    // Check low stock products
-    const lowStockCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(products)
-      .where(and(eq(products.isActive, true), sql`${products.stockQuantity} <= 5`));
+      metrics.lowStockProducts = lowStockCount[0]?.count || 0;
 
-    metrics.lowStockProducts = lowStockCount[0].count;
-
-    if (metrics.lowStockProducts > 10) {
-      recommendations.push('High number of low-stock products detected. Consider restocking.');
+      if (metrics.lowStockProducts > 10) {
+        recommendations.push('High number of low-stock products detected. Consider restocking.');
+      }
+    } catch (error) {
+      metrics.lowStockProducts = 0;
+      recommendations.push('Unable to check low stock products - database connection issue');
     }
 
-    // Check pending quotes
-    const pendingQuotesCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(quotes)
-      .where(eq(quotes.status, 'pending'));
+    // Check pending quotes with error handling
+    try {
+      const pendingQuotesCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(quotes)
+        .where(eq(quotes.status, 'pending'));
 
-    metrics.pendingQuotes = pendingQuotesCount[0].count;
+      metrics.pendingQuotes = pendingQuotesCount[0]?.count || 0;
 
-    if (metrics.pendingQuotes > 50) {
-      recommendations.push('Large number of pending quotes. Consider follow-up actions.');
+      if (metrics.pendingQuotes > 50) {
+        recommendations.push('Large number of pending quotes. Consider follow-up actions.');
+      }
+    } catch (error) {
+      metrics.pendingQuotes = 0;
+      recommendations.push('Unable to check pending quotes - database connection issue');
     }
 
     // Determine system health
