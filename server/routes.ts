@@ -16,6 +16,8 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import nodemailer from "nodemailer";
+import csv from "csv-parser";
+import { Readable } from "stream";
 import { apiLimiter, authLimiter, uploadLimiter } from "./rate-limiter";
 import { cache } from "./cache";
 import { config } from "./config";
@@ -3685,6 +3687,100 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // CSV upload configuration
+  const csvUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit for CSV files
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only CSV files are allowed'));
+      }
+    }
+  });
+
+  // CSV Bulk Import with exact header mapping and data validation
+  app.post("/api/admin/bulk-import-csv", requireAuth, requireRole(['admin']), uploadLimiter, csvUpload.single('csvFile'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "CSV file is required" });
+    }
+
+    try {
+      console.log('Starting CSV bulk import process...');
+      
+      // Parse CSV to get headers and rows
+      const csvContent = req.file.buffer.toString('utf-8');
+      const rows: any[] = [];
+      let headers: string[] = [];
+      
+      await new Promise((resolve, reject) => {
+        const stream = Readable.from(csvContent)
+          .pipe(csv())
+          .on('headers', (csvHeaders) => {
+            headers = csvHeaders;
+            console.log('CSV Headers detected:', headers);
+          })
+          .on('data', (row) => {
+            rows.push(row);
+          })
+          .on('end', resolve)
+          .on('error', reject);
+      });
+
+      if (headers.length === 0 || rows.length === 0) {
+        return res.status(400).json({ error: "CSV file is empty or has no valid headers" });
+      }
+
+      // Step 1: Determine table type by scanning headers
+      const tableType = determineTableType(headers);
+      if (!tableType) {
+        return res.status(400).json({ 
+          error: "Unable to determine table type from CSV headers. Ensure headers match exactly with database field names." 
+        });
+      }
+
+      console.log(`Detected table type: ${tableType}`);
+
+      // Step 2: Validate header mapping
+      const fieldMapping = getFieldMapping(tableType, headers);
+      if (!fieldMapping.isValid) {
+        return res.status(400).json({ 
+          error: `Header mapping failed for ${tableType} table. Missing required fields: ${fieldMapping.missingFields.join(', ')}` 
+        });
+      }
+
+      console.log('Header mapping validated successfully');
+
+      // Step 3: Validate all data integrity before any database operations
+      const validationResults = await validateAllRowsData(rows, tableType, fieldMapping.mapping);
+      if (!validationResults.isValid) {
+        return res.status(400).json({
+          error: `Data validation failed. ${validationResults.errors.join('. ')}`,
+          details: validationResults.errors
+        });
+      }
+
+      console.log(`All ${rows.length} rows validated successfully`);
+
+      // Step 4: Atomic transaction - import all or none
+      const importResults = await performBulkImport(rows, tableType, fieldMapping.mapping);
+      
+      res.json({
+        message: `Successfully imported ${importResults.imported} ${tableType} records`,
+        imported: importResults.imported,
+        failed: importResults.failed,
+        tableType: tableType
+      });
+
+    } catch (error: any) {
+      console.error('CSV bulk import error:', error);
+      res.status(500).json({ error: `Import failed: ${error.message}` });
+    }
+  });
+
   app.get("/api/admin/health-report", requireAuth, requireRole(['admin']), async (req, res) => {
     try {
       const { generateHealthReport } = await import('./database-maintenance');
@@ -3936,4 +4032,364 @@ Your body text starts here with proper spacing.`;
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// CSV Bulk Import Helper Functions
+
+// Determine table type from headers
+function determineTableType(headers: string[]): string | null {
+  const headerSet = new Set(headers.map(h => h.toLowerCase()));
+  
+  // Products table detection
+  const productRequiredFields = ['name', 'supplier', 'category', 'grade', 'thickness', 'finish', 'price'];
+  
+  if (productRequiredFields.every(field => headerSet.has(field))) {
+    return 'products';
+  }
+  
+  // Clients table detection
+  const clientRequiredFields = ['name', 'email'];
+  
+  if (clientRequiredFields.every(field => headerSet.has(field))) {
+    return 'clients';
+  }
+  
+  // Slabs table detection
+  const slabRequiredFields = ['bundleid', 'slabnumber'];
+  
+  if (slabRequiredFields.every(field => headerSet.has(field))) {
+    return 'slabs';
+  }
+  
+  return null;
+}
+
+// Get field mapping and validate required fields
+function getFieldMapping(tableType: string, headers: string[]) {
+  const headerMap = new Map(headers.map(h => [h.toLowerCase(), h]));
+  
+  const mappings = {
+    products: {
+      required: ['name', 'supplier', 'category', 'grade', 'thickness', 'finish', 'price'],
+      optional: ['bundleid', 'description', 'unit', 'stockquantity', 'slablength', 'slabwidth', 'location', 'barcodes', 'imageurl', 'aiheadline', 'isactive'],
+      mapping: {} as Record<string, string>
+    },
+    clients: {
+      required: ['name', 'email'],
+      optional: ['phone', 'company', 'address', 'city', 'state', 'zipcode', 'notes'],
+      mapping: {} as Record<string, string>
+    },
+    slabs: {
+      required: ['bundleid', 'slabnumber'],
+      optional: ['status', 'length', 'width', 'barcode', 'location', 'notes'],
+      mapping: {} as Record<string, string>
+    }
+  };
+  
+  const config = mappings[tableType as keyof typeof mappings];
+  if (!config) {
+    return { isValid: false, missingFields: [], mapping: {} };
+  }
+  
+  const missingFields: string[] = [];
+  
+  // Check required fields
+  for (const field of config.required) {
+    if (headerMap.has(field)) {
+      config.mapping[field] = headerMap.get(field)!;
+    } else {
+      missingFields.push(field);
+    }
+  }
+  
+  // Map optional fields if present
+  for (const field of config.optional) {
+    if (headerMap.has(field)) {
+      config.mapping[field] = headerMap.get(field)!;
+    }
+  }
+  
+  return {
+    isValid: missingFields.length === 0,
+    missingFields,
+    mapping: config.mapping
+  };
+}
+
+// Validate all rows data integrity
+async function validateAllRowsData(rows: any[], tableType: string, mapping: Record<string, string>) {
+  const errors: string[] = [];
+  
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowNumber = i + 2; // +2 because CSV is 1-indexed and has header row
+    
+    try {
+      if (tableType === 'products') {
+        validateProductRow(row, mapping, rowNumber);
+      } else if (tableType === 'clients') {
+        validateClientRow(row, mapping, rowNumber);
+      } else if (tableType === 'slabs') {
+        validateSlabRow(row, mapping, rowNumber);
+      }
+    } catch (error: any) {
+      errors.push(`Row ${rowNumber}: ${error.message}`);
+    }
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// Product row validation
+function validateProductRow(row: any, mapping: Record<string, string>, rowNumber: number) {
+  // Required field validation
+  if (!row[mapping.name]?.trim()) {
+    throw new Error('Product name is required');
+  }
+  if (!row[mapping.supplier]?.trim()) {
+    throw new Error('Supplier is required');
+  }
+  if (!row[mapping.category]?.trim()) {
+    throw new Error('Category is required');
+  }
+  if (!row[mapping.grade]?.trim()) {
+    throw new Error('Grade is required');
+  }
+  if (!row[mapping.thickness]?.trim()) {
+    throw new Error('Thickness is required');
+  }
+  if (!row[mapping.finish]?.trim()) {
+    throw new Error('Finish is required');
+  }
+  
+  // Price validation
+  const price = parseFloat(row[mapping.price]);
+  if (isNaN(price) || price < 0) {
+    throw new Error('Price must be a valid positive number');
+  }
+  
+  // Category validation
+  const validCategories = ['marble', 'granite', 'quartz', 'quartzite', 'travertine', 'porcelain', 'counter_fixtures'];
+  if (!validCategories.includes(row[mapping.category]?.toLowerCase())) {
+    throw new Error(`Category must be one of: ${validCategories.join(', ')}`);
+  }
+  
+  // Grade validation
+  const validGrades = ['premium', 'standard', 'economy'];
+  if (!validGrades.includes(row[mapping.grade]?.toLowerCase())) {
+    throw new Error(`Grade must be one of: ${validGrades.join(', ')}`);
+  }
+  
+  // Optional numeric field validation
+  if (mapping.stockquantity && row[mapping.stockquantity]) {
+    const stock = parseInt(row[mapping.stockquantity]);
+    if (isNaN(stock) || stock < 0) {
+      throw new Error('Stock quantity must be a valid non-negative integer');
+    }
+  }
+  
+  if (mapping.slablength && row[mapping.slablength]) {
+    const length = parseFloat(row[mapping.slablength]);
+    if (isNaN(length) || length <= 0) {
+      throw new Error('Slab length must be a valid positive number');
+    }
+  }
+  
+  if (mapping.slabwidth && row[mapping.slabwidth]) {
+    const width = parseFloat(row[mapping.slabwidth]);
+    if (isNaN(width) || width <= 0) {
+      throw new Error('Slab width must be a valid positive number');
+    }
+  }
+}
+
+// Client row validation
+function validateClientRow(row: any, mapping: Record<string, string>, rowNumber: number) {
+  // Required field validation
+  if (!row[mapping.name]?.trim()) {
+    throw new Error('Client name is required');
+  }
+  
+  const email = row[mapping.email]?.trim();
+  if (!email) {
+    throw new Error('Email is required');
+  }
+  
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error('Invalid email format');
+  }
+}
+
+// Slab row validation
+function validateSlabRow(row: any, mapping: Record<string, string>, rowNumber: number) {
+  // Required field validation
+  if (!row[mapping.bundleid]?.trim()) {
+    throw new Error('Bundle ID is required');
+  }
+  if (!row[mapping.slabnumber]?.trim()) {
+    throw new Error('Slab number is required');
+  }
+  
+  // Status validation
+  if (mapping.status && row[mapping.status]) {
+    const validStatuses = ['available', 'sold', 'delivered'];
+    if (!validStatuses.includes(row[mapping.status]?.toLowerCase())) {
+      throw new Error(`Status must be one of: ${validStatuses.join(', ')}`);
+    }
+  }
+  
+  // Dimension validation
+  if (mapping.length && row[mapping.length]) {
+    const length = parseFloat(row[mapping.length]);
+    if (isNaN(length) || length <= 0) {
+      throw new Error('Length must be a valid positive number');
+    }
+  }
+  
+  if (mapping.width && row[mapping.width]) {
+    const width = parseFloat(row[mapping.width]);
+    if (isNaN(width) || width <= 0) {
+      throw new Error('Width must be a valid positive number');
+    }
+  }
+}
+
+// Perform atomic bulk import
+async function performBulkImport(rows: any[], tableType: string, mapping: Record<string, string>) {
+  return await db.transaction(async (tx) => {
+    let imported = 0;
+    let failed = 0;
+    
+    for (const row of rows) {
+      try {
+        if (tableType === 'products') {
+          await importProductRow(row, mapping, tx);
+        } else if (tableType === 'clients') {
+          await importClientRow(row, mapping, tx);
+        } else if (tableType === 'slabs') {
+          await importSlabRow(row, mapping, tx);
+        }
+        imported++;
+      } catch (error) {
+        console.error('Row import error:', error);
+        failed++;
+        throw error; // Rollback transaction on any failure
+      }
+    }
+    
+    return { imported, failed };
+  });
+}
+
+// Import product row
+async function importProductRow(row: any, mapping: Record<string, string>, tx: any) {
+  const { products } = await import('@shared/schema');
+  
+  const productData: any = {
+    name: row[mapping.name]?.trim(),
+    supplier: row[mapping.supplier]?.trim(),
+    category: row[mapping.category]?.toLowerCase(),
+    grade: row[mapping.grade]?.toLowerCase(),
+    thickness: row[mapping.thickness]?.trim(),
+    finish: row[mapping.finish]?.trim(),
+    price: parseFloat(row[mapping.price]).toString(),
+    unit: row[mapping.unit]?.trim() || 'sqft',
+    stockQuantity: mapping.stockquantity ? parseInt(row[mapping.stockquantity]) || 0 : 0,
+    isActive: mapping.isactive ? row[mapping.isactive]?.toLowerCase() === 'true' : true
+  };
+  
+  // Optional fields
+  if (mapping.bundleid && row[mapping.bundleid]?.trim()) {
+    productData.bundleId = row[mapping.bundleid].trim();
+  }
+  if (mapping.description && row[mapping.description]?.trim()) {
+    productData.description = row[mapping.description].trim();
+  }
+  if (mapping.slablength && row[mapping.slablength]) {
+    productData.slabLength = parseFloat(row[mapping.slablength]).toString();
+  }
+  if (mapping.slabwidth && row[mapping.slabwidth]) {
+    productData.slabWidth = parseFloat(row[mapping.slabwidth]).toString();
+  }
+  if (mapping.location && row[mapping.location]?.trim()) {
+    productData.location = row[mapping.location].trim();
+  }
+  if (mapping.imageurl && row[mapping.imageurl]?.trim()) {
+    productData.imageUrl = row[mapping.imageurl].trim();
+  }
+  if (mapping.aiheadline && row[mapping.aiheadline]?.trim()) {
+    productData.aiHeadline = row[mapping.aiheadline].trim();
+  }
+  
+  await tx.insert(products).values(productData);
+}
+
+// Import client row
+async function importClientRow(row: any, mapping: Record<string, string>, tx: any) {
+  const { clients } = await import('@shared/schema');
+  
+  const clientData: any = {
+    name: row[mapping.name]?.trim(),
+    email: row[mapping.email]?.trim().toLowerCase()
+  };
+  
+  // Optional fields
+  if (mapping.phone && row[mapping.phone]?.trim()) {
+    clientData.phone = row[mapping.phone].trim();
+  }
+  if (mapping.company && row[mapping.company]?.trim()) {
+    clientData.company = row[mapping.company].trim();
+  }
+  if (mapping.address && row[mapping.address]?.trim()) {
+    clientData.address = row[mapping.address].trim();
+  }
+  if (mapping.city && row[mapping.city]?.trim()) {
+    clientData.city = row[mapping.city].trim();
+  }
+  if (mapping.state && row[mapping.state]?.trim()) {
+    clientData.state = row[mapping.state].trim();
+  }
+  if (mapping.zipcode && row[mapping.zipcode]?.trim()) {
+    clientData.zipCode = row[mapping.zipcode].trim();
+  }
+  if (mapping.notes && row[mapping.notes]?.trim()) {
+    clientData.notes = row[mapping.notes].trim();
+  }
+  
+  await tx.insert(clients).values(clientData);
+}
+
+// Import slab row
+async function importSlabRow(row: any, mapping: Record<string, string>, tx: any) {
+  const { slabs } = await import('@shared/schema');
+  
+  const slabData: any = {
+    bundleId: row[mapping.bundleid]?.trim(),
+    slabNumber: row[mapping.slabnumber]?.trim(),
+    status: mapping.status ? row[mapping.status]?.toLowerCase() || 'available' : 'available'
+  };
+  
+  // Optional fields
+  if (mapping.length && row[mapping.length]) {
+    slabData.length = parseFloat(row[mapping.length]).toString();
+  }
+  if (mapping.width && row[mapping.width]) {
+    slabData.width = parseFloat(row[mapping.width]).toString();
+  }
+  if (mapping.barcode && row[mapping.barcode]?.trim()) {
+    slabData.barcode = row[mapping.barcode].trim();
+  }
+  if (mapping.location && row[mapping.location]?.trim()) {
+    slabData.location = row[mapping.location].trim();
+  }
+  if (mapping.notes && row[mapping.notes]?.trim()) {
+    slabData.notes = row[mapping.notes].trim();
+  }
+  
+  await tx.insert(slabs).values(slabData);
 }
