@@ -18,6 +18,7 @@ import multer from "multer";
 import nodemailer from "nodemailer";
 import { apiLimiter, authLimiter, uploadLimiter } from "./rate-limiter";
 import { cache } from "./cache";
+import { notifyTaskComplete } from './task-completion-hook';
 import { config } from "./config";
 
 // Email function for appointment notifications
@@ -616,6 +617,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errors: errors.length,
         errorDetails: errors.slice(0, 10)
       });
+
+      // Play completion sound
+      await notifyTaskComplete('Bulk Client Edit', `Updated ${updated} clients`);
     } catch (error: any) {
       console.error("Bulk edit error:", error);
       res.status(500).json({ error: "Failed to process bulk edit" });
@@ -706,6 +710,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         failed,
         errorDetails: errors.slice(0, 10)
       });
+
+      // Play completion sound
+      await notifyTaskComplete('Bulk Client Import', `Imported ${imported} new clients, updated ${updated} existing`);
     } catch (error: any) {
       console.error("Bulk import error:", error);
       res.status(500).json({ error: "Failed to process bulk import" });
