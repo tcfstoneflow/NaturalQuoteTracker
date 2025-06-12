@@ -29,8 +29,8 @@ export default function StatsCards() {
   const statCards = [
     {
       title: "Total Revenue",
-      value: `$${parseFloat(stats.totalRevenue).toLocaleString()}`,
-      change: stats.revenueChange,
+      value: `$${parseFloat(stats.totalRevenue || '0').toLocaleString()}`,
+      change: stats.revenueChange || '0%',
       changeType: "positive" as const,
       icon: DollarSign,
       bgColor: "bg-green-100",
@@ -38,8 +38,8 @@ export default function StatsCards() {
     },
     {
       title: "Active Clients",
-      value: stats.activeClients.toLocaleString(),
-      change: stats.clientsChange,
+      value: (stats.activeClients || 0).toLocaleString(),
+      change: stats.clientsChange || '0%',
       changeType: "positive" as const,
       icon: Users,
       bgColor: "bg-blue-100",
@@ -47,8 +47,8 @@ export default function StatsCards() {
     },
     {
       title: "Pending Quotes",
-      value: stats.pendingQuotes.toString(),
-      change: `${stats.expiringQuotesCount} expiring soon`,
+      value: (stats.pendingQuotes || 0).toString(),
+      change: `${stats.expiringQuotesCount || 0} expiring soon`,
       changeType: "warning" as const,
       icon: FileText,
       bgColor: "bg-orange-100",
@@ -56,8 +56,8 @@ export default function StatsCards() {
     },
     {
       title: "Inventory Items",
-      value: stats.inventoryItems.toString(),
-      change: `${stats.lowStockCount} low stock`,
+      value: (stats.inventoryItems || 0).toString(),
+      change: `${stats.lowStockCount || 0} low stock`,
       changeType: stats.lowStockCount > 0 ? "negative" : "neutral",
       icon: Package,
       bgColor: "bg-purple-100",
