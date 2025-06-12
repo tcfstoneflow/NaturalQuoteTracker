@@ -119,6 +119,31 @@ export default function SalesRepManagement() {
     }
   });
 
+  const uploadImageMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('profileImage', file);
+      return fetch("/api/sales-rep-profile/upload-image", {
+        method: "POST",
+        body: formData,
+      }).then(res => res.json());
+    },
+    onSuccess: (data) => {
+      profileForm.setValue('profileImageUrl', data.imageUrl);
+      toast({
+        title: "Image uploaded",
+        description: "Your profile image has been uploaded successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createOrUpdateProfileMutation = useMutation({
     mutationFn: async (data: z.infer<typeof profileSchema>) => {
       const method = profile ? 'PUT' : 'POST';
@@ -221,6 +246,13 @@ export default function SalesRepManagement() {
       });
     },
   });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadImageMutation.mutate(file);
+    }
+  };
 
   const onSubmitProfile = (data: z.infer<typeof profileSchema>) => {
     createOrUpdateProfileMutation.mutate(data);
@@ -411,12 +443,51 @@ export default function SalesRepManagement() {
                       name="profileImageUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Profile Image URL</FormLabel>
+                          <FormLabel>Profile Image</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="https://example.com/your-photo.jpg" />
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-4">
+                                {field.value && (
+                                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                                    <img 
+                                      src={field.value} 
+                                      alt="Profile preview" 
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1">
+                                  <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadImageMutation.isPending}
+                                    className="w-full"
+                                  >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    {uploadImageMutation.isPending ? "Uploading..." : "Upload Photo"}
+                                  </Button>
+                                </div>
+                              </div>
+                              {field.value && (
+                                <Input 
+                                  {...field} 
+                                  placeholder="Image URL will appear here after upload" 
+                                  readOnly
+                                  className="text-sm text-gray-500"
+                                />
+                              )}
+                            </div>
                           </FormControl>
                           <FormDescription>
-                            Enter a URL to your professional headshot
+                            Upload a professional headshot (JPEG, PNG, or WebP, max 5MB)
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
