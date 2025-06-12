@@ -359,7 +359,6 @@ export default function SalesRepProfile() {
                           {favorite.notes && (
                             <p className="text-sm text-gray-700 italic">"{favorite.notes}"</p>
                           )}
-                          <p className="text-lg font-bold text-blue-600 mt-2">{favorite.product.price}</p>
                         </div>
                       </div>
                     ))}
