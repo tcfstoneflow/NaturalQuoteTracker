@@ -14,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import TopBar from "@/components/layout/topbar";
 import { ImageUpload } from "@/components/ui/image-upload";
-import BulkClientManager from "@/components/bulk/bulk-client-manager";
 
 interface Product {
   id: number;
@@ -1571,9 +1570,6 @@ export default function Inventory() {
           )}
         </CardContent>
       </Card>
-
-      {/* Bulk Client Management Section */}
-      <BulkClientManager />
     </div>
   );
 }

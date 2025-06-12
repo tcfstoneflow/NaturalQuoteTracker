@@ -24,6 +24,7 @@ import SalesDashboard from "@/pages/sales-dashboard";
 import CounterFixtures from "@/pages/counter-fixtures";
 import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
+import BulkClientManagement from "@/pages/bulk-client-management";
 import Sidebar from "@/components/layout/sidebar";
 
 // Component to handle role-based default routing
@@ -91,6 +92,7 @@ function Router() {
                   <Route path="/slab-management/:productId" component={SlabManagement} />
                   <Route path="/settings" component={Settings} />
                   <Route path="/system-health" component={SystemHealth} />
+                  <Route path="/bulk-client-management" component={BulkClientManagement} />
                   <Route component={NotFound} />
                 </Switch>
               </main>
