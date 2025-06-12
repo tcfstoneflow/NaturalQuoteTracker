@@ -195,13 +195,17 @@ export default function SalesRepProfile() {
                 {profile.phone && (
                   <div className="flex items-center gap-1">
                     <Phone className="w-4 h-4" />
-                    <span>{profile.phone}</span>
+                    <a href={`tel:${profile.phone}`} className="hover:text-blue-600 transition-colors">
+                      {profile.phone}
+                    </a>
                   </div>
                 )}
                 {profile.email && (
                   <div className="flex items-center gap-1">
                     <Mail className="w-4 h-4" />
-                    <span>{profile.email}</span>
+                    <a href={`mailto:${profile.email}`} className="hover:text-blue-600 transition-colors">
+                      {profile.email}
+                    </a>
                   </div>
                 )}
               </div>
