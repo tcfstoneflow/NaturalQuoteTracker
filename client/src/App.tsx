@@ -25,7 +25,6 @@ import CounterFixtures from "@/pages/counter-fixtures";
 import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
 import Sidebar from "@/components/layout/sidebar";
-import { RoleSwitcherProvider } from "@/components/layout/role-switcher";
 
 // Component to handle role-based default routing
 function DefaultRoute() {
@@ -49,10 +48,8 @@ function Router() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-lg">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
       </div>
     );
   }
@@ -66,42 +63,40 @@ function Router() {
       
       {/* Admin/Staff routes - require authentication */}
       {isAuthenticated ? (
-        <RoleSwitcherProvider>
-          <Route path="*">
-            {() => (
-              <div className="flex h-screen">
-                <Sidebar />
-                <main className="flex-1 overflow-y-auto">
-                  <Switch>
-                    <Route path="/" component={DefaultRoute} />
-                    <Route path="/dashboard" component={Dashboard} />
-                    <Route path="/sales-dashboard" component={SalesDashboard} />
-                    <Route path="/clients" component={Clients} />
-                    <Route path="/inventory" component={Inventory} />
-                    <Route path="/counter-fixtures" component={CounterFixtures} />
-                    <Route path="/quotes" component={Quotes} />
-                    <Route path="/reports">
-                      {() => {
-                        // Protect reports page from sales reps
-                        if (user?.role === 'sales_rep') {
-                          return <NotFound />;
-                        }
-                        return <Reports />;
-                      }}
-                    </Route>
-                    <Route path="/sql-query" component={SQLQuery} />
-                    <Route path="/user-management" component={UserManagement} />
-                    <Route path="/showroom-visits" component={ShowroomVisits} />
-                    <Route path="/slab-management/:productId" component={SlabManagement} />
-                    <Route path="/settings" component={Settings} />
-                    <Route path="/system-health" component={SystemHealth} />
-                    <Route component={NotFound} />
-                  </Switch>
-                </main>
-              </div>
-            )}
-          </Route>
-        </RoleSwitcherProvider>
+        <Route path="*">
+          {() => (
+            <div className="flex h-screen">
+              <Sidebar />
+              <main className="flex-1 overflow-y-auto">
+                <Switch>
+                  <Route path="/" component={DefaultRoute} />
+                  <Route path="/dashboard" component={Dashboard} />
+                  <Route path="/sales-dashboard" component={SalesDashboard} />
+                  <Route path="/clients" component={Clients} />
+                  <Route path="/inventory" component={Inventory} />
+                  <Route path="/counter-fixtures" component={CounterFixtures} />
+                  <Route path="/quotes" component={Quotes} />
+                  <Route path="/reports">
+                    {() => {
+                      // Protect reports page from sales reps
+                      if (user?.role === 'sales_rep') {
+                        return <NotFound />;
+                      }
+                      return <Reports />;
+                    }}
+                  </Route>
+                  <Route path="/sql-query" component={SQLQuery} />
+                  <Route path="/user-management" component={UserManagement} />
+                  <Route path="/showroom-visits" component={ShowroomVisits} />
+                  <Route path="/slab-management/:productId" component={SlabManagement} />
+                  <Route path="/settings" component={Settings} />
+                  <Route path="/system-health" component={SystemHealth} />
+                  <Route component={NotFound} />
+                </Switch>
+              </main>
+            </div>
+          )}
+        </Route>
       ) : (
         <Route path="*" component={Login} />
       )}

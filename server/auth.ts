@@ -52,10 +52,7 @@ export function requireRole(roles: string[]) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Dev role has all admin privileges
-    const userRole = req.user.role === 'dev' ? 'admin' : req.user.role;
-    
-    if (!roles.includes(userRole)) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
@@ -70,10 +67,7 @@ export function requireInventoryAccess() {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const allowedRoles = ['admin', 'inventory_specialist'];
-    const userRole = req.user.role === 'dev' ? 'admin' : req.user.role;
-    
-    if (!allowedRoles.includes(userRole)) {
+    if (!['admin', 'inventory_specialist'].includes(req.user.role)) {
       return res.status(403).json({ error: 'Insufficient inventory permissions' });
     }
 
@@ -81,15 +75,14 @@ export function requireInventoryAccess() {
   };
 }
 
-// Middleware for pricing operations (admin and dev only)
+// Middleware for pricing operations (admin only)
 export function requirePricingAccess() {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const allowedRoles = ['admin', 'dev'];
-    if (!allowedRoles.includes(req.user.role)) {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Only administrators can modify pricing' });
     }
 

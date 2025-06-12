@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, Download, Edit, Trash2, Plus, Save, X, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { useEffectiveRole } from "@/components/layout/role-switcher";
 
 interface Client {
   id: number;
@@ -43,8 +42,20 @@ export default function BulkClientManager() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Use the role switcher system for access control
-  const { hasAdminAccess, displayRole } = useEffectiveRole();
+  // Check user authentication and role
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/user', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) return null;
+      return response.json();
+    },
+  });
+
+  const isAdmin = user?.user?.role === 'admin';
 
   // Fetch clients
   const { data: clients = [], isLoading } = useQuery({
@@ -208,7 +219,7 @@ export default function BulkClientManager() {
   }
 
   // Show access restricted message for non-admin users
-  if (!hasAdminAccess) {
+  if (!isAdmin) {
     return (
       <Card>
         <CardHeader>
