@@ -77,7 +77,8 @@ export default function RecentQuotes() {
               </tr>
             </thead>
             <tbody>
-              {quotes?.map((quote: any) => (
+              {Array.isArray(quotes) && quotes.length > 0 ? (
+                quotes.map((quote: any) => (
                 <tr key={quote.id} className="border-b border-neutral-100 hover:bg-neutral-50">
                   <td className="py-4 px-2">
                     <span className="font-medium text-primary-custom">{quote.quoteNumber}</span>
@@ -148,7 +149,14 @@ export default function RecentQuotes() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-secondary-custom">
+                    No recent quotes available
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
