@@ -620,6 +620,8 @@ export const insertProductTagSchema = createInsertSchema(productTags).omit({
   createdAt: true,
 });
 
+
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -686,6 +688,18 @@ export type InsertTag = z.infer<typeof insertTagSchema>;
 export type ProductTag = typeof productTags.$inferSelect;
 export type InsertProductTag = z.infer<typeof insertProductTagSchema>;
 
+export type SalesRepProfile = typeof salesRepProfiles.$inferSelect;
+export type InsertSalesRepProfile = z.infer<typeof insertSalesRepProfileSchema>;
+
+export type SalesRepFavoriteSlab = typeof salesRepFavoriteSlabs.$inferSelect;
+export type InsertSalesRepFavoriteSlab = z.infer<typeof insertSalesRepFavoriteSlabSchema>;
+
+export type SalesRepPortfolioImage = typeof salesRepPortfolioImages.$inferSelect;
+export type InsertSalesRepPortfolioImage = z.infer<typeof insertSalesRepPortfolioImageSchema>;
+
+export type SalesRepAppointment = typeof salesRepAppointments.$inferSelect;
+export type InsertSalesRepAppointment = z.infer<typeof insertSalesRepAppointmentSchema>;
+
 // Extended types for API responses
 export type QuoteWithDetails = Quote & {
   client: Client;
@@ -706,3 +720,62 @@ export type DashboardStats = {
   lowStockCount: number;
   expiringQuotesCount: number;
 };
+
+// Sales Rep Public Profiles
+export const salesRepProfiles = pgTable("sales_rep_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  urlSlug: text("url_slug").notNull().unique(), // unique URL slug for public access
+  bio: text("bio"), // sales rep bio/description
+  title: text("title"), // job title
+  yearsExperience: integer("years_experience"),
+  specialties: text("specialties").array(), // areas of expertise
+  phone: text("phone"),
+  email: text("email"),
+  profileImageUrl: text("profile_image_url"),
+  isPublic: boolean("is_public").default(true).notNull(),
+  customization: jsonb("customization"), // page styling and layout preferences
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Sales Rep Favorite Slabs (for showcasing)
+export const salesRepFavoriteSlabs = pgTable("sales_rep_favorite_slabs", {
+  id: serial("id").primaryKey(),
+  salesRepId: integer("sales_rep_id").references(() => users.id).notNull(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  displayOrder: integer("display_order").default(0), // for custom ordering
+  notes: text("notes"), // why they recommend this slab
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  uniqueFavorite: index("unique_sales_rep_product_favorite").on(table.salesRepId, table.productId),
+}));
+
+// Sales Rep Portfolio Images
+export const salesRepPortfolioImages = pgTable("sales_rep_portfolio_images", {
+  id: serial("id").primaryKey(),
+  salesRepId: integer("sales_rep_id").references(() => users.id).notNull(),
+  imageUrl: text("image_url").notNull(),
+  title: text("title"),
+  description: text("description"),
+  projectType: text("project_type"), // "kitchen", "bathroom", "commercial", etc.
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Appointment bookings for sales reps
+export const salesRepAppointments = pgTable("sales_rep_appointments", {
+  id: serial("id").primaryKey(),
+  salesRepId: integer("sales_rep_id").references(() => users.id).notNull(),
+  clientName: text("client_name").notNull(),
+  clientEmail: text("client_email").notNull(),
+  clientPhone: text("client_phone"),
+  appointmentDate: timestamp("appointment_date").notNull(),
+  appointmentType: text("appointment_type").notNull(), // "consultation", "showroom_visit", "site_visit"
+  status: text("status").default("pending").notNull(), // "pending", "confirmed", "completed", "cancelled"
+  notes: text("notes"),
+  reminderSent: boolean("reminder_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
