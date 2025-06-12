@@ -161,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User profile management routes
-  app.patch("/api/users/:id/profile", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.patch("/api/users/:id/profile", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       const { firstName, lastName, email, username, role } = req.body;
@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users/:id/avatar", requireAuth, requireRole(['admin']), uploadLimiter, avatarUpload.single('avatar'), async (req, res) => {
+  app.post("/api/users/:id/avatar", requireAuth, requireRole(['admin', 'dev']), uploadLimiter, avatarUpload.single('avatar'), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       
@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/users/:id", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.delete("/api/users/:id", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       
@@ -586,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk client edit
-  app.patch("/api/clients/bulk-edit", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.patch("/api/clients/bulk-edit", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const { clientIds, updates } = req.body;
       
@@ -623,7 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk client import with CSV parsing
-  app.post("/api/clients/bulk-import", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.post("/api/clients/bulk-import", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const { csvData } = req.body;
       
@@ -3779,7 +3779,7 @@ Your body text starts here with proper spacing.`;
   });
 
   // Database maintenance routes (admin only)
-  app.post("/api/admin/validate-database", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.post("/api/admin/validate-database", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const { validateProductData } = await import('./database-maintenance');
       const result = await validateProductData();
@@ -3888,7 +3888,7 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  app.delete("/api/tags/:id", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.delete("/api/tags/:id", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const tagId = parseInt(req.params.id);
       const success = await storage.deleteTag(tagId);

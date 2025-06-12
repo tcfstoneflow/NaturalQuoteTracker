@@ -75,6 +75,14 @@ export default function UserManagement() {
         return acc;
       }, {} as Record<string, string[]>)
     },
+    dev: {
+      name: "Developer",
+      description: "Development access with admin privileges plus role switching",
+      permissions: Object.keys(permissions).reduce((acc, module) => {
+        acc[module] = permissions[module as keyof typeof permissions].actions;
+        return acc;
+      }, {} as Record<string, string[]>)
+    },
     sales_rep: {
       name: "Sales Representative", 
       description: "Access to quotes, clients, and inventory viewing",
@@ -99,7 +107,7 @@ export default function UserManagement() {
 
   // Helper function to check if a user has a specific permission
   const hasPermission = (userRole: string, moduleKey: string, action: string) => {
-    if (userRole === "admin") return true;
+    if (userRole === "admin" || userRole === "dev") return true;
     
     const roleTemplate = roleTemplates[userRole as keyof typeof roleTemplates];
     if (!roleTemplate) return false;
