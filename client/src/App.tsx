@@ -19,6 +19,7 @@ import PublicInventory from "@/pages/public-inventory";
 import ProductDetails from "@/pages/product-details";
 import ClientFavorites from "@/pages/client-favorites";
 import SlabManagement from "@/pages/slab-management";
+import AllSlabs from "@/pages/all-slabs";
 import ShowroomVisits from "@/pages/showroom-visits";
 import SalesDashboard from "@/pages/sales-dashboard";
 import CounterFixtures from "@/pages/counter-fixtures";
@@ -89,6 +90,7 @@ function Router() {
                   <Route path="/user-management" component={UserManagement} />
                   <Route path="/showroom-visits" component={ShowroomVisits} />
                   <Route path="/slab-management/:productId" component={SlabManagement} />
+                  <Route path="/all-slabs" component={AllSlabs} />
                   <Route path="/settings" component={Settings} />
                   <Route path="/system-health" component={SystemHealth} />
                   <Route component={NotFound} />

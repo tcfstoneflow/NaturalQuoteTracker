@@ -93,6 +93,7 @@ export interface IStorage {
 
   // Slabs
   getSlabs(bundleId?: string): Promise<Slab[]>;
+  getAllSlabs(): Promise<Slab[]>;
   getSlab(id: number): Promise<Slab | undefined>;
   createSlab(slab: InsertSlab): Promise<Slab>;
   updateSlab(id: number, slab: Partial<InsertSlab>): Promise<Slab>;
@@ -1209,6 +1210,10 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(slabs).where(eq(slabs.bundleId, bundleId)).orderBy(asc(slabs.slabNumber));
     }
     return await db.select().from(slabs).orderBy(asc(slabs.bundleId), asc(slabs.slabNumber));
+  }
+
+  async getAllSlabs(): Promise<Slab[]> {
+    return await db.select().from(slabs).orderBy(asc(slabs.createdAt));
   }
 
   async getSlab(id: number): Promise<Slab | undefined> {

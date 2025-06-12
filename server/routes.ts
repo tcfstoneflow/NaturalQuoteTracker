@@ -2016,6 +2016,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all slabs across all products
+  app.get("/api/slabs/all", requireAuth, requireInventoryAccess(), async (req, res) => {
+    try {
+      const slabs = await storage.getAllSlabs();
+      res.json(slabs);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch slabs", details: error.message });
+    }
+  });
+
   app.get("/api/slabs/:id", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
       const slab = await storage.getSlab(parseInt(req.params.id));
