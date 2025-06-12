@@ -15,7 +15,8 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  Upload
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +58,7 @@ interface ValidationResult {
 export default function SystemHealth() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   const { data: healthReport, isLoading: healthLoading, refetch: refetchHealth } = useQuery<HealthReport>({
     queryKey: ["/api/admin/health-report"],
@@ -120,6 +122,30 @@ export default function SystemHealth() {
     onError: (error: Error) => {
       toast({
         title: "Cleanup Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const csvImportMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('csvFile', file);
+      const res = await apiRequest("POST", "/api/admin/bulk-import-csv", formData);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/health-report"] });
+      toast({
+        title: "CSV Import Complete",
+        description: `Successfully imported ${data.imported} records. ${data.failed || 0} failed.`,
+      });
+      setCsvFile(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "CSV Import Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -259,7 +285,7 @@ export default function SystemHealth() {
         </TabsContent>
 
         <TabsContent value="maintenance">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -336,6 +362,40 @@ export default function SystemHealth() {
                   )}
                   Clean Up Data
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Upload className="w-5 h-5 mr-2" />
+                  CSV Bulk Import
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Import database items from CSV file with exact header mapping
+                </p>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <Button 
+                    onClick={() => csvFile && csvImportMutation.mutate(csvFile)}
+                    disabled={!csvFile || csvImportMutation.isPending}
+                    className="w-full"
+                  >
+                    {csvImportMutation.isPending ? (
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    Import CSV Data
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
