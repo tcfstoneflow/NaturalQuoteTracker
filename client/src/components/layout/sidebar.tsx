@@ -33,7 +33,6 @@ const navigation = [
 const adminNavigation = [
   { name: "User Management", href: "/user-management", icon: UserCog },
   { name: "System Health", href: "/system-health", icon: Activity },
-  { name: "Bulk Db Manager", href: "/bulk-client-management", icon: Users },
 ];
 
 export default function Sidebar() {
