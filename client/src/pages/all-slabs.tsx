@@ -37,10 +37,16 @@ export default function AllSlabs() {
   const [locationFilter, setLocationFilter] = useState<string>("all");
 
   // Fetch all slabs across all products
-  const { data: slabs = [], isLoading, error } = useQuery<Slab[]>({
+  const { data: slabsData = [], isLoading, error } = useQuery({
     queryKey: ['/api/slabs/all'],
-    queryFn: () => apiRequest('GET', '/api/slabs/all'),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/slabs/all');
+      return Array.isArray(response) ? response : [];
+    },
   });
+
+  // Ensure slabs is always an array
+  const slabs = Array.isArray(slabsData) ? slabsData as Slab[] : [];
 
   const deleteSlabMutation = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/slabs/${id}`),
@@ -81,7 +87,7 @@ export default function AllSlabs() {
   });
 
   // Get unique locations for filter
-  const uniqueLocations = Array.from(new Set(slabs.map((slab: Slab) => slab.location).filter(Boolean)));
+  const uniqueLocations = Array.from(new Set(slabs.map((slab: Slab) => slab.location).filter(Boolean))) as string[];
 
   if (isLoading) {
     return (
@@ -188,7 +194,7 @@ export default function AllSlabs() {
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
                 {uniqueLocations.map((location) => (
-                  <SelectItem key={location} value={location}>
+                  <SelectItem key={location} value={location || ""}>
                     {location}
                   </SelectItem>
                 ))}
