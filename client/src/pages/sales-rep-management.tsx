@@ -47,6 +47,7 @@ export default function SalesRepManagement() {
   const [newSpecialty, setNewSpecialty] = useState("");
   const [isAddingFavorite, setIsAddingFavorite] = useState(false);
   const [isAddingPortfolioImage, setIsAddingPortfolioImage] = useState(false);
+  const [editingPortfolioImage, setEditingPortfolioImage] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -93,6 +94,16 @@ export default function SalesRepManagement() {
   });
 
   const portfolioForm = useForm<z.infer<typeof portfolioImageSchema>>({
+    resolver: zodResolver(portfolioImageSchema),
+    defaultValues: {
+      imageUrl: "",
+      title: "",
+      description: "",
+      projectType: "",
+    },
+  });
+
+  const editPortfolioForm = useForm<z.infer<typeof portfolioImageSchema>>({
     resolver: zodResolver(portfolioImageSchema),
     defaultValues: {
       imageUrl: "",
@@ -247,6 +258,32 @@ export default function SalesRepManagement() {
     },
   });
 
+  const editPortfolioImageMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof portfolioImageSchema> & { id: number }) => {
+      const response = await fetch(`/api/sales-rep-portfolio/${data.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: data.imageUrl,
+          title: data.title,
+          description: data.description,
+          projectType: data.projectType,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to update portfolio image');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep-portfolio'] });
+      setEditingPortfolioImage(null);
+      editPortfolioForm.reset();
+      toast({
+        title: "Portfolio Updated",
+        description: "Image details updated successfully.",
+      });
+    },
+  });
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -264,6 +301,25 @@ export default function SalesRepManagement() {
 
   const onSubmitPortfolioImage = (data: z.infer<typeof portfolioImageSchema>) => {
     addPortfolioImageMutation.mutate(data);
+  };
+
+  const onSubmitEditPortfolioImage = (data: z.infer<typeof portfolioImageSchema>) => {
+    if (editingPortfolioImage) {
+      editPortfolioImageMutation.mutate({
+        ...data,
+        id: editingPortfolioImage.id,
+      });
+    }
+  };
+
+  const handleEditPortfolioImage = (image: any) => {
+    setEditingPortfolioImage(image);
+    editPortfolioForm.reset({
+      imageUrl: image.imageUrl || "",
+      title: image.title || "",
+      description: image.description || "",
+      projectType: image.projectType || "",
+    });
   };
 
   const addSpecialty = () => {
@@ -848,15 +904,27 @@ export default function SalesRepManagement() {
                         {image.description && (
                           <p className="text-sm text-gray-700 mb-3">{image.description}</p>
                         )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removePortfolioImageMutation.mutate(image.id)}
-                          disabled={removePortfolioImageMutation.isPending}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Remove
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditPortfolioImage(image)}
+                            className="flex-1"
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removePortfolioImageMutation.mutate(image.id)}
+                            disabled={removePortfolioImageMutation.isPending}
+                            className="flex-1"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
