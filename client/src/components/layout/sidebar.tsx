@@ -14,7 +14,8 @@ import {
   Calendar,
   Target,
   Activity,
-  ShoppingCart
+  ShoppingCart,
+  Layers
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -23,6 +24,7 @@ const navigation = [
   { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Inventory", href: "/inventory", icon: Package },
+  { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
   { name: "Quotes", href: "/quotes", icon: FileText },
   { name: "Showroom Visits", href: "/showroom-visits", icon: Calendar },
