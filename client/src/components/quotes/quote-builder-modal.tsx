@@ -62,10 +62,13 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const { user } = useAuth();
 
   // Fetch clients and products
-  const { data: clients } = useQuery({
+  const { data: clientsData } = useQuery({
     queryKey: ['/api/clients'],
     queryFn: () => clientsApi.getAll(),
   });
+
+  // Ensure clients is always an array
+  const clients = Array.isArray(clientsData) ? clientsData : [];
 
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
@@ -379,7 +382,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
                   <SelectItem value="create_new" className="text-blue-600 font-medium border-b">
                     + Create New Client
                   </SelectItem>
-                  {clients?.map((client: any) => (
+                  {clients.map((client: any) => (
                     <SelectItem key={client.id} value={client.id.toString()}>
                       {client.company ? `${client.company} - ${client.name}` : client.name}
                     </SelectItem>
