@@ -29,6 +29,7 @@ type SalesRepProfileData = {
     customization: any;
     createdAt: string;
     updatedAt: string;
+    userName: string;
   };
   favoriteSlabs: Array<{
     id: number;
@@ -177,9 +178,12 @@ export default function SalesRepProfile() {
             </div>
             
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {profile.title || "Sales Representative"}
+              <h1 className="text-3xl font-bold text-gray-900 mb-1">
+                {profile.userName}
               </h1>
+              {profile.title && (
+                <p className="text-xl text-gray-600 mb-4">{profile.title}</p>
+              )}
               
               <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
                 {profile.yearsExperience && (

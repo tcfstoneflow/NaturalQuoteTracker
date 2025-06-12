@@ -1845,10 +1845,27 @@ export class DatabaseStorage implements IStorage {
     return profile || undefined;
   }
 
-  async getSalesRepProfileBySlug(slug: string): Promise<SalesRepProfile | undefined> {
+  async getSalesRepProfileBySlug(slug: string): Promise<(SalesRepProfile & { userName: string }) | undefined> {
     const [profile] = await db
-      .select()
+      .select({
+        id: salesRepProfiles.id,
+        userId: salesRepProfiles.userId,
+        urlSlug: salesRepProfiles.urlSlug,
+        bio: salesRepProfiles.bio,
+        title: salesRepProfiles.title,
+        yearsExperience: salesRepProfiles.yearsExperience,
+        specialties: salesRepProfiles.specialties,
+        phone: salesRepProfiles.phone,
+        email: salesRepProfiles.email,
+        profileImageUrl: salesRepProfiles.profileImageUrl,
+        isPublic: salesRepProfiles.isPublic,
+        customization: salesRepProfiles.customization,
+        createdAt: salesRepProfiles.createdAt,
+        updatedAt: salesRepProfiles.updatedAt,
+        userName: users.username,
+      })
       .from(salesRepProfiles)
+      .innerJoin(users, eq(salesRepProfiles.userId, users.id))
       .where(eq(salesRepProfiles.urlSlug, slug));
     return profile || undefined;
   }
