@@ -77,10 +77,7 @@ export default function PublicInventory() {
     setProductsWithSlabs(productsWithSlabData);
   }, [products, ...slabQueries.map(q => q.data)]);
 
-  // Helper function to calculate slab area
-  const calculateSlabArea = (length: number, width: number) => {
-    return Math.round((length * width) / 144);
-  };
+  // Removed pricing calculations for public page security
 
   // Filter and sort products
   const filteredProducts = productsWithSlabs.filter((product: any) => {
@@ -436,9 +433,6 @@ export default function PublicInventory() {
                             {(slab.length && slab.width) && (
                               <div className="text-xs text-gray-600 mb-1">
                                 {slab.length}" × {slab.width}"
-                                <span className="ml-1 text-primary font-medium">
-                                  ({((slab.length * slab.width) / 144).toFixed(1)} sq ft)
-                                </span>
                               </div>
                             )}
                             

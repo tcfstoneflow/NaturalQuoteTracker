@@ -75,11 +75,7 @@ export default function PublicInventory() {
     }
   }, [products, allSlabs]);
 
-  // Calculate slab area
-  const calculateSlabArea = (length: number, width: number) => {
-    if (!length || !width) return 0;
-    return ((length * width) / 144).toFixed(1);
-  };
+  // Removed pricing calculations for public page security
 
   // Filter and sort products
   const filteredProducts = productsWithSlabs.filter((product: any) => {

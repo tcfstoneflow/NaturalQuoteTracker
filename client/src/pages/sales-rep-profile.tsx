@@ -584,9 +584,6 @@ export default function SalesRepProfile() {
                           {(slab.length && slab.width) && (
                             <div className="text-xs text-gray-600 mb-1">
                               {slab.length}" × {slab.width}"
-                              <span className="ml-1 text-primary font-medium">
-                                ({((slab.length * slab.width) / 144).toFixed(1)} sq ft)
-                              </span>
                             </div>
                           )}
                           
