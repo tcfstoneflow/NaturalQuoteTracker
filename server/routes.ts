@@ -3711,6 +3711,20 @@ Your body text starts here with proper spacing.`;
     try {
       console.log('Starting CSV bulk import process...');
       
+      // Log import attempt start
+      await storage.createActivity({
+        type: "csv_import_started",
+        description: `CSV bulk import started by user ${req.user?.username || 'unknown'}`,
+        entityType: "system",
+        entityId: null,
+        metadata: {
+          filename: req.file.originalname,
+          filesize: req.file.size,
+          userId: req.user?.id,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
       // Parse CSV to get headers and rows
       const csvContent = req.file.buffer.toString('utf-8');
       const rows: any[] = [];
@@ -3731,12 +3745,39 @@ Your body text starts here with proper spacing.`;
       });
 
       if (headers.length === 0 || rows.length === 0) {
+        // Log empty file error
+        await storage.createActivity({
+          type: "csv_import_failed",
+          description: `CSV import failed: Empty file or no valid headers`,
+          entityType: "system",
+          entityId: null,
+          metadata: {
+            filename: req.file.originalname,
+            error: "Empty file or no valid headers",
+            userId: req.user?.id,
+            timestamp: new Date().toISOString()
+          }
+        });
         return res.status(400).json({ error: "CSV file is empty or has no valid headers" });
       }
 
       // Step 1: Determine table type by scanning headers
       const tableType = determineTableType(headers);
       if (!tableType) {
+        // Log table type detection error
+        await storage.createActivity({
+          type: "csv_import_failed",
+          description: `CSV import failed: Unable to determine table type`,
+          entityType: "system",
+          entityId: null,
+          metadata: {
+            filename: req.file.originalname,
+            headers: headers,
+            error: "Unable to determine table type from headers",
+            userId: req.user?.id,
+            timestamp: new Date().toISOString()
+          }
+        });
         return res.status(400).json({ 
           error: "Unable to determine table type from CSV headers. Ensure headers match exactly with database field names." 
         });
@@ -3747,6 +3788,22 @@ Your body text starts here with proper spacing.`;
       // Step 2: Validate header mapping
       const fieldMapping = getFieldMapping(tableType, headers);
       if (!fieldMapping.isValid) {
+        // Log field mapping error
+        await storage.createActivity({
+          type: "csv_import_failed",
+          description: `CSV import failed: Header mapping validation failed for ${tableType}`,
+          entityType: "system",
+          entityId: null,
+          metadata: {
+            filename: req.file.originalname,
+            tableType: tableType,
+            headers: headers,
+            missingFields: fieldMapping.missingFields,
+            error: `Missing required fields: ${fieldMapping.missingFields.join(', ')}`,
+            userId: req.user?.id,
+            timestamp: new Date().toISOString()
+          }
+        });
         return res.status(400).json({ 
           error: `Header mapping failed for ${tableType} table. Missing required fields: ${fieldMapping.missingFields.join(', ')}` 
         });
@@ -3757,6 +3814,22 @@ Your body text starts here with proper spacing.`;
       // Step 3: Validate all data integrity before any database operations
       const validationResults = await validateAllRowsData(rows, tableType, fieldMapping.mapping);
       if (!validationResults.isValid) {
+        // Log data validation error
+        await storage.createActivity({
+          type: "csv_import_failed",
+          description: `CSV import failed: Data validation errors in ${tableType} data`,
+          entityType: "system",
+          entityId: null,
+          metadata: {
+            filename: req.file.originalname,
+            tableType: tableType,
+            rowCount: rows.length,
+            validationErrors: validationResults.errors,
+            error: "Data validation failed",
+            userId: req.user?.id,
+            timestamp: new Date().toISOString()
+          }
+        });
         return res.status(400).json({
           error: `Data validation failed. ${validationResults.errors.join('. ')}`,
           details: validationResults.errors
@@ -3768,6 +3841,23 @@ Your body text starts here with proper spacing.`;
       // Step 4: Atomic transaction - import all or none
       const importResults = await performBulkImport(rows, tableType, fieldMapping.mapping);
       
+      // Log successful import
+      await storage.createActivity({
+        type: "csv_import_completed",
+        description: `CSV bulk import completed successfully: ${importResults.imported} ${tableType} records imported`,
+        entityType: "system",
+        entityId: null,
+        metadata: {
+          filename: req.file.originalname,
+          tableType: tableType,
+          recordsImported: importResults.imported,
+          recordsFailed: importResults.failed,
+          totalRows: rows.length,
+          userId: req.user?.id,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
       res.json({
         message: `Successfully imported ${importResults.imported} ${tableType} records`,
         imported: importResults.imported,
@@ -3777,6 +3867,22 @@ Your body text starts here with proper spacing.`;
 
     } catch (error: any) {
       console.error('CSV bulk import error:', error);
+      
+      // Log unexpected error
+      await storage.createActivity({
+        type: "csv_import_failed",
+        description: `CSV bulk import failed with unexpected error: ${error.message}`,
+        entityType: "system",
+        entityId: null,
+        metadata: {
+          filename: req.file?.originalname || 'unknown',
+          error: error.message,
+          stack: error.stack,
+          userId: req.user?.id,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
       res.status(500).json({ error: `Import failed: ${error.message}` });
     }
   });
