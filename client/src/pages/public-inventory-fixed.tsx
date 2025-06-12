@@ -388,12 +388,7 @@ export default function PublicInventory() {
                             <span className="text-gray-600">Slab Width:</span>
                             <span>{selectedProduct.slabWidth}"</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Area per Slab:</span>
-                            <span className="font-semibold">
-                              {calculateSlabArea(selectedProduct.slabLength, selectedProduct.slabWidth)} sq ft
-                            </span>
-                          </div>
+
                         </>
                       )}
                       <div className="flex justify-between">

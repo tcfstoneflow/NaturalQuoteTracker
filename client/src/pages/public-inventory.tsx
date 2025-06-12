@@ -41,8 +41,7 @@ export default function PublicInventory() {
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxTitle, setLightboxTitle] = useState("");
   
-  // Advanced filtering states
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  // Removed pricing filters for public page security
   const [dimensionFilter, setDimensionFilter] = useState("all");
   const [finishFilter, setFinishFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
@@ -123,10 +122,7 @@ export default function PublicInventory() {
   }, [products, allSlabs]);
 
   // Calculate slab area
-  const calculateSlabArea = (length: number, width: number) => {
-    if (!length || !width) return 0;
-    return ((length * width) / 144).toFixed(1);
-  };
+  // Removed pricing calculations for public page security
 
   // Enhanced filtering with price range, dimensions, finish, and tags
   const filteredProducts = productsWithSlabs.filter((product: any) => {
@@ -513,7 +509,7 @@ export default function PublicInventory() {
                         url={`${window.location.origin}/product/${product.id}`}
                         title={product.name}
                         description={`${product.category} - ${product.grade} grade with ${product.finish} finish`}
-                        price={`$${product.price}`}
+
                         size="sm"
                         className="flex-1"
                       />
