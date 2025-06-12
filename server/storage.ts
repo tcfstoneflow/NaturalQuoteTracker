@@ -193,6 +193,17 @@ export interface IStorage {
   createSalesTarget(target: InsertSalesTarget): Promise<SalesTarget>;
   updateSalesTarget(id: number, updates: Partial<InsertSalesTarget>): Promise<SalesTarget>;
   deleteSalesTarget(id: number): Promise<boolean>;
+  
+  // Sales Rep Portfolio
+  getSalesRepPortfolioImages(salesRepId: number): Promise<SalesRepPortfolioImage[]>;
+  addSalesRepPortfolioImage(imageData: InsertSalesRepPortfolioImage): Promise<SalesRepPortfolioImage>;
+  updateSalesRepPortfolioImage(id: number, salesRepId: number, updates: Partial<{
+    imageUrl: string;
+    title: string;
+    description: string;
+    projectType: string;
+  }>): Promise<SalesRepPortfolioImage | null>;
+  deleteSalesRepPortfolioImage(id: number, salesRepId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1945,6 +1956,26 @@ export class DatabaseStorage implements IStorage {
       .values(imageData)
       .returning();
     return image;
+  }
+
+  async updateSalesRepPortfolioImage(id: number, salesRepId: number, updates: Partial<{
+    imageUrl: string;
+    title: string;
+    description: string;
+    projectType: string;
+  }>): Promise<SalesRepPortfolioImage | null> {
+    const [image] = await db
+      .update(salesRepPortfolioImages)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(salesRepPortfolioImages.id, id),
+        eq(salesRepPortfolioImages.salesRepId, salesRepId)
+      ))
+      .returning();
+    return image || null;
   }
 
   async deleteSalesRepPortfolioImage(id: number, salesRepId: number): Promise<boolean> {

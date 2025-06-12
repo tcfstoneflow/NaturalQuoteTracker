@@ -938,6 +938,110 @@ export default function SalesRepManagement() {
               )}
             </CardContent>
           </Card>
+
+          {/* Edit Portfolio Image Dialog */}
+          <Dialog open={!!editingPortfolioImage} onOpenChange={() => setEditingPortfolioImage(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Portfolio Image</DialogTitle>
+                <DialogDescription>
+                  Update the details for this portfolio image
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...editPortfolioForm}>
+                <form onSubmit={editPortfolioForm.handleSubmit(onSubmitEditPortfolioImage)} className="space-y-4">
+                  <FormField
+                    control={editPortfolioForm.control}
+                    name="imageUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Image URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={editPortfolioForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Title (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Modern Kitchen Transformation" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={editPortfolioForm.control}
+                    name="projectType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Type (Optional)</FormLabel>
+                        <FormControl>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select project type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="kitchen">Kitchen</SelectItem>
+                              <SelectItem value="bathroom">Bathroom</SelectItem>
+                              <SelectItem value="commercial">Commercial</SelectItem>
+                              <SelectItem value="outdoor">Outdoor</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={editPortfolioForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Describe the project, materials used, or special features..."
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex gap-2 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setEditingPortfolioImage(null)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={editPortfolioImageMutation.isPending} 
+                      className="flex-1"
+                    >
+                      {editPortfolioImageMutation.isPending ? "Updating..." : "Update Image"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="appointments" className="space-y-6">

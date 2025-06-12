@@ -2655,6 +2655,24 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  app.patch("/api/sales-rep-portfolio/:id", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const imageId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const image = await storage.updateSalesRepPortfolioImage(imageId, userId, updates);
+      if (!image) {
+        return res.status(404).json({ error: "Portfolio image not found" });
+      }
+      
+      res.json(image);
+    } catch (error) {
+      console.error("Update sales rep portfolio image error:", error);
+      res.status(500).json({ error: "Failed to update portfolio image" });
+    }
+  });
+
   app.delete("/api/sales-rep-portfolio/:id", requireAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
