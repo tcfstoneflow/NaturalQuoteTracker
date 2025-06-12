@@ -25,6 +25,8 @@ import SalesDashboard from "@/pages/sales-dashboard";
 import CounterFixtures from "@/pages/counter-fixtures";
 import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
+import SalesRepManagement from "@/pages/sales-rep-management";
+import SalesRepProfile from "@/pages/sales-rep-profile";
 import Sidebar from "@/components/layout/sidebar";
 
 // Component to handle role-based default routing

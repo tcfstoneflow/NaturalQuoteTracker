@@ -2465,6 +2465,208 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Sales Rep Profile routes
+  app.get("/api/sales-rep-profile", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const profile = await storage.getSalesRepProfile(userId);
+      res.json(profile);
+    } catch (error) {
+      console.error("Get sales rep profile error:", error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  app.post("/api/sales-rep-profile", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const profileData = insertSalesRepProfileSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const profile = await storage.createSalesRepProfile(profileData);
+      res.json(profile);
+    } catch (error) {
+      console.error("Create sales rep profile error:", error);
+      res.status(500).json({ error: "Failed to create profile" });
+    }
+  });
+
+  app.put("/api/sales-rep-profile", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const updates = req.body;
+      
+      const profile = await storage.updateSalesRepProfile(userId, updates);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      console.error("Update sales rep profile error:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Public sales rep profile route (no auth required)
+  app.get("/api/public/sales-rep/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const profile = await storage.getSalesRepProfileBySlug(slug);
+      
+      if (!profile || !profile.isPublic) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      // Get additional data for the public profile
+      const [favoriteSlabs, portfolioImages] = await Promise.all([
+        storage.getSalesRepFavoriteSlabs(profile.userId),
+        storage.getSalesRepPortfolioImages(profile.userId)
+      ]);
+
+      res.json({
+        profile,
+        favoriteSlabs,
+        portfolioImages
+      });
+    } catch (error) {
+      console.error("Get public sales rep profile error:", error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  // Sales Rep Favorite Slabs routes
+  app.get("/api/sales-rep-favorites", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const favorites = await storage.getSalesRepFavoriteSlabs(userId);
+      res.json(favorites);
+    } catch (error) {
+      console.error("Get sales rep favorites error:", error);
+      res.status(500).json({ error: "Failed to fetch favorites" });
+    }
+  });
+
+  app.post("/api/sales-rep-favorites", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const favoriteData = insertSalesRepFavoriteSlabSchema.parse({
+        ...req.body,
+        salesRepId: userId
+      });
+      
+      const favorite = await storage.addSalesRepFavoriteSlab(favoriteData);
+      res.json(favorite);
+    } catch (error) {
+      console.error("Add sales rep favorite error:", error);
+      res.status(500).json({ error: "Failed to add favorite" });
+    }
+  });
+
+  app.delete("/api/sales-rep-favorites/:productId", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const productId = parseInt(req.params.productId);
+      
+      const success = await storage.removeSalesRepFavoriteSlab(userId, productId);
+      if (!success) {
+        return res.status(404).json({ error: "Favorite not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Remove sales rep favorite error:", error);
+      res.status(500).json({ error: "Failed to remove favorite" });
+    }
+  });
+
+  // Sales Rep Portfolio routes
+  app.get("/api/sales-rep-portfolio", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const images = await storage.getSalesRepPortfolioImages(userId);
+      res.json(images);
+    } catch (error) {
+      console.error("Get sales rep portfolio error:", error);
+      res.status(500).json({ error: "Failed to fetch portfolio" });
+    }
+  });
+
+  app.post("/api/sales-rep-portfolio", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const imageData = insertSalesRepPortfolioImageSchema.parse({
+        ...req.body,
+        salesRepId: userId
+      });
+      
+      const image = await storage.addSalesRepPortfolioImage(imageData);
+      res.json(image);
+    } catch (error) {
+      console.error("Add sales rep portfolio image error:", error);
+      res.status(500).json({ error: "Failed to add portfolio image" });
+    }
+  });
+
+  app.delete("/api/sales-rep-portfolio/:id", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const imageId = parseInt(req.params.id);
+      
+      const success = await storage.deleteSalesRepPortfolioImage(imageId, userId);
+      if (!success) {
+        return res.status(404).json({ error: "Portfolio image not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete sales rep portfolio image error:", error);
+      res.status(500).json({ error: "Failed to delete portfolio image" });
+    }
+  });
+
+  // Sales Rep Appointments routes
+  app.post("/api/sales-rep-appointments", async (req, res) => {
+    try {
+      const appointmentData = insertSalesRepAppointmentSchema.parse(req.body);
+      const appointment = await storage.createSalesRepAppointment(appointmentData);
+      res.json(appointment);
+    } catch (error) {
+      console.error("Create appointment error:", error);
+      res.status(500).json({ error: "Failed to create appointment" });
+    }
+  });
+
+  app.get("/api/sales-rep-appointments", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const appointments = await storage.getSalesRepAppointments(userId);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Get appointments error:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
+  app.put("/api/sales-rep-appointments/:id/status", requireAuth, async (req, res) => {
+    try {
+      const appointmentId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      const appointment = await storage.updateAppointmentStatus(appointmentId, status);
+      if (!appointment) {
+        return res.status(404).json({ error: "Appointment not found" });
+      }
+      
+      res.json(appointment);
+    } catch (error) {
+      console.error("Update appointment status error:", error);
+      res.status(500).json({ error: "Failed to update appointment status" });
+    }
+  });
+
   app.post('/api/test-email', async (req, res) => {
     try {
       const { testEmailConfiguration } = await import('./email');

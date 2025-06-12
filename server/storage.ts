@@ -1,5 +1,6 @@
 import { 
   users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags, salesTargets,
+  salesRepProfiles, salesRepFavoriteSlabs, salesRepPortfolioImages, salesRepAppointments,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -14,6 +15,10 @@ import {
   type Tag, type InsertTag,
   type ProductTag, type InsertProductTag,
   type SalesTarget, type InsertSalesTarget,
+  type SalesRepProfile, type InsertSalesRepProfile,
+  type SalesRepFavoriteSlab, type InsertSalesRepFavoriteSlab,
+  type SalesRepPortfolioImage, type InsertSalesRepPortfolioImage,
+  type SalesRepAppointment, type InsertSalesRepAppointment,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
