@@ -49,6 +49,7 @@ export default function SalesRepManagement() {
   const [isAddingPortfolioImage, setIsAddingPortfolioImage] = useState(false);
   const [editingPortfolioImage, setEditingPortfolioImage] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['/api/sales-rep-profile'],
@@ -799,9 +800,38 @@ export default function SalesRepManagement() {
                           name="imageUrl"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Image URL</FormLabel>
+                              <FormLabel>Image</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="https://example.com/project-image.jpg" />
+                                <div className="space-y-3">
+                                  <Input {...field} placeholder="https://example.com/project-image.jpg" />
+                                  <div className="text-center">
+                                    <span className="text-sm text-gray-500">or</span>
+                                  </div>
+                                  <div>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const url = URL.createObjectURL(file);
+                                          field.onChange(url);
+                                        }
+                                      }}
+                                      className="hidden"
+                                      ref={fileInputRef}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full"
+                                    >
+                                      <Upload className="w-4 h-4 mr-2" />
+                                      Upload Image File
+                                    </Button>
+                                  </div>
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -955,9 +985,38 @@ export default function SalesRepManagement() {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Image URL</FormLabel>
+                        <FormLabel>Image</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                          <div className="space-y-3">
+                            <Input placeholder="https://example.com/image.jpg" {...field} />
+                            <div className="text-center">
+                              <span className="text-sm text-gray-500">or</span>
+                            </div>
+                            <div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const url = URL.createObjectURL(file);
+                                    field.onChange(url);
+                                  }
+                                }}
+                                className="hidden"
+                                ref={editFileInputRef}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => editFileInputRef.current?.click()}
+                                className="w-full"
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload Image File
+                              </Button>
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
