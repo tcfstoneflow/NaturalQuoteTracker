@@ -357,7 +357,7 @@ export default function SalesRepProfile() {
                         key={favorite.id} 
                         className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => {
-                          setSelectedProduct({ ...favorite.product, slabs: productSlabs });
+                          setSelectedProduct(favorite.product);
                           setIsProductDetailsOpen(true);
                         }}
                       >
