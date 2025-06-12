@@ -1,0 +1,4 @@
+bundleid,slabnumber,status,length,width,barcode,location,notes
+HW-001,hello world,available,120.5,75.0,HW001BAR,Warehouse A,Premium quality slab for testing
+HW-002,hello world 2,available,118.0,74.5,HW002BAR,Warehouse A,Secondary test slab
+HW-003,hello world 3,available,119.75,75.25,HW003BAR,Warehouse B,Third test specimen
