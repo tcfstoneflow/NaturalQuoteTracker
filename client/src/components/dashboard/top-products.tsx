@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 
 export default function TopProducts() {
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard/top-products'],
     queryFn: dashboardApi.getTopProducts,
   });
@@ -22,6 +22,22 @@ export default function TopProducts() {
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-20 w-full" />
             ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !Array.isArray(products)) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Products</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-secondary-custom">
+            <p>Unable to load top products at this time</p>
+            <p className="text-sm mt-1">Please check your connection</p>
           </div>
         </CardContent>
       </Card>
@@ -48,7 +64,7 @@ export default function TopProducts() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {products?.map((product: any) => (
+          {(products || []).map((product: any) => (
             <Link key={product.id} href={`/product/${product.id}`}>
               <div className="flex items-center space-x-4 p-2 rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer">
                 <img 
