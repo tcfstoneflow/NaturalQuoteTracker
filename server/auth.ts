@@ -81,14 +81,15 @@ export function requireInventoryAccess() {
   };
 }
 
-// Middleware for pricing operations (admin only)
+// Middleware for pricing operations (admin and dev only)
 export function requirePricingAccess() {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (req.user.role !== 'admin') {
+    const allowedRoles = ['admin', 'dev'];
+    if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Only administrators can modify pricing' });
     }
 

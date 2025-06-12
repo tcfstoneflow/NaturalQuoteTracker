@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Authentication routes with rate limiting
   app.post("/api/auth/login", authLimiter, login);
-  app.post("/api/auth/register", requireAuth, requireRole(['admin']), authLimiter, register);
+  app.post("/api/auth/register", requireAuth, requireRole(['admin', 'dev']), authLimiter, register);
   app.post("/api/auth/logout", logout);
   app.get("/api/auth/user", requireAuth, getCurrentUser);
 
@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/users/:id/toggle", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.patch("/api/users/:id/toggle", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       const { isActive } = req.body;
@@ -3790,7 +3790,7 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  app.post("/api/admin/optimize-quotes", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.post("/api/admin/optimize-quotes", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const { optimizeQuoteCalculations } = await import('./database-maintenance');
       await optimizeQuoteCalculations();
@@ -3801,7 +3801,7 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  app.post("/api/admin/cleanup-data", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.post("/api/admin/cleanup-data", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const { cleanupExpiredData } = await import('./database-maintenance');
       await cleanupExpiredData();
@@ -3812,7 +3812,7 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  app.get("/api/admin/health-report", requireAuth, requireRole(['admin']), async (req, res) => {
+  app.get("/api/admin/health-report", requireAuth, requireRole(['admin', 'dev']), async (req, res) => {
     try {
       const { generateHealthReport } = await import('./database-maintenance');
       const report = await generateHealthReport();

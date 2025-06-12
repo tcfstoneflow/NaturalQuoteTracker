@@ -39,14 +39,14 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
   
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'dev';
   const isInventorySpecialist = user?.role === 'inventory_specialist';
   const isSalesRep = user?.role === 'sales_rep';
   
   // Filter navigation based on user role
   const getVisibleNavigation = () => {
     if (isAdmin) {
-      // Admins see everything except sales dashboard (they have main dashboard)
+      // Admins and devs see everything except sales dashboard (they have main dashboard)
       return navigation.filter(item => item.href !== '/sales-dashboard');
     } else if (isInventorySpecialist) {
       // Inventory specialists can see dashboard, inventory, and reports
