@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { User, Globe, Heart, ImageIcon, Calendar, Plus, Trash2, Edit, ExternalLink, Copy } from "lucide-react";
+import { User, Globe, Heart, ImageIcon, Calendar, Plus, Trash2, Edit, ExternalLink, Copy, Upload } from "lucide-react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +25,7 @@ const profileSchema = z.object({
   specialties: z.array(z.string()).optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
-  profileImageUrl: z.string().url().optional().or(z.literal("")),
+  profileImageUrl: z.string().optional(),
   isPublic: z.boolean(),
 });
 
@@ -47,6 +47,7 @@ export default function SalesRepManagement() {
   const [newSpecialty, setNewSpecialty] = useState("");
   const [isAddingFavorite, setIsAddingFavorite] = useState(false);
   const [isAddingPortfolioImage, setIsAddingPortfolioImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['/api/sales-rep-profile'],
