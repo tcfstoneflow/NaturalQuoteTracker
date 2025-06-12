@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, Mail, Phone, User, MapPin, Star, ImageIcon, CalendarPlus } from "lucide-react";
+import { Calendar, Clock, Mail, Phone, User, MapPin, Star, ImageIcon, CalendarPlus, Globe2 } from "lucide-react";
 import { format } from "date-fns";
 
 type SalesRepProfileData = {
@@ -75,6 +75,8 @@ export default function SalesRepProfile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [appointmentForm, setAppointmentForm] = useState<AppointmentForm>({
     clientName: "",
     clientEmail: "",
@@ -87,6 +89,14 @@ export default function SalesRepProfile() {
   const { data: profileData, isLoading } = useQuery<SalesRepProfileData>({
     queryKey: [`/api/public/sales-rep/${slug}`],
     enabled: !!slug,
+  });
+
+  // Fetch slabs for selected product
+  const { data: productSlabs = [] } = useQuery({
+    queryKey: ["/api/public/slabs", selectedProduct?.bundleId],
+    queryFn: () => 
+      fetch(`/api/public/slabs?bundleId=${encodeURIComponent(selectedProduct?.bundleId || '')}`).then(res => res.json()),
+    enabled: !!selectedProduct?.bundleId,
   });
 
   const bookAppointmentMutation = useMutation({
@@ -343,7 +353,14 @@ export default function SalesRepProfile() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {favoriteSlabs.map((favorite) => (
-                      <div key={favorite.id} className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                      <div 
+                        key={favorite.id} 
+                        className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => {
+                          setSelectedProduct({ ...favorite.product, slabs: productSlabs });
+                          setIsProductDetailsOpen(true);
+                        }}
+                      >
                         <div className="aspect-video bg-gray-100 overflow-hidden">
                           {favorite.product.imageUrl ? (
                             <img 
@@ -363,6 +380,9 @@ export default function SalesRepProfile() {
                           {favorite.notes && (
                             <p className="text-sm text-gray-700 italic">"{favorite.notes}"</p>
                           )}
+                          <p className="text-xs text-blue-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            Click to view details
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -469,6 +489,150 @@ export default function SalesRepProfile() {
           </div>
         </div>
       </div>
+
+      {/* Product Details Modal */}
+      <Dialog open={isProductDetailsOpen} onOpenChange={setIsProductDetailsOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              {selectedProduct?.name}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedProduct?.category} • {selectedProduct?.supplier}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedProduct && (
+            <div className="space-y-6">
+              {/* Product Image */}
+              {selectedProduct.imageUrl && (
+                <div className="w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                  <img 
+                    src={selectedProduct.imageUrl} 
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Product Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Product Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Material:</span>
+                      <span>{selectedProduct.material || selectedProduct.category}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Grade:</span>
+                      <span>{selectedProduct.grade}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Finish:</span>
+                      <span>{selectedProduct.finish}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Thickness:</span>
+                      <span>{selectedProduct.thickness}</span>
+                    </div>
+                    {selectedProduct.description && (
+                      <div className="pt-2">
+                        <span className="text-gray-600">Description:</span>
+                        <p className="text-sm mt-1">{selectedProduct.description}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Availability</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Bundle ID:</span>
+                      <span>{selectedProduct.bundleId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Available Slabs:</span>
+                      <span className="font-semibold">
+                        {productSlabs?.filter((slab: any) => slab.status === 'available').length || selectedProduct.stockQuantity || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Individual Slabs */}
+              {productSlabs && Array.isArray(productSlabs) && productSlabs.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Individual Slabs Available</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto">
+                    {productSlabs
+                      .filter((slab: any) => slab.status === 'available')
+                      .map((slab: any) => (
+                        <div 
+                          key={slab.id} 
+                          className="border-2 border-gray-200 rounded-lg bg-white p-3"
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="font-medium text-sm">#{slab.slabNumber}</div>
+                            <Badge variant="secondary" className="text-xs">
+                              Available
+                            </Badge>
+                          </div>
+                          
+                          {(slab.length && slab.width) && (
+                            <div className="text-xs text-gray-600 mb-1">
+                              {slab.length}" × {slab.width}"
+                              <span className="ml-1 text-primary font-medium">
+                                ({((slab.length * slab.width) / 144).toFixed(1)} sq ft)
+                              </span>
+                            </div>
+                          )}
+                          
+                          <div className="space-y-1">
+                            {slab.location && (
+                              <div className="flex items-center text-xs text-gray-500">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                Storage: {slab.location}
+                              </div>
+                            )}
+                            {slab.productionLocation && (
+                              <div className="flex items-center text-xs text-gray-600">
+                                <Globe2 className="h-3 w-3 mr-1" />
+                                Origin: {slab.productionLocation}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button 
+                  className="flex-1"
+                  onClick={() => setIsBookingOpen(true)}
+                >
+                  Schedule Consultation
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const subject = `Interest in ${selectedProduct.name}`;
+                    const body = `Hello ${profile.userName},\n\nI'm interested in learning more about the ${selectedProduct.name} from your recommendations.\n\nPlease contact me to discuss details.\n\nThank you!`;
+                    window.location.href = `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                  }}
+                >
+                  Contact About This Slab
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
