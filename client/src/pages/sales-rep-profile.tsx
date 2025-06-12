@@ -539,7 +539,13 @@ export default function SalesRepProfile() {
                     {selectedProduct.description && (
                       <div className="pt-2">
                         <span className="text-gray-600">Description:</span>
-                        <p className="text-sm mt-1">{selectedProduct.description}</p>
+                        <p className="text-sm mt-1" 
+                           dangerouslySetInnerHTML={{
+                             __html: selectedProduct.description
+                               .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                               .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                           }}
+                        />
                       </div>
                     )}
                   </div>
