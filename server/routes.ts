@@ -3977,14 +3977,89 @@ Your body text starts here with proper spacing.`;
     }
   });
 
-  // CSV Bulk Import with exact header mapping and data validation
+  // CSV Preview Endpoint - Preview data before import
+  app.post("/api/admin/bulk-import-preview", requireAuth, requireRole(['admin']), uploadLimiter, csvUpload.single('csvFile'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "CSV file is required" });
+    }
+
+    try {
+      console.log('Starting CSV preview process...');
+      
+      // Parse CSV to get headers and sample rows
+      const csvContent = req.file.buffer.toString('utf-8');
+      const rows: any[] = [];
+      let headers: string[] = [];
+      
+      await new Promise((resolve, reject) => {
+        const stream = Readable.from(csvContent)
+          .pipe(csv())
+          .on('headers', (csvHeaders) => {
+            headers = csvHeaders;
+          })
+          .on('data', (row) => {
+            rows.push(row);
+          })
+          .on('end', resolve)
+          .on('error', reject);
+      });
+
+      if (headers.length === 0) {
+        return res.status(400).json({ error: "CSV file has no valid headers" });
+      }
+
+      // Determine table type
+      const tableType = determineTableType(headers);
+      if (!tableType) {
+        return res.json({
+          success: false,
+          error: "Unable to determine table type from CSV headers",
+          headers,
+          suggestedMappings: generateSuggestedMappings(headers),
+          totalRows: rows.length
+        });
+      }
+
+      // Validate header mapping
+      const fieldMapping = getFieldMapping(tableType, headers);
+      
+      // Get preview data (first 10 rows)
+      const previewRows = rows.slice(0, 10);
+      
+      // Validate preview rows
+      const validationResults = await validateAllRowsData(previewRows, tableType, fieldMapping.mapping);
+      
+      res.json({
+        success: true,
+        tableType,
+        headers,
+        totalRows: rows.length,
+        previewRows,
+        fieldMapping,
+        validationSummary: {
+          isValid: validationResults.isValid,
+          errorCount: validationResults.errors.length,
+          errors: validationResults.errors.slice(0, 5) // First 5 errors only
+        },
+        filename: req.file.originalname,
+        fileSize: req.file.size
+      });
+
+    } catch (error: any) {
+      console.error('CSV preview error:', error);
+      res.status(500).json({ error: `Preview failed: ${error.message}` });
+    }
+  });
+
+  // Enhanced CSV Bulk Import with batch processing and error recovery
   app.post("/api/admin/bulk-import-csv", requireAuth, requireRole(['admin']), uploadLimiter, csvUpload.single('csvFile'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "CSV file is required" });
     }
 
     try {
-      console.log('Starting CSV bulk import process...');
+      console.log('Starting enhanced CSV bulk import process...');
+      const { skipErrors = false, batchSize = 100 } = req.body;
       
       // Log import attempt start
       await storage.createActivity({
@@ -4113,8 +4188,11 @@ Your body text starts here with proper spacing.`;
 
       console.log(`All ${rows.length} rows validated successfully`);
 
-      // Step 4: Atomic transaction - import all or none
-      const importResults = await performBulkImport(rows, tableType, fieldMapping.mapping);
+      // Step 4: Enhanced bulk import with batch processing and error recovery
+      const importResults = await performEnhancedBulkImport(rows, tableType, fieldMapping.mapping, { 
+        skipErrors, 
+        batchSize: parseInt(batchSize) || 100 
+      });
       
       // Log successful import
       await storage.createActivity({
@@ -4445,6 +4523,102 @@ function determineTableType(headers: string[]): string | null {
   return null;
 }
 
+// Generate suggested field mappings for unknown headers
+function generateSuggestedMappings(headers: string[]) {
+  const suggestions = {
+    products: {
+      confidence: 0,
+      possibleMappings: {} as Record<string, string[]>
+    },
+    clients: {
+      confidence: 0,
+      possibleMappings: {} as Record<string, string[]>
+    },
+    slabs: {
+      confidence: 0,
+      possibleMappings: {} as Record<string, string[]>
+    }
+  };
+
+  const headerLower = headers.map(h => h.toLowerCase());
+
+  // Product field suggestions
+  const productMappings = {
+    name: ['product_name', 'productname', 'item', 'title', 'material'],
+    supplier: ['vendor', 'manufacturer', 'provider', 'source'],
+    category: ['type', 'material_type', 'stone_type', 'product_type'],
+    grade: ['quality', 'level', 'tier', 'class'],
+    thickness: ['thick', 'depth', 'height'],
+    finish: ['surface', 'texture', 'polished', 'honed'],
+    price: ['cost', 'amount', 'value', 'rate', 'unit_price'],
+    bundleid: ['bundle', 'lot', 'batch', 'group'],
+    stockquantity: ['stock', 'qty', 'quantity', 'available', 'inventory']
+  };
+
+  // Client field suggestions  
+  const clientMappings = {
+    name: ['client_name', 'customer', 'contact', 'full_name', 'person'],
+    email: ['email_address', 'contact_email', 'mail'],
+    phone: ['telephone', 'mobile', 'contact_number', 'phone_number'],
+    company: ['business', 'organization', 'firm', 'corp'],
+    address: ['street', 'location', 'address1', 'street_address'],
+    city: ['town', 'municipality'],
+    state: ['province', 'region', 'territory'],
+    zipcode: ['zip', 'postal_code', 'postcode']
+  };
+
+  // Slab field suggestions
+  const slabMappings = {
+    bundleid: ['bundle', 'lot', 'batch', 'group', 'bundle_id'],
+    slabnumber: ['slab_no', 'number', 'piece', 'item_number'],
+    status: ['state', 'condition', 'availability'],
+    length: ['l', 'len', 'long'],
+    width: ['w', 'wide', 'breadth'],
+    location: ['warehouse', 'storage', 'yard', 'position']
+  };
+
+  // Check product mappings
+  let productMatches = 0;
+  for (const [field, alternatives] of Object.entries(productMappings)) {
+    const matches = headerLower.filter(h => 
+      h === field || alternatives.some(alt => h.includes(alt) || alt.includes(h))
+    );
+    if (matches.length > 0) {
+      suggestions.products.possibleMappings[field] = matches;
+      productMatches++;
+    }
+  }
+  suggestions.products.confidence = (productMatches / Object.keys(productMappings).length) * 100;
+
+  // Check client mappings
+  let clientMatches = 0;
+  for (const [field, alternatives] of Object.entries(clientMappings)) {
+    const matches = headerLower.filter(h => 
+      h === field || alternatives.some(alt => h.includes(alt) || alt.includes(h))
+    );
+    if (matches.length > 0) {
+      suggestions.clients.possibleMappings[field] = matches;
+      clientMatches++;
+    }
+  }
+  suggestions.clients.confidence = (clientMatches / Object.keys(clientMappings).length) * 100;
+
+  // Check slab mappings  
+  let slabMatches = 0;
+  for (const [field, alternatives] of Object.entries(slabMappings)) {
+    const matches = headerLower.filter(h => 
+      h === field || alternatives.some(alt => h.includes(alt) || alt.includes(h))
+    );
+    if (matches.length > 0) {
+      suggestions.slabs.possibleMappings[field] = matches;
+      slabMatches++;
+    }
+  }
+  suggestions.slabs.confidence = (slabMatches / Object.keys(slabMappings).length) * 100;
+
+  return suggestions;
+}
+
 // Get field mapping and validate required fields
 function getFieldMapping(tableType: string, headers: string[]) {
   const headerMap = new Map(headers.map(h => [h.toLowerCase(), h]));
@@ -4640,14 +4814,106 @@ function validateSlabRow(row: any, mapping: Record<string, string>, rowNumber: n
   }
 }
 
-// Perform atomic bulk import
-async function performBulkImport(rows: any[], tableType: string, mapping: Record<string, string>) {
-  return await db.transaction(async (tx) => {
-    let imported = 0;
-    let failed = 0;
+// Enhanced bulk import with batch processing and error recovery
+async function performEnhancedBulkImport(
+  rows: any[], 
+  tableType: string, 
+  mapping: Record<string, string>, 
+  options: { skipErrors: boolean; batchSize: number }
+) {
+  const { skipErrors, batchSize } = options;
+  let totalImported = 0;
+  let totalFailed = 0;
+  const errors: Array<{ row: number; error: string; data: any }> = [];
+  
+  console.log(`Starting enhanced bulk import: ${rows.length} rows, batch size: ${batchSize}, skip errors: ${skipErrors}`);
+
+  // Process in batches
+  for (let i = 0; i < rows.length; i += batchSize) {
+    const batch = rows.slice(i, i + batchSize);
+    const batchNumber = Math.floor(i / batchSize) + 1;
+    const totalBatches = Math.ceil(rows.length / batchSize);
     
-    for (const row of rows) {
+    console.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} rows)`);
+
+    if (skipErrors) {
+      // Process with error recovery - continue on errors
+      const batchResults = await processBatchWithErrorRecovery(batch, tableType, mapping, i);
+      totalImported += batchResults.imported;
+      totalFailed += batchResults.failed;
+      errors.push(...batchResults.errors);
+    } else {
+      // Atomic batch processing - rollback batch on any error
       try {
+        const batchResults = await db.transaction(async (tx) => {
+          let batchImported = 0;
+          
+          for (let j = 0; j < batch.length; j++) {
+            const row = batch[j];
+            const globalRowIndex = i + j;
+            
+            try {
+              if (tableType === 'products') {
+                await importProductRow(row, mapping, tx);
+              } else if (tableType === 'clients') {
+                await importClientRow(row, mapping, tx);
+              } else if (tableType === 'slabs') {
+                await importSlabRow(row, mapping, tx);
+              }
+              batchImported++;
+            } catch (error: any) {
+              console.error(`Row ${globalRowIndex + 2} import error:`, error);
+              throw new Error(`Row ${globalRowIndex + 2}: ${error.message}`);
+            }
+          }
+          
+          return { imported: batchImported, failed: 0 };
+        });
+        
+        totalImported += batchResults.imported;
+        console.log(`Batch ${batchNumber} completed successfully: ${batchResults.imported} rows imported`);
+      } catch (error: any) {
+        console.error(`Batch ${batchNumber} failed:`, error);
+        totalFailed += batch.length;
+        errors.push({
+          row: i + 2, // CSV row number
+          error: error.message,
+          data: batch[0] // First row of failed batch for context
+        });
+        
+        // In atomic mode, we stop on first batch failure
+        break;
+      }
+    }
+  }
+
+  console.log(`Enhanced bulk import completed: ${totalImported} imported, ${totalFailed} failed`);
+  
+  return { 
+    imported: totalImported, 
+    failed: totalFailed, 
+    errors: errors.slice(0, 20), // Limit to first 20 errors
+    totalErrors: errors.length
+  };
+}
+
+// Process batch with individual row error recovery
+async function processBatchWithErrorRecovery(
+  batch: any[], 
+  tableType: string, 
+  mapping: Record<string, string>, 
+  batchStartIndex: number
+) {
+  let imported = 0;
+  let failed = 0;
+  const errors: Array<{ row: number; error: string; data: any }> = [];
+
+  for (let i = 0; i < batch.length; i++) {
+    const row = batch[i];
+    const globalRowIndex = batchStartIndex + i;
+    
+    try {
+      await db.transaction(async (tx) => {
         if (tableType === 'products') {
           await importProductRow(row, mapping, tx);
         } else if (tableType === 'clients') {
@@ -4655,15 +4921,28 @@ async function performBulkImport(rows: any[], tableType: string, mapping: Record
         } else if (tableType === 'slabs') {
           await importSlabRow(row, mapping, tx);
         }
-        imported++;
-      } catch (error) {
-        console.error('Row import error:', error);
-        failed++;
-        throw error; // Rollback transaction on any failure
-      }
+      });
+      
+      imported++;
+    } catch (error: any) {
+      console.error(`Row ${globalRowIndex + 2} failed:`, error.message);
+      failed++;
+      errors.push({
+        row: globalRowIndex + 2, // CSV row number (1-indexed + header)
+        error: error.message,
+        data: row
+      });
     }
-    
-    return { imported, failed };
+  }
+
+  return { imported, failed, errors };
+}
+
+// Perform atomic bulk import (legacy function for compatibility)
+async function performBulkImport(rows: any[], tableType: string, mapping: Record<string, string>) {
+  return await performEnhancedBulkImport(rows, tableType, mapping, { 
+    skipErrors: false, 
+    batchSize: 100 
   });
 }
 
