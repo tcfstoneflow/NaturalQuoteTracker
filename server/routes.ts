@@ -782,6 +782,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const product = await storage.updateProduct(id, validatedData);
       
+      // Invalidate products cache after updating product
+      cache.invalidateProducts();
+      
       // Note: Automatic AI rendering disabled to prevent unwanted gallery image generation
       // Use manual render endpoints instead: /api/products/:id/generate-render or /api/products/:id/generate-python-render
       
@@ -802,6 +805,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const product = await storage.updateProduct(id, validatedData);
+      
+      // Invalidate products cache after updating product
+      cache.invalidateProducts();
       
       // Note: Automatic AI rendering disabled to prevent unwanted gallery image generation
       // Use manual render endpoints instead: /api/products/:id/generate-render or /api/products/:id/generate-python-render

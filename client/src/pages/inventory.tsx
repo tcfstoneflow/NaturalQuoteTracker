@@ -1356,27 +1356,38 @@ export default function Inventory() {
                                   bundles.push(bundle);
                                 }
                                 
-                                // Update bundles one by one
+                                // Update bundles one by one with slight delay to prevent server overload
                                 let successCount = 0;
                                 let errorCount = 0;
                                 
                                 for (const bundleData of bundles) {
                                   try {
                                     if (bundleData.id) {
+                                      // Clean up data before sending
+                                      const updateData = { ...bundleData };
+                                      delete updateData.createdAt; // Remove readonly fields
+                                      
                                       // Update existing product
                                       const response = await fetch(`/api/products/${bundleData.id}`, {
                                         method: "PUT",
                                         headers: { "Content-Type": "application/json" },
                                         credentials: "include",
-                                        body: JSON.stringify(bundleData),
+                                        body: JSON.stringify(updateData),
                                       });
                                       
                                       if (response.ok) {
                                         successCount++;
+                                        console.log(`Successfully updated product ${bundleData.id}`);
                                       } else {
                                         errorCount++;
+                                        const errorText = await response.text();
+                                        console.error(`Failed to update product ${bundleData.id}:`, errorText);
                                       }
                                     }
+                                    
+                                    // Small delay between requests to prevent overwhelming the server
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                    
                                   } catch (error) {
                                     errorCount++;
                                     console.error(`Error updating bundle ${bundleData.id}:`, error);
@@ -1388,8 +1399,10 @@ export default function Inventory() {
                                   description: `Updated ${successCount} bundles${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
                                 });
                                 
-                                // Refresh the products data
-                                queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+                                // Force complete refresh of products data
+                                queryClient.removeQueries({ queryKey: ["/api/products"] });
+                                await queryClient.refetchQueries({ queryKey: ["/api/products"] });
+                                
                                 setIsBulkOpen(false);
                                 e.target.value = '';
                                 
