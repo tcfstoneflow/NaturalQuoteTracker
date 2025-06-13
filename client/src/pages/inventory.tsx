@@ -1224,8 +1224,10 @@ export default function Inventory() {
             <Button
               variant="outline"
               onClick={() => {
-                // Export current bundles to CSV
+                // Export current bundles to CSV - using exact same data source as import updates
                 const productList = products as Product[];
+                console.log("Exporting products from /api/products:", productList);
+                
                 if (!productList || productList.length === 0) {
                   toast({
                     title: "No Data",
@@ -1444,10 +1446,12 @@ export default function Inventory() {
                                   description: `Updated ${successCount} bundles${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
                                 });
                                 
-                                // Force complete refresh of products data
+                                // Force complete refresh of products data from same table used by export
+                                console.log("Clearing cache and refreshing /api/products data...");
                                 queryClient.removeQueries({ queryKey: ["/api/products"] });
                                 await queryClient.refetchQueries({ queryKey: ["/api/products"] });
                                 
+                                console.log("Import workflow completed - data refresh finished");
                                 setIsBulkOpen(false);
                                 e.target.value = '';
                                 
