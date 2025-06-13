@@ -1323,49 +1323,96 @@ export default function Inventory() {
                               description: "Processing your CSV file, please wait.",
                             });
 
-                            // Use the backend CSV import API for Stone Slab Bundles
-                            const formData = new FormData();
-                            formData.append('csvFile', file);
-                            formData.append('tableType', 'slabs'); // Stone Slab Bundles table type
-                            formData.append('skipErrors', 'false');
-                            formData.append('batchSize', '50');
-
-                            const response = await fetch("/api/admin/bulk-import", {
-                              method: "POST",
-                              credentials: "include",
-                              body: formData,
-                              headers: {
-                                // Don't set Content-Type for FormData, let browser set it
+                            // Read the CSV file content
+                            const reader = new FileReader();
+                            reader.onload = async (event) => {
+                              try {
+                                const csvData = event.target?.result as string;
+                                const lines = csvData.split('\n').filter(line => line.trim());
+                                
+                                if (lines.length < 2) {
+                                  throw new Error("CSV must contain at least a header and one data row");
+                                }
+                                
+                                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                                const bundles = [];
+                                
+                                // Process each row
+                                for (let i = 1; i < lines.length; i++) {
+                                  const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                                  if (values.length !== headers.length) continue;
+                                  
+                                  const bundle: any = {};
+                                  headers.forEach((header, index) => {
+                                    bundle[header] = values[index];
+                                  });
+                                  
+                                  // Convert numeric fields
+                                  if (bundle.price) bundle.price = parseFloat(bundle.price) || 0;
+                                  if (bundle.stockQuantity) bundle.stockQuantity = parseInt(bundle.stockQuantity) || 0;
+                                  if (bundle.slabLength) bundle.slabLength = parseFloat(bundle.slabLength) || null;
+                                  if (bundle.slabWidth) bundle.slabWidth = parseFloat(bundle.slabWidth) || null;
+                                  
+                                  bundles.push(bundle);
+                                }
+                                
+                                // Update bundles one by one
+                                let successCount = 0;
+                                let errorCount = 0;
+                                
+                                for (const bundleData of bundles) {
+                                  try {
+                                    if (bundleData.id) {
+                                      // Update existing product
+                                      const response = await fetch(`/api/products/${bundleData.id}`, {
+                                        method: "PUT",
+                                        headers: { "Content-Type": "application/json" },
+                                        credentials: "include",
+                                        body: JSON.stringify(bundleData),
+                                      });
+                                      
+                                      if (response.ok) {
+                                        successCount++;
+                                      } else {
+                                        errorCount++;
+                                      }
+                                    }
+                                  } catch (error) {
+                                    errorCount++;
+                                    console.error(`Error updating bundle ${bundleData.id}:`, error);
+                                  }
+                                }
+                                
+                                toast({
+                                  title: "Import Complete",
+                                  description: `Updated ${successCount} bundles${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+                                });
+                                
+                                // Refresh the products data
+                                queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+                                setIsBulkOpen(false);
+                                e.target.value = '';
+                                
+                              } catch (error: any) {
+                                console.error('CSV processing error:', error);
+                                toast({
+                                  title: "Import Error",
+                                  description: error.message || "Failed to process CSV file",
+                                  variant: "destructive"
+                                });
+                                e.target.value = '';
                               }
-                            });
-
-                            if (!response.ok) {
-                              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                            }
-
-                            const result = await response.json();
+                            };
                             
-                            toast({
-                              title: "Import Successful",
-                              description: `Successfully imported ${result.imported || 0} Stone Slab Bundle${(result.imported || 0) !== 1 ? 's' : ''}`,
-                            });
-                            
-                            // Refresh the products data
-                            queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-                            queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
-                            setIsBulkOpen(false);
-                            
-                            // Clear the file input
-                            e.target.value = '';
+                            reader.readAsText(file);
                             
                           } catch (error: any) {
                             console.error('CSV import error:', error);
                             toast({ 
                               title: "Import Error", 
-                              description: error.message || "Network error occurred. Please check your connection and try again.", 
+                              description: error.message || "Failed to import CSV file", 
                               variant: "destructive" 
                             });
-                            // Clear the file input on error
                             e.target.value = '';
                           }
                         }
