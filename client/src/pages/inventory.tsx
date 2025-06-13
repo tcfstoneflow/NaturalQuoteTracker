@@ -58,6 +58,7 @@ export default function Inventory() {
   const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [isMultiCreateOpen, setIsMultiCreateOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -105,6 +106,24 @@ export default function Inventory() {
   const [newTagName, setNewTagName] = useState("");
   const [newTagCategory, setNewTagCategory] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
+  
+  // Multi-bundle creation state
+  const [multiBundles, setMultiBundles] = useState([
+    {
+      bundleId: "",
+      slabNumber: "",
+      status: "available",
+      length: "",
+      width: "",
+      thickness: "",
+      location: "",
+      notes: "",
+      grade: "",
+      finish: "",
+      price: "",
+      weight: ""
+    }
+  ]);
 
   // Fetch available tags for the tags dropdown
   const { data: availableTags = [] } = useQuery({
@@ -842,11 +861,371 @@ export default function Inventory() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Stone Slab Bundles</CardTitle>
           <div className="flex gap-2">
-            <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
+            <Dialog open={isMultiCreateOpen} onOpenChange={setIsMultiCreateOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Plus size={16} className="mr-2" />
-                  Add Bulk
+                  Add Multiple
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create Multiple Stone Slab Bundles</DialogTitle>
+                  <DialogDescription>
+                    Add multiple stone slab bundles at once. You can add or remove rows as needed.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">
+                      Creating {multiBundles.length} bundle{multiBundles.length !== 1 ? 's' : ''}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setMultiBundles([...multiBundles, {
+                            bundleId: "",
+                            slabNumber: "",
+                            status: "available",
+                            length: "",
+                            width: "",
+                            thickness: "",
+                            location: "",
+                            notes: "",
+                            grade: "",
+                            finish: "",
+                            price: "",
+                            weight: ""
+                          }]);
+                        }}
+                      >
+                        <Plus size={16} className="mr-1" />
+                        Add Row
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (multiBundles.length > 1) {
+                            setMultiBundles(multiBundles.slice(0, -1));
+                          }
+                        }}
+                        disabled={multiBundles.length <= 1}
+                      >
+                        <X size={16} className="mr-1" />
+                        Remove Row
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="p-2 text-left font-medium">Bundle ID*</th>
+                          <th className="p-2 text-left font-medium">Slab Number*</th>
+                          <th className="p-2 text-left font-medium">Status</th>
+                          <th className="p-2 text-left font-medium">Length</th>
+                          <th className="p-2 text-left font-medium">Width</th>
+                          <th className="p-2 text-left font-medium">Thickness</th>
+                          <th className="p-2 text-left font-medium">Location</th>
+                          <th className="p-2 text-left font-medium">Grade</th>
+                          <th className="p-2 text-left font-medium">Finish</th>
+                          <th className="p-2 text-left font-medium">Price</th>
+                          <th className="p-2 text-left font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {multiBundles.map((bundle, index) => (
+                          <tr key={index} className="border-t">
+                            <td className="p-2">
+                              <Input
+                                value={bundle.bundleId}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].bundleId = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Bundle ID"
+                                className="w-24"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.slabNumber}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].slabNumber = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Slab #"
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Select
+                                value={bundle.status}
+                                onValueChange={(value) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].status = value;
+                                  setMultiBundles(updated);
+                                }}
+                              >
+                                <SelectTrigger className="w-24">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="available">Available</SelectItem>
+                                  <SelectItem value="reserved">Reserved</SelectItem>
+                                  <SelectItem value="sold">Sold</SelectItem>
+                                  <SelectItem value="production">Production</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.length}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].length = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Length"
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.width}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].width = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Width"
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.thickness}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].thickness = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Thickness"
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.location}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].location = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Location"
+                                className="w-24"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.grade}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].grade = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Grade"
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.finish}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].finish = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Finish"
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                value={bundle.price}
+                                onChange={(e) => {
+                                  const updated = [...multiBundles];
+                                  updated[index].price = e.target.value;
+                                  setMultiBundles(updated);
+                                }}
+                                placeholder="Price"
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (multiBundles.length > 1) {
+                                    const updated = multiBundles.filter((_, i) => i !== index);
+                                    setMultiBundles(updated);
+                                  }
+                                }}
+                                disabled={multiBundles.length <= 1}
+                              >
+                                <Trash2 size={14} />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="text-xs text-gray-500">
+                      <p>* Required fields: Bundle ID and Slab Number</p>
+                      <p>Other fields are optional and can be updated later</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsMultiCreateOpen(false);
+                          setMultiBundles([{
+                            bundleId: "",
+                            slabNumber: "",
+                            status: "available",
+                            length: "",
+                            width: "",
+                            thickness: "",
+                            location: "",
+                            notes: "",
+                            grade: "",
+                            finish: "",
+                            price: "",
+                            weight: ""
+                          }]);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            // Validate required fields
+                            const invalidBundles = multiBundles.filter(b => !b.bundleId.trim() || !b.slabNumber.trim());
+                            if (invalidBundles.length > 0) {
+                              toast({
+                                title: "Validation Error",
+                                description: "All bundles must have Bundle ID and Slab Number",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+
+                            // Create bundles one by one
+                            let successCount = 0;
+                            const errors = [];
+                            
+                            for (const bundle of multiBundles) {
+                              try {
+                                const response = await fetch("/api/stone-slab-bundles", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  credentials: "include",
+                                  body: JSON.stringify({
+                                    bundleId: bundle.bundleId,
+                                    slabNumber: bundle.slabNumber,
+                                    status: bundle.status,
+                                    length: bundle.length ? parseFloat(bundle.length) : null,
+                                    width: bundle.width ? parseFloat(bundle.width) : null,
+                                    thickness: bundle.thickness || null,
+                                    location: bundle.location || null,
+                                    notes: bundle.notes || null,
+                                    grade: bundle.grade || null,
+                                    finish: bundle.finish || null,
+                                    price: bundle.price || null,
+                                    weight: bundle.weight ? parseFloat(bundle.weight) : null
+                                  })
+                                });
+
+                                if (response.ok) {
+                                  successCount++;
+                                } else {
+                                  const errorData = await response.json();
+                                  errors.push(`${bundle.bundleId}-${bundle.slabNumber}: ${errorData.error}`);
+                                }
+                              } catch (error) {
+                                errors.push(`${bundle.bundleId}-${bundle.slabNumber}: Network error`);
+                              }
+                            }
+
+                            // Show results
+                            if (successCount > 0) {
+                              queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
+                              toast({
+                                title: "Success",
+                                description: `Created ${successCount} stone slab bundle${successCount !== 1 ? 's' : ''} successfully`,
+                              });
+                            }
+
+                            if (errors.length > 0) {
+                              toast({
+                                title: "Partial Success",
+                                description: `${errors.length} bundle${errors.length !== 1 ? 's' : ''} failed to create. Check the data and try again.`,
+                                variant: "destructive"
+                              });
+                            }
+
+                            if (successCount === multiBundles.length) {
+                              setIsMultiCreateOpen(false);
+                              setMultiBundles([{
+                                bundleId: "",
+                                slabNumber: "",
+                                status: "available",
+                                length: "",
+                                width: "",
+                                thickness: "",
+                                location: "",
+                                notes: "",
+                                grade: "",
+                                finish: "",
+                                price: "",
+                                weight: ""
+                              }]);
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to create bundles. Please try again.",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                      >
+                        Create {multiBundles.length} Bundle{multiBundles.length !== 1 ? 's' : ''}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload size={16} className="mr-2" />
+                  CSV Import
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
