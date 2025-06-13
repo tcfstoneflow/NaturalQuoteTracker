@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema } from "@shared/schema";
+import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema, insertSalesRepProfileSchema, insertSalesRepFavoriteSlabSchema, insertSalesRepPortfolioImageSchema, insertSalesRepAppointmentSchema } from "@shared/schema";
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";

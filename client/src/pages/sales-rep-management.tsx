@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,70 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
+// Type definitions for API responses
+type SalesRepProfile = {
+  id: number;
+  userId: number;
+  urlSlug: string;
+  bio: string | null;
+  title: string | null;
+  yearsExperience: number | null;
+  specialties: string[] | null;
+  phone: string | null;
+  email: string | null;
+  profileImageUrl: string | null;
+  isPublic: boolean;
+  customization: any;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Product = {
+  id: number;
+  name: string;
+  category: string;
+  imageUrl: string | null;
+  price: string;
+  description: string | null;
+};
+
+type SalesRepFavoriteSlab = {
+  id: number;
+  salesRepId: number;
+  productId: number;
+  displayOrder: number;
+  notes: string | null;
+  isActive: boolean;
+  createdAt: string;
+  product: Product;
+};
+
+type SalesRepPortfolioImage = {
+  id: number;
+  salesRepId: number;
+  imageUrl: string;
+  title: string | null;
+  description: string | null;
+  projectType: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+};
+
+type SalesRepAppointment = {
+  id: number;
+  salesRepId: number;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  appointmentDate: string;
+  appointmentType: string;
+  status: string;
+  notes: string | null;
+  reminderSent: boolean;
+  createdAt: string;
+};
 
 const profileSchema = z.object({
   urlSlug: z.string().min(3, "URL slug must be at least 3 characters").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens allowed"),
@@ -51,23 +115,23 @@ export default function SalesRepManagement() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery<SalesRepProfile>({
     queryKey: ['/api/sales-rep-profile'],
   });
 
-  const { data: products } = useQuery({
+  const { data: products } = useQuery<Product[]>({
     queryKey: ['/api/products'],
   });
 
-  const { data: favorites, isLoading: favoritesLoading } = useQuery({
+  const { data: favorites, isLoading: favoritesLoading } = useQuery<SalesRepFavoriteSlab[]>({
     queryKey: ['/api/sales-rep-favorites'],
   });
 
-  const { data: portfolioImages, isLoading: portfolioLoading } = useQuery({
+  const { data: portfolioImages, isLoading: portfolioLoading } = useQuery<SalesRepPortfolioImage[]>({
     queryKey: ['/api/sales-rep-portfolio'],
   });
 
-  const { data: appointments } = useQuery({
+  const { data: appointments } = useQuery<SalesRepAppointment[]>({
     queryKey: ['/api/sales-rep-appointments'],
   });
 
@@ -115,7 +179,7 @@ export default function SalesRepManagement() {
   });
 
   // Update form when profile data loads
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       profileForm.reset({
         urlSlug: profile.urlSlug || "",
@@ -129,7 +193,7 @@ export default function SalesRepManagement() {
         isPublic: profile.isPublic || false,
       });
     }
-  });
+  }, [profile, profileForm]);
 
   const uploadImageMutation = useMutation({
     mutationFn: (file: File) => {
