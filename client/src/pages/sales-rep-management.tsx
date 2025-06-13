@@ -138,15 +138,15 @@ export default function SalesRepManagement() {
   const profileForm = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      urlSlug: profile?.urlSlug || "",
-      bio: profile?.bio || "",
-      title: profile?.title || "",
-      yearsExperience: profile?.yearsExperience || 0,
-      specialties: profile?.specialties || [],
-      phone: profile?.phone || "",
-      email: profile?.email || "",
-      profileImageUrl: profile?.profileImageUrl || "",
-      isPublic: profile?.isPublic || false,
+      urlSlug: "",
+      bio: "",
+      title: "",
+      yearsExperience: 0,
+      specialties: [],
+      phone: "",
+      email: "",
+      profileImageUrl: "",
+      isPublic: false,
     },
   });
 
@@ -788,9 +788,9 @@ export default function SalesRepManagement() {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 </div>
-              ) : favorites?.length > 0 ? (
+              ) : favorites && favorites.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {favorites.map((favorite: any) => (
+                  {favorites.map((favorite) => (
                     <div key={favorite.id} className="border rounded-lg overflow-hidden">
                       <div className="aspect-video bg-gray-100">
                         {favorite.product.imageUrl ? (
@@ -977,9 +977,9 @@ export default function SalesRepManagement() {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 </div>
-              ) : portfolioImages?.length > 0 ? (
+              ) : portfolioImages && portfolioImages.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {portfolioImages.map((image: any) => (
+                  {portfolioImages.map((image) => (
                     <div key={image.id} className="border rounded-lg overflow-hidden">
                       <div className="aspect-square bg-gray-100">
                         <img 
@@ -1179,9 +1179,9 @@ export default function SalesRepManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {appointments?.length > 0 ? (
+              {appointments && appointments.length > 0 ? (
                 <div className="space-y-4">
-                  {appointments.map((appointment: any) => (
+                  {appointments.map((appointment) => (
                     <div key={appointment.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div>
