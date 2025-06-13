@@ -5180,6 +5180,31 @@ async function importSlabRow(row: any, mapping: Record<string, string>, tx: any)
     }
   }
   
-  console.log(`Importing slab: ${slabData.bundleId} - ${slabData.slabNumber}`);
-  await tx.insert(slabs).values(slabData);
+  // Additional optional fields for Stone Slab Bundles
+  if (mapping.grade && row[mapping.grade]?.trim()) {
+    slabData.grade = row[mapping.grade].trim();
+  }
+  if (mapping.finish && row[mapping.finish]?.trim()) {
+    slabData.finish = row[mapping.finish].trim();
+  }
+  if (mapping.price && row[mapping.price]) {
+    slabData.price = row[mapping.price].trim();
+  }
+  if (mapping.weight && row[mapping.weight]) {
+    const weightValue = parseFloat(row[mapping.weight]);
+    if (!isNaN(weightValue)) {
+      slabData.weight = weightValue;
+    }
+  }
+  if (mapping.thickness && row[mapping.thickness]?.trim()) {
+    slabData.thickness = row[mapping.thickness].trim();
+  }
+
+  console.log(`Importing Stone Slab Bundle: ${slabData.bundleId} - ${slabData.slabNumber}`);
+  
+  // Use the insertSlabSchema for validation
+  const { insertSlabSchema } = await import('@shared/schema');
+  const validatedData = insertSlabSchema.parse(slabData);
+  
+  await tx.insert(slabs).values(validatedData);
 }

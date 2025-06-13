@@ -1247,92 +1247,42 @@ export default function Inventory() {
                           reader.onload = async (event) => {
                             const csvData = event.target?.result as string;
                             try {
-                              // Parse CSV data
-                              const lines = csvData.split('\n').filter(line => line.trim());
-                              if (lines.length < 2) {
-                                toast({ title: "Invalid CSV", description: "CSV must contain at least a header and one data row", variant: "destructive" });
-                                return;
-                              }
-                              
-                              const headers = lines[0].split(',').map(h => h.trim());
-                              const requiredHeaders = ['bundleId', 'name', 'supplier', 'category', 'grade', 'thickness', 'finish', 'price', 'unit', 'stockQuantity', 'location'];
-                              
-                              // Check if all required headers are present
-                              const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-                              if (missingHeaders.length > 0) {
-                                toast({ 
-                                  title: "Missing CSV columns", 
-                                  description: `Missing: ${missingHeaders.join(', ')}`, 
-                                  variant: "destructive" 
-                                });
-                                return;
-                              }
-                              
-                              // Process each row
-                              const bundles = [];
-                              for (let i = 1; i < lines.length; i++) {
-                                const values = lines[i].split(',').map(v => v.trim());
-                                if (values.length !== headers.length) continue;
-                                
-                                const bundle: any = {};
-                                headers.forEach((header, index) => {
-                                  bundle[header] = values[index];
+                              // Use the backend CSV import API for Stone Slab Bundles
+                              const formData = new FormData();
+                              formData.append('csvFile', file);
+                              formData.append('tableType', 'slabs'); // Stone Slab Bundles table type
+                              formData.append('skipErrors', 'false');
+                              formData.append('batchSize', '50');
+
+                              const response = await fetch("/api/admin/bulk-import", {
+                                method: "POST",
+                                credentials: "include",
+                                body: formData
+                              });
+
+                              if (response.ok) {
+                                const result = await response.json();
+                                toast({
+                                  title: "Import Successful",
+                                  description: `Successfully imported ${result.imported} Stone Slab Bundle${result.imported !== 1 ? 's' : ''}`,
                                 });
                                 
-                                // Convert numeric fields
-                                bundle.price = parseFloat(bundle.price) || 0;
-                                bundle.stockQuantity = parseInt(bundle.stockQuantity) || 0;
-                                bundle.slabLength = bundle.slabLength ? parseFloat(bundle.slabLength) : null;
-                                bundle.slabWidth = bundle.slabWidth ? parseFloat(bundle.slabWidth) : null;
-                                
-                                bundles.push(bundle);
-                              }
-                              
-                              // Create bundles in batch
-                              let successCount = 0;
-                              let errorCount = 0;
-                              
-                              for (const bundleData of bundles) {
-                                try {
-                                  const response = await fetch("/api/products", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify(bundleData),
-                                  });
-                                  
-                                  if (response.ok) {
-                                    successCount++;
-                                  } else {
-                                    errorCount++;
-                                    console.error(`Failed to create bundle ${bundleData.bundleId}`);
-                                  }
-                                } catch (error) {
-                                  errorCount++;
-                                  console.error(`Error creating bundle ${bundleData.bundleId}:`, error);
-                                }
-                              }
-                              
-                              // Show results
-                              if (successCount > 0) {
-                                queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-                                toast({ 
-                                  title: "Bulk import completed", 
-                                  description: `Successfully imported ${successCount} bundles${errorCount > 0 ? `, ${errorCount} failed` : ''}` 
-                                });
+                                // Refresh the Stone Slab Bundles data
+                                queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
                                 setIsBulkOpen(false);
                               } else {
-                                toast({ 
-                                  title: "Import failed", 
-                                  description: "No bundles were successfully imported", 
-                                  variant: "destructive" 
+                                const errorData = await response.json();
+                                toast({
+                                  title: "Import Failed",
+                                  description: errorData.error || "Failed to import CSV file",
+                                  variant: "destructive"
                                 });
                               }
-                              
                             } catch (error) {
-                              console.error('CSV parsing error:', error);
+                              console.error('CSV import error:', error);
                               toast({ 
-                                title: "CSV parsing failed", 
-                                description: "Please check your CSV format and try again", 
+                                title: "Import Error", 
+                                description: "Failed to import CSV file. Please check the format and try again.", 
                                 variant: "destructive" 
                               });
                             }
