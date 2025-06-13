@@ -4513,10 +4513,23 @@ function determineTableType(headers: string[]): string | null {
     return 'clients';
   }
   
-  // Slabs table detection
+  // Slabs table detection - Enhanced with more flexible matching
   const slabRequiredFields = ['bundleid', 'slabnumber'];
+  const slabAlternativeFields = [
+    ['bundle_id', 'bundle', 'bundleid'],
+    ['slab_number', 'slabnumber', 'slab_no', 'piece_number', 'item_number']
+  ];
   
+  // Check if required fields exist (exact match)
   if (slabRequiredFields.every(field => headerSet.has(field))) {
+    return 'slabs';
+  }
+  
+  // Check alternative field names for slabs
+  const hasBundle = slabAlternativeFields[0].some(alt => headerSet.has(alt));
+  const hasSlabNumber = slabAlternativeFields[1].some(alt => headerSet.has(alt));
+  
+  if (hasBundle && hasSlabNumber) {
     return 'slabs';
   }
   
@@ -4567,14 +4580,21 @@ function generateSuggestedMappings(headers: string[]) {
     zipcode: ['zip', 'postal_code', 'postcode']
   };
 
-  // Slab field suggestions
+  // Slab field suggestions - Enhanced for Stone Slab Bundles
   const slabMappings = {
-    bundleid: ['bundle', 'lot', 'batch', 'group', 'bundle_id'],
-    slabnumber: ['slab_no', 'number', 'piece', 'item_number'],
-    status: ['state', 'condition', 'availability'],
-    length: ['l', 'len', 'long'],
-    width: ['w', 'wide', 'breadth'],
-    location: ['warehouse', 'storage', 'yard', 'position']
+    bundleid: ['bundle', 'lot', 'batch', 'group', 'bundle_id', 'bundle_name', 'material_id'],
+    slabnumber: ['slab_no', 'number', 'piece', 'item_number', 'slab_id', 'piece_number', 'serial'],
+    status: ['state', 'condition', 'availability', 'stock_status', 'inventory_status'],
+    length: ['l', 'len', 'long', 'length_inches', 'length_cm', 'dimension_l'],
+    width: ['w', 'wide', 'breadth', 'width_inches', 'width_cm', 'dimension_w'],
+    thickness: ['thick', 'depth', 'height', 'thickness_inches', 'thickness_cm'],
+    location: ['warehouse', 'storage', 'yard', 'position', 'bin', 'rack', 'zone'],
+    barcode: ['code', 'sku', 'qr_code', 'scan_code', 'identifier'],
+    notes: ['comments', 'remarks', 'description', 'memo', 'details'],
+    grade: ['quality', 'class', 'tier', 'level', 'rating'],
+    finish: ['surface', 'texture', 'polish', 'treatment'],
+    price: ['cost', 'amount', 'value', 'unit_price', 'selling_price'],
+    weight: ['mass', 'kg', 'pounds', 'lbs', 'weight_kg']
   };
 
   // Check product mappings
@@ -4636,7 +4656,7 @@ function getFieldMapping(tableType: string, headers: string[]) {
     },
     slabs: {
       required: ['bundleid', 'slabnumber'],
-      optional: ['status', 'length', 'width', 'barcode', 'location', 'notes'],
+      optional: ['status', 'length', 'width', 'thickness', 'barcode', 'location', 'notes', 'grade', 'finish', 'price', 'weight', 'productionLocation', 'soldDate', 'deliveredDate'],
       mapping: {} as Record<string, string>
     }
   };
@@ -4826,15 +4846,22 @@ async function performEnhancedBulkImport(
   let totalFailed = 0;
   const errors: Array<{ row: number; error: string; data: any }> = [];
   
-  console.log(`Starting enhanced bulk import: ${rows.length} rows, batch size: ${batchSize}, skip errors: ${skipErrors}`);
+  const importStartTime = Date.now();
+  const importSessionId = `import_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  console.log(`[BULK IMPORT] Starting enhanced bulk import for ${tableType}:`);
+  console.log(`[BULK IMPORT] Session ID: ${importSessionId}`);
+  console.log(`[BULK IMPORT] Total rows: ${rows.length}, batch size: ${batchSize}, skip errors: ${skipErrors}`);
+  console.log(`[BULK IMPORT] Field mappings:`, mapping);
 
   // Process in batches
   for (let i = 0; i < rows.length; i += batchSize) {
     const batch = rows.slice(i, i + batchSize);
     const batchNumber = Math.floor(i / batchSize) + 1;
     const totalBatches = Math.ceil(rows.length / batchSize);
+    const batchStartTime = Date.now();
     
-    console.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} rows)`);
+    console.log(`[BULK IMPORT] Processing batch ${batchNumber}/${totalBatches} (rows ${i + 1}-${i + batch.length})`);
 
     if (skipErrors) {
       // Process with error recovery - continue on errors
@@ -4842,6 +4869,13 @@ async function performEnhancedBulkImport(
       totalImported += batchResults.imported;
       totalFailed += batchResults.failed;
       errors.push(...batchResults.errors);
+      
+      const batchTime = Date.now() - batchStartTime;
+      console.log(`[BULK IMPORT] Batch ${batchNumber} completed in ${batchTime}ms: ${batchResults.imported} imported, ${batchResults.failed} failed`);
+      
+      if (batchResults.errors.length > 0) {
+        console.log(`[BULK IMPORT] Batch ${batchNumber} errors:`, batchResults.errors.slice(0, 3));
+      }
     } else {
       // Atomic batch processing - rollback batch on any error
       try {
@@ -5024,7 +5058,7 @@ async function importClientRow(row: any, mapping: Record<string, string>, tx: an
   await tx.insert(clients).values(clientData);
 }
 
-// Import slab row
+// Import slab row - Enhanced for Stone Slab Bundles
 async function importSlabRow(row: any, mapping: Record<string, string>, tx: any) {
   const { slabs } = await import('@shared/schema');
   
@@ -5034,13 +5068,21 @@ async function importSlabRow(row: any, mapping: Record<string, string>, tx: any)
     status: mapping.status ? row[mapping.status]?.toLowerCase() || 'available' : 'available'
   };
   
-  // Optional fields
+  // Dimensional fields
   if (mapping.length && row[mapping.length]) {
-    slabData.length = parseFloat(row[mapping.length]).toString();
+    const lengthValue = parseFloat(row[mapping.length]);
+    if (!isNaN(lengthValue)) {
+      slabData.length = lengthValue;
+    }
   }
   if (mapping.width && row[mapping.width]) {
-    slabData.width = parseFloat(row[mapping.width]).toString();
+    const widthValue = parseFloat(row[mapping.width]);
+    if (!isNaN(widthValue)) {
+      slabData.width = widthValue;
+    }
   }
+  
+  // Identification and location fields
   if (mapping.barcode && row[mapping.barcode]?.trim()) {
     slabData.barcode = row[mapping.barcode].trim();
   }
@@ -5051,5 +5093,25 @@ async function importSlabRow(row: any, mapping: Record<string, string>, tx: any)
     slabData.notes = row[mapping.notes].trim();
   }
   
+  // Production and quality fields
+  if (mapping.productionLocation && row[mapping.productionLocation]?.trim()) {
+    slabData.productionLocation = row[mapping.productionLocation].trim();
+  }
+  
+  // Date fields
+  if (mapping.soldDate && row[mapping.soldDate]) {
+    const soldDate = new Date(row[mapping.soldDate]);
+    if (!isNaN(soldDate.getTime())) {
+      slabData.soldDate = soldDate;
+    }
+  }
+  if (mapping.deliveredDate && row[mapping.deliveredDate]) {
+    const deliveredDate = new Date(row[mapping.deliveredDate]);
+    if (!isNaN(deliveredDate.getTime())) {
+      slabData.deliveredDate = deliveredDate;
+    }
+  }
+  
+  console.log(`Importing slab: ${slabData.bundleId} - ${slabData.slabNumber}`);
   await tx.insert(slabs).values(slabData);
 }
