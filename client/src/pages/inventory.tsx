@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2, Copy } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2, Copy, Download } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -1221,6 +1221,68 @@ export default function Inventory() {
                 </div>
               </DialogContent>
             </Dialog>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Export current bundles to CSV
+                const productList = products as Product[];
+                if (!productList || productList.length === 0) {
+                  toast({
+                    title: "No Data",
+                    description: "No bundles available to export",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
+                const headers = [
+                  'id', 'bundleId', 'name', 'description', 'supplier', 'category',
+                  'grade', 'thickness', 'finish', 'price', 'unit', 'stockQuantity',
+                  'slabLength', 'slabWidth', 'location', 'imageUrl', 'barcodes'
+                ];
+
+                const csvContent = [
+                  headers.join(','),
+                  ...productList.map((product: Product) => [
+                    product.id,
+                    `"${product.bundleId || ''}"`,
+                    `"${product.name || ''}"`,
+                    `"${product.description || ''}"`,
+                    `"${product.supplier || ''}"`,
+                    `"${product.category || ''}"`,
+                    `"${product.grade || ''}"`,
+                    `"${product.thickness || ''}"`,
+                    `"${product.finish || ''}"`,
+                    product.price || 0,
+                    `"${product.unit || ''}"`,
+                    product.stockQuantity || 0,
+                    product.slabLength || '',
+                    product.slabWidth || '',
+                    `"${product.location || ''}"`,
+                    `"${product.imageUrl || ''}"`,
+                    `"${(product.barcodes || []).join(';')}"`
+                  ].join(','))
+                ].join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `inventory_bundles_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                toast({
+                  title: "Export Complete",
+                  description: `Downloaded ${productList.length} bundles as CSV file`,
+                });
+              }}
+            >
+              <Package size={16} className="mr-2" />
+              Export CSV
+            </Button>
             <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
