@@ -1292,9 +1292,9 @@ export default function Inventory() {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Bulk Import Bundles</DialogTitle>
+                  <DialogTitle>Import Bundle Updates</DialogTitle>
                   <DialogDescription>
-                    Upload a CSV file to import multiple stone slab bundles at once. The system supports flexible header mapping for various formats.
+                    Upload a CSV file exported from this system to update existing bundles. Only CSV files with the exact exported header format are accepted for data integrity.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -1337,8 +1337,29 @@ export default function Inventory() {
                                   throw new Error("CSV must contain at least a header and one data row");
                                 }
                                 
+                                // Define expected headers (must match export format exactly)
+                                const expectedHeaders = [
+                                  'id', 'bundleId', 'name', 'description', 'supplier', 'category',
+                                  'grade', 'thickness', 'finish', 'price', 'unit', 'stockQuantity',
+                                  'slabLength', 'slabWidth', 'location', 'imageUrl', 'barcodes'
+                                ];
+                                
                                 const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
                                 console.log("CSV headers:", headers);
+                                console.log("Expected headers:", expectedHeaders);
+                                
+                                // Validate headers match exported format exactly
+                                if (headers.length !== expectedHeaders.length) {
+                                  throw new Error(`Invalid CSV format. Expected ${expectedHeaders.length} columns, found ${headers.length}`);
+                                }
+                                
+                                for (let i = 0; i < expectedHeaders.length; i++) {
+                                  if (headers[i] !== expectedHeaders[i]) {
+                                    throw new Error(`Invalid header at column ${i + 1}. Expected "${expectedHeaders[i]}", found "${headers[i]}"`);
+                                  }
+                                }
+                                
+                                console.log("Header validation passed");
                                 
                                 const bundles = [];
                                 
