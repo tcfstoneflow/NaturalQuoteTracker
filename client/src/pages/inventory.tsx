@@ -57,6 +57,7 @@ export default function Inventory() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -840,13 +841,157 @@ export default function Inventory() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Stone Slab Bundles</CardTitle>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus size={16} className="mr-2" />
-                Add Bundle
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus size={16} className="mr-2" />
+                  Add Bulk
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Bulk Import Bundles</DialogTitle>
+                  <DialogDescription>
+                    Upload a CSV file to import multiple bundles at once. The CSV should include columns for bundleId, name, supplier, category, grade, thickness, finish, price, unit, stockQuantity, and location.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = async (event) => {
+                            const csvData = event.target?.result as string;
+                            try {
+                              // Parse CSV data
+                              const lines = csvData.split('\n').filter(line => line.trim());
+                              if (lines.length < 2) {
+                                toast({ title: "Invalid CSV", description: "CSV must contain at least a header and one data row", variant: "destructive" });
+                                return;
+                              }
+                              
+                              const headers = lines[0].split(',').map(h => h.trim());
+                              const requiredHeaders = ['bundleId', 'name', 'supplier', 'category', 'grade', 'thickness', 'finish', 'price', 'unit', 'stockQuantity', 'location'];
+                              
+                              // Check if all required headers are present
+                              const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+                              if (missingHeaders.length > 0) {
+                                toast({ 
+                                  title: "Missing CSV columns", 
+                                  description: `Missing: ${missingHeaders.join(', ')}`, 
+                                  variant: "destructive" 
+                                });
+                                return;
+                              }
+                              
+                              // Process each row
+                              const bundles = [];
+                              for (let i = 1; i < lines.length; i++) {
+                                const values = lines[i].split(',').map(v => v.trim());
+                                if (values.length !== headers.length) continue;
+                                
+                                const bundle: any = {};
+                                headers.forEach((header, index) => {
+                                  bundle[header] = values[index];
+                                });
+                                
+                                // Convert numeric fields
+                                bundle.price = parseFloat(bundle.price) || 0;
+                                bundle.stockQuantity = parseInt(bundle.stockQuantity) || 0;
+                                bundle.slabLength = bundle.slabLength ? parseFloat(bundle.slabLength) : null;
+                                bundle.slabWidth = bundle.slabWidth ? parseFloat(bundle.slabWidth) : null;
+                                
+                                bundles.push(bundle);
+                              }
+                              
+                              // Create bundles in batch
+                              let successCount = 0;
+                              let errorCount = 0;
+                              
+                              for (const bundleData of bundles) {
+                                try {
+                                  const response = await fetch("/api/products", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(bundleData),
+                                  });
+                                  
+                                  if (response.ok) {
+                                    successCount++;
+                                  } else {
+                                    errorCount++;
+                                    console.error(`Failed to create bundle ${bundleData.bundleId}`);
+                                  }
+                                } catch (error) {
+                                  errorCount++;
+                                  console.error(`Error creating bundle ${bundleData.bundleId}:`, error);
+                                }
+                              }
+                              
+                              // Show results
+                              if (successCount > 0) {
+                                queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+                                toast({ 
+                                  title: "Bulk import completed", 
+                                  description: `Successfully imported ${successCount} bundles${errorCount > 0 ? `, ${errorCount} failed` : ''}` 
+                                });
+                                setIsBulkOpen(false);
+                              } else {
+                                toast({ 
+                                  title: "Import failed", 
+                                  description: "No bundles were successfully imported", 
+                                  variant: "destructive" 
+                                });
+                              }
+                              
+                            } catch (error) {
+                              console.error('CSV parsing error:', error);
+                              toast({ 
+                                title: "CSV parsing failed", 
+                                description: "Please check your CSV format and try again", 
+                                variant: "destructive" 
+                              });
+                            }
+                          };
+                          reader.readAsText(file);
+                        }
+                      }}
+                      className="hidden"
+                      id="csv-upload"
+                    />
+                    <label htmlFor="csv-upload" className="cursor-pointer">
+                      <div className="flex flex-col items-center">
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                          <Plus size={24} className="text-gray-600" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-900 mb-1">
+                          Click to upload CSV file
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          or drag and drop your file here
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    <p className="font-medium mb-1">Required CSV columns:</p>
+                    <p>bundleId, name, supplier, category, grade, thickness, finish, price, unit, stockQuantity, location</p>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus size={16} className="mr-2" />
+                  Add Bundle
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -1407,6 +1552,7 @@ export default function Inventory() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
