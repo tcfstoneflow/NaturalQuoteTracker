@@ -1240,54 +1240,49 @@ export default function Inventory() {
                     <input
                       type="file"
                       accept=".csv"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = async (event) => {
-                            const csvData = event.target?.result as string;
-                            try {
-                              // Use the backend CSV import API for Stone Slab Bundles
-                              const formData = new FormData();
-                              formData.append('csvFile', file);
-                              formData.append('tableType', 'slabs'); // Stone Slab Bundles table type
-                              formData.append('skipErrors', 'false');
-                              formData.append('batchSize', '50');
+                          try {
+                            // Use the backend CSV import API for Stone Slab Bundles
+                            const formData = new FormData();
+                            formData.append('csvFile', file);
+                            formData.append('tableType', 'slabs'); // Stone Slab Bundles table type
+                            formData.append('skipErrors', 'false');
+                            formData.append('batchSize', '50');
 
-                              const response = await fetch("/api/admin/bulk-import", {
-                                method: "POST",
-                                credentials: "include",
-                                body: formData
+                            const response = await fetch("/api/admin/bulk-import", {
+                              method: "POST",
+                              credentials: "include",
+                              body: formData
+                            });
+
+                            if (response.ok) {
+                              const result = await response.json();
+                              toast({
+                                title: "Import Successful",
+                                description: `Successfully imported ${result.imported} Stone Slab Bundle${result.imported !== 1 ? 's' : ''}`,
                               });
-
-                              if (response.ok) {
-                                const result = await response.json();
-                                toast({
-                                  title: "Import Successful",
-                                  description: `Successfully imported ${result.imported} Stone Slab Bundle${result.imported !== 1 ? 's' : ''}`,
-                                });
-                                
-                                // Refresh the Stone Slab Bundles data
-                                queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
-                                setIsBulkOpen(false);
-                              } else {
-                                const errorData = await response.json();
-                                toast({
-                                  title: "Import Failed",
-                                  description: errorData.error || "Failed to import CSV file",
-                                  variant: "destructive"
-                                });
-                              }
-                            } catch (error) {
-                              console.error('CSV import error:', error);
-                              toast({ 
-                                title: "Import Error", 
-                                description: "Failed to import CSV file. Please check the format and try again.", 
-                                variant: "destructive" 
+                              
+                              // Refresh the Stone Slab Bundles data
+                              queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
+                              setIsBulkOpen(false);
+                            } else {
+                              const errorData = await response.json();
+                              toast({
+                                title: "Import Failed",
+                                description: errorData.error || "Failed to import CSV file",
+                                variant: "destructive"
                               });
                             }
-                          };
-                          reader.readAsText(file);
+                          } catch (error) {
+                            console.error('CSV import error:', error);
+                            toast({ 
+                              title: "Import Error", 
+                              description: "Failed to import CSV file. Please check the format and try again.", 
+                              variant: "destructive" 
+                            });
+                          }
                         }
                       }}
                       className="hidden"

@@ -1,0 +1,6 @@
+bundleId,slabNumber,status,length,width,thickness,location,barcode,notes,grade,finish,price,weight
+BSB001,001,Available,120,60,3,Warehouse A,12345678901,High quality marble,Premium,Polished,150.00,250
+BSB001,002,Available,120,60,3,Warehouse A,12345678902,High quality marble,Premium,Polished,150.00,250
+BSB002,001,Available,100,50,2,Warehouse B,12345678903,Granite slab,Standard,Honed,120.00,200
+BSB002,002,Reserved,100,50,2,Warehouse B,12345678904,Granite slab,Standard,Honed,120.00,200
+BSB003,001,Sold,80,40,2.5,Warehouse C,12345678905,Quartz countertop,Premium,Polished,180.00,180
