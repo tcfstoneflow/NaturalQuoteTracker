@@ -4194,7 +4194,7 @@ Your body text starts here with proper spacing.`;
         batchSize: parseInt(batchSize) || 100 
       });
       
-      // Log successful import
+      // Log successful import with enhanced metadata
       await storage.createActivity({
         type: "csv_import_completed",
         description: `CSV bulk import completed successfully: ${importResults.imported} ${tableType} records imported`,
@@ -4207,6 +4207,10 @@ Your body text starts here with proper spacing.`;
           recordsFailed: importResults.failed,
           totalRows: rows.length,
           userId: req.user?.id,
+          sessionId: importResults.sessionId,
+          duration: importResults.duration,
+          fieldMappings: fieldMapping.mapping,
+          importSettings: { skipErrors, batchSize },
           timestamp: new Date().toISOString()
         }
       });
@@ -4248,6 +4252,63 @@ Your body text starts here with proper spacing.`;
     } catch (error: any) {
       console.error('Health report error:', error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Bulk Import Logs Endpoint
+  app.get("/api/admin/bulk-import-logs", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      const { limit = 50, offset = 0, tableType } = req.query;
+      
+      console.log(`[BULK IMPORT LOGS] Fetching import logs - limit: ${limit}, offset: ${offset}, tableType: ${tableType}`);
+      
+      // Build filter for CSV import activities
+      const whereClause: any = {
+        type: ['csv_import_started', 'csv_import_completed', 'csv_import_failed']
+      };
+      
+      if (tableType && tableType !== 'all') {
+        whereClause['metadata->tableType'] = tableType;
+      }
+      
+      const logs = await storage.getRecentActivities(parseInt(limit as string), parseInt(offset as string));
+      
+      // Filter for bulk import related activities and enhance with metadata
+      const importLogs = logs
+        .filter(log => ['csv_import_started', 'csv_import_completed', 'csv_import_failed'].includes(log.type))
+        .filter(log => !tableType || tableType === 'all' || log.metadata?.tableType === tableType)
+        .map(log => ({
+          id: log.id,
+          type: log.type,
+          description: log.description,
+          timestamp: log.createdAt,
+          status: log.type === 'csv_import_completed' ? 'success' : 
+                 log.type === 'csv_import_failed' ? 'failed' : 'started',
+          metadata: {
+            filename: log.metadata?.filename || 'Unknown file',
+            tableType: log.metadata?.tableType || 'Unknown',
+            recordsImported: log.metadata?.recordsImported || 0,
+            recordsFailed: log.metadata?.recordsFailed || 0,
+            totalRows: log.metadata?.totalRows || 0,
+            sessionId: log.metadata?.sessionId,
+            duration: log.metadata?.duration,
+            fieldMappings: log.metadata?.fieldMappings,
+            importSettings: log.metadata?.importSettings,
+            userId: log.metadata?.userId,
+            errorDetails: log.metadata?.error
+          }
+        }));
+
+      console.log(`[BULK IMPORT LOGS] Returning ${importLogs.length} import log entries`);
+      
+      res.json({
+        logs: importLogs,
+        total: importLogs.length,
+        hasMore: logs.length === parseInt(limit as string)
+      });
+    } catch (error: any) {
+      console.error('[BULK IMPORT LOGS] Error fetching import logs:', error);
+      res.status(500).json({ error: 'Failed to fetch import logs' });
     }
   });
 
@@ -4905,9 +4966,11 @@ async function performEnhancedBulkImport(
         });
         
         totalImported += batchResults.imported;
-        console.log(`Batch ${batchNumber} completed successfully: ${batchResults.imported} rows imported`);
+        const batchTime = Date.now() - batchStartTime;
+        console.log(`[BULK IMPORT] Batch ${batchNumber} completed successfully in ${batchTime}ms: ${batchResults.imported} rows imported`);
       } catch (error: any) {
-        console.error(`Batch ${batchNumber} failed:`, error);
+        const batchTime = Date.now() - batchStartTime;
+        console.error(`[BULK IMPORT] Batch ${batchNumber} failed in ${batchTime}ms:`, error);
         totalFailed += batch.length;
         errors.push({
           row: i + 2, // CSV row number
@@ -4916,18 +4979,23 @@ async function performEnhancedBulkImport(
         });
         
         // In atomic mode, we stop on first batch failure
+        console.log(`[BULK IMPORT] Stopping import due to atomic batch failure`);
         break;
       }
     }
   }
 
-  console.log(`Enhanced bulk import completed: ${totalImported} imported, ${totalFailed} failed`);
+  const totalTime = Date.now() - importStartTime;
+  console.log(`[BULK IMPORT] Session ${importSessionId} completed in ${totalTime}ms:`);
+  console.log(`[BULK IMPORT] Final results - Imported: ${totalImported}, Failed: ${totalFailed}, Total errors: ${errors.length}`);
   
   return { 
     imported: totalImported, 
     failed: totalFailed, 
     errors: errors.slice(0, 20), // Limit to first 20 errors
-    totalErrors: errors.length
+    totalErrors: errors.length,
+    sessionId: importSessionId,
+    duration: totalTime
   };
 }
 

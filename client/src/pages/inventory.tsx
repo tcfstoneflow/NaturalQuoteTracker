@@ -853,7 +853,7 @@ export default function Inventory() {
                 <DialogHeader>
                   <DialogTitle>Bulk Import Bundles</DialogTitle>
                   <DialogDescription>
-                    Upload a CSV file to import multiple bundles at once. The CSV should include columns for bundleId, name, supplier, category, grade, thickness, finish, price, unit, stockQuantity, and location.
+                    Upload a CSV file to import multiple stone slab bundles at once. The system supports flexible header mapping for various formats.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -979,8 +979,13 @@ export default function Inventory() {
                     </label>
                   </div>
                   <div className="text-xs text-gray-500">
-                    <p className="font-medium mb-1">Required CSV columns:</p>
-                    <p>bundleId, name, supplier, category, grade, thickness, finish, price, unit, stockQuantity, location</p>
+                    <p className="font-medium mb-1">Supported CSV formats for Stone Slab Bundles:</p>
+                    <div className="space-y-1">
+                      <p><strong>Required:</strong> bundleId (or bundle_id, bundle), slabNumber (or slab_number, slab_no, piece_number)</p>
+                      <p><strong>Optional:</strong> status, length, width, thickness, location, barcode, notes, grade, finish, price, weight</p>
+                      <p><strong>Advanced:</strong> productionLocation, soldDate, deliveredDate</p>
+                      <p className="text-blue-600 font-medium">System automatically maps similar header names and validates data before import.</p>
+                    </div>
                   </div>
                 </div>
               </DialogContent>
