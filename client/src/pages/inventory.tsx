@@ -1318,6 +1318,11 @@ export default function Inventory() {
                           }
 
                           try {
+                            toast({
+                              title: "Importing...",
+                              description: "Processing your CSV file, please wait.",
+                            });
+
                             // Use the backend CSV import API for Stone Slab Bundles
                             const formData = new FormData();
                             formData.append('csvFile', file);
@@ -1328,34 +1333,40 @@ export default function Inventory() {
                             const response = await fetch("/api/admin/bulk-import", {
                               method: "POST",
                               credentials: "include",
-                              body: formData
+                              body: formData,
+                              headers: {
+                                // Don't set Content-Type for FormData, let browser set it
+                              }
                             });
 
-                            if (response.ok) {
-                              const result = await response.json();
-                              toast({
-                                title: "Import Successful",
-                                description: `Successfully imported ${result.imported} Stone Slab Bundle${result.imported !== 1 ? 's' : ''}`,
-                              });
-                              
-                              // Refresh the Stone Slab Bundles data
-                              queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
-                              setIsBulkOpen(false);
-                            } else {
-                              const errorData = await response.json();
-                              toast({
-                                title: "Import Failed",
-                                description: errorData.error || "Failed to import CSV file",
-                                variant: "destructive"
-                              });
+                            if (!response.ok) {
+                              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                             }
-                          } catch (error) {
+
+                            const result = await response.json();
+                            
+                            toast({
+                              title: "Import Successful",
+                              description: `Successfully imported ${result.imported || 0} Stone Slab Bundle${(result.imported || 0) !== 1 ? 's' : ''}`,
+                            });
+                            
+                            // Refresh the products data
+                            queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+                            queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
+                            setIsBulkOpen(false);
+                            
+                            // Clear the file input
+                            e.target.value = '';
+                            
+                          } catch (error: any) {
                             console.error('CSV import error:', error);
                             toast({ 
                               title: "Import Error", 
-                              description: "Failed to import CSV file. Please check the format and try again.", 
+                              description: error.message || "Network error occurred. Please check your connection and try again.", 
                               variant: "destructive" 
                             });
+                            // Clear the file input on error
+                            e.target.value = '';
                           }
                         }
                       }}
