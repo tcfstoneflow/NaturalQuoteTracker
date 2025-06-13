@@ -1328,19 +1328,27 @@ export default function Inventory() {
                             reader.onload = async (event) => {
                               try {
                                 const csvData = event.target?.result as string;
+                                console.log("CSV Data received:", csvData.substring(0, 500));
+                                
                                 const lines = csvData.split('\n').filter(line => line.trim());
+                                console.log("CSV lines found:", lines.length);
                                 
                                 if (lines.length < 2) {
                                   throw new Error("CSV must contain at least a header and one data row");
                                 }
                                 
                                 const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                                console.log("CSV headers:", headers);
+                                
                                 const bundles = [];
                                 
                                 // Process each row
                                 for (let i = 1; i < lines.length; i++) {
                                   const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                                  if (values.length !== headers.length) continue;
+                                  if (values.length !== headers.length) {
+                                    console.log(`Skipping row ${i}: column count mismatch`);
+                                    continue;
+                                  }
                                   
                                   const bundle: any = {};
                                   headers.forEach((header, index) => {
@@ -1353,8 +1361,11 @@ export default function Inventory() {
                                   if (bundle.slabLength) bundle.slabLength = parseFloat(bundle.slabLength) || null;
                                   if (bundle.slabWidth) bundle.slabWidth = parseFloat(bundle.slabWidth) || null;
                                   
+                                  console.log(`Processed bundle ${i}:`, { id: bundle.id, name: bundle.name, price: bundle.price });
                                   bundles.push(bundle);
                                 }
+                                
+                                console.log("Total bundles to process:", bundles.length);
                                 
                                 // Update bundles one by one with slight delay to prevent server overload
                                 let successCount = 0;
@@ -1362,27 +1373,38 @@ export default function Inventory() {
                                 
                                 for (const bundleData of bundles) {
                                   try {
-                                    if (bundleData.id) {
-                                      // Clean up data before sending
-                                      const updateData = { ...bundleData };
-                                      delete updateData.createdAt; // Remove readonly fields
-                                      
-                                      // Update existing product
-                                      const response = await fetch(`/api/products/${bundleData.id}`, {
-                                        method: "PUT",
-                                        headers: { "Content-Type": "application/json" },
-                                        credentials: "include",
-                                        body: JSON.stringify(updateData),
-                                      });
-                                      
-                                      if (response.ok) {
-                                        successCount++;
-                                        console.log(`Successfully updated product ${bundleData.id}`);
-                                      } else {
-                                        errorCount++;
-                                        const errorText = await response.text();
-                                        console.error(`Failed to update product ${bundleData.id}:`, errorText);
-                                      }
+                                    console.log(`Processing bundle:`, bundleData);
+                                    
+                                    if (!bundleData.id) {
+                                      console.log(`Skipping bundle - no ID found:`, bundleData);
+                                      errorCount++;
+                                      continue;
+                                    }
+                                    
+                                    // Clean up data before sending
+                                    const updateData = { ...bundleData };
+                                    delete updateData.createdAt; // Remove readonly fields
+                                    
+                                    console.log(`Sending update for product ${bundleData.id}:`, updateData);
+                                    
+                                    // Update existing product
+                                    const response = await fetch(`/api/products/${bundleData.id}`, {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      credentials: "include",
+                                      body: JSON.stringify(updateData),
+                                    });
+                                    
+                                    console.log(`Response status for product ${bundleData.id}:`, response.status);
+                                    
+                                    if (response.ok) {
+                                      successCount++;
+                                      const responseData = await response.json();
+                                      console.log(`Successfully updated product ${bundleData.id}:`, responseData);
+                                    } else {
+                                      errorCount++;
+                                      const errorText = await response.text();
+                                      console.error(`Failed to update product ${bundleData.id} (${response.status}):`, errorText);
                                     }
                                     
                                     // Small delay between requests to prevent overwhelming the server
@@ -1393,6 +1415,8 @@ export default function Inventory() {
                                     console.error(`Error updating bundle ${bundleData.id}:`, error);
                                   }
                                 }
+                                
+                                console.log(`Import completed: ${successCount} successful, ${errorCount} failed`);
                                 
                                 toast({
                                   title: "Import Complete",
