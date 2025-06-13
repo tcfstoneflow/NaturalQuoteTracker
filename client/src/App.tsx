@@ -27,6 +27,7 @@ import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
 import SalesRepManagement from "@/pages/sales-rep-management";
 import SalesRepProfile from "@/pages/sales-rep-profile";
+import BulkImport from "@/pages/bulk-import";
 import Sidebar from "@/components/layout/sidebar";
 
 // Component to handle role-based default routing
@@ -91,6 +92,15 @@ function Router() {
                   </Route>
                   <Route path="/sql-query" component={SQLQuery} />
                   <Route path="/user-management" component={UserManagement} />
+                  <Route path="/bulk-import">
+                    {() => {
+                      // Protect bulk import from sales reps
+                      if (user?.role === 'sales_rep') {
+                        return <NotFound />;
+                      }
+                      return <BulkImport />;
+                    }}
+                  </Route>
                   <Route path="/showroom-visits" component={ShowroomVisits} />
                   <Route path="/slab-management/:productId" component={SlabManagement} />
                   <Route path="/all-slabs" component={AllSlabs} />
