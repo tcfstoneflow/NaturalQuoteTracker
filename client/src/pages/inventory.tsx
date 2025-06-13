@@ -1305,6 +1305,18 @@ export default function Inventory() {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          // Validate filename matches exported CSV pattern
+                          const expectedPattern = /^inventory_bundles_\d{4}-\d{2}-\d{2}\.csv$/;
+                          if (!expectedPattern.test(file.name)) {
+                            toast({
+                              title: "Invalid File",
+                              description: "Please import only CSV files exported from this system (filename format: inventory_bundles_YYYY-MM-DD.csv)",
+                              variant: "destructive"
+                            });
+                            e.target.value = ''; // Clear the file input
+                            return;
+                          }
+
                           try {
                             // Use the backend CSV import API for Stone Slab Bundles
                             const formData = new FormData();
