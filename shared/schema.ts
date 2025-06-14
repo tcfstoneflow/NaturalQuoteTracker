@@ -239,6 +239,26 @@ export const productGalleryImages = pgTable("product_gallery_images", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Client consultation requests from public sales rep profiles
+export const clientConsultations = pgTable("client_consultations", {
+  id: serial("id").primaryKey(),
+  salesRepId: integer("sales_rep_id").references(() => users.id).notNull(),
+  clientName: text("client_name").notNull(),
+  clientEmail: text("client_email").notNull(),
+  clientPhone: text("client_phone").notNull(),
+  projectType: text("project_type").notNull(),
+  projectDescription: text("project_description").notNull(),
+  budget: text("budget"), // Optional budget range
+  timeline: text("timeline"), // Optional timeline
+  preferredContactMethod: text("preferred_contact_method").notNull(),
+  context: text("context"), // What triggered the consultation (e.g., "Portfolio Project: Kitchen Remodel")
+  status: text("status").default("pending").notNull(), // "pending", "contacted", "scheduled", "completed", "cancelled"
+  notes: text("notes"), // Internal notes by sales rep
+  followUpDate: timestamp("follow_up_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // User profiles for the public favorites system
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
@@ -709,6 +729,12 @@ export const insertSalesRepAppointmentSchema = createInsertSchema(salesRepAppoin
   createdAt: true,
 });
 
+export const insertClientConsultationSchema = createInsertSchema(clientConsultations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -786,6 +812,9 @@ export type InsertSalesRepPortfolioImage = z.infer<typeof insertSalesRepPortfoli
 
 export type SalesRepAppointment = typeof salesRepAppointments.$inferSelect;
 export type InsertSalesRepAppointment = z.infer<typeof insertSalesRepAppointmentSchema>;
+
+export type ClientConsultation = typeof clientConsultations.$inferSelect;
+export type InsertClientConsultation = z.infer<typeof insertClientConsultationSchema>;
 
 // Extended types for API responses
 export type QuoteWithDetails = Quote & {
