@@ -9,7 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Calendar, Clock, Mail, Phone, User, MapPin, Star, ImageIcon, CalendarPlus, Globe2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -62,31 +66,38 @@ type SalesRepProfileData = {
   }>;
 };
 
-type AppointmentForm = {
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  appointmentDate: string;
-  appointmentType: string;
-  notes: string;
-};
+const appointmentSchema = z.object({
+  clientName: z.string().min(1, "Name is required"),
+  clientEmail: z.string().email("Valid email is required"),
+  clientPhone: z.string().min(1, "Phone number is required"),
+  appointmentDate: z.string().min(1, "Date is required"),
+  appointmentType: z.string().min(1, "Consultation type is required"),
+  notes: z.string().optional(),
+});
+
+type AppointmentForm = z.infer<typeof appointmentSchema>;
 
 export default function SalesRepProfile() {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [selectedPortfolioImage, setSelectedPortfolioImage] = useState<any>(null);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
-  const [appointmentForm, setAppointmentForm] = useState<AppointmentForm>({
-    clientName: "",
-    clientEmail: "",
-    clientPhone: "",
-    appointmentDate: "",
-    appointmentType: "consultation",
-    notes: "",
+  
+  const appointmentForm = useForm<AppointmentForm>({
+    resolver: zodResolver(appointmentSchema),
+    defaultValues: {
+      clientName: "",
+      clientEmail: "",
+      clientPhone: "",
+      appointmentDate: "",
+      appointmentType: "showroom",
+      notes: "",
+    },
   });
 
   const { data: profileData, isLoading } = useQuery<SalesRepProfileData>({
@@ -108,12 +119,15 @@ export default function SalesRepProfile() {
     queryFn: () => fetch('/api/products').then(res => res.json()),
   });
 
-  const bookAppointmentMutation = useMutation({
-    mutationFn: async (appointmentData: any) => {
+  const appointmentMutation = useMutation({
+    mutationFn: async (appointmentData: AppointmentForm) => {
       const response = await fetch("/api/sales-rep-appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(appointmentData),
+        body: JSON.stringify({
+          ...appointmentData,
+          salesRepId: profile?.id,
+        }),
       });
       if (!response.ok) throw new Error("Failed to book appointment");
       return response.json();
@@ -123,15 +137,8 @@ export default function SalesRepProfile() {
         title: "Appointment Requested",
         description: "Your appointment request has been submitted. We'll contact you soon to confirm.",
       });
-      setIsBookingOpen(false);
-      setAppointmentForm({
-        clientName: "",
-        clientEmail: "",
-        clientPhone: "",
-        appointmentDate: "",
-        appointmentType: "consultation",
-        notes: "",
-      });
+      setIsAppointmentOpen(false);
+      appointmentForm.reset();
     },
     onError: () => {
       toast({
@@ -141,6 +148,10 @@ export default function SalesRepProfile() {
       });
     },
   });
+
+  const handleAppointmentSubmit = (data: AppointmentForm) => {
+    appointmentMutation.mutate(data);
+  };
 
   const handleBookAppointment = () => {
     if (!profileData?.profile) return;
