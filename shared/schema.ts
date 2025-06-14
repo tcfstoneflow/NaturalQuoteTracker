@@ -468,6 +468,7 @@ export const salesRepPortfolioImages = pgTable("sales_rep_portfolio_images", {
   title: text("title"),
   description: text("description"),
   projectType: text("project_type"), // "kitchen", "bathroom", "commercial", etc.
+  productsUsed: text("products_used").array(), // array of product names/IDs used in this project
   displayOrder: integer("display_order").default(0),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

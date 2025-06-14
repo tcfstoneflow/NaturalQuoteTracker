@@ -106,6 +106,7 @@ const portfolioImageSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   projectType: z.string().optional(),
+  productsUsed: z.array(z.string()).optional(),
 });
 
 export default function SalesRepManagement() {
@@ -168,6 +169,7 @@ export default function SalesRepManagement() {
       title: "",
       description: "",
       projectType: "",
+      productsUsed: [],
     },
   });
 
@@ -178,6 +180,7 @@ export default function SalesRepManagement() {
       title: "",
       description: "",
       projectType: "",
+      productsUsed: [],
     },
   });
 
