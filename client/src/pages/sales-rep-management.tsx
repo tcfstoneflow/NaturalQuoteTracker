@@ -220,6 +220,32 @@ export default function SalesRepManagement() {
     },
   });
 
+  const uploadPortfolioImageMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('portfolioImage', file);
+      return fetch("/api/sales-rep-portfolio/upload-image", {
+        method: "POST",
+        body: formData,
+      }).then(res => res.json());
+    },
+    onSuccess: (data) => {
+      portfolioForm.setValue('imageUrl', data.imageUrl);
+      editPortfolioForm.setValue('imageUrl', data.imageUrl);
+      toast({
+        title: "Image uploaded",
+        description: "Portfolio image uploaded successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload portfolio image. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createOrUpdateProfileMutation = useMutation({
     mutationFn: async (data: z.infer<typeof profileSchema>) => {
       const method = profile ? 'PUT' : 'POST';
@@ -878,8 +904,7 @@ export default function SalesRepManagement() {
                                       onChange={(e) => {
                                         const file = e.target.files?.[0];
                                         if (file) {
-                                          const url = URL.createObjectURL(file);
-                                          field.onChange(url);
+                                          uploadPortfolioImageMutation.mutate(file);
                                         }
                                       }}
                                       className="hidden"
@@ -889,10 +914,11 @@ export default function SalesRepManagement() {
                                       type="button"
                                       variant="outline"
                                       onClick={() => fileInputRef.current?.click()}
+                                      disabled={uploadPortfolioImageMutation.isPending}
                                       className="w-full"
                                     >
                                       <Upload className="w-4 h-4 mr-2" />
-                                      Upload Image File
+                                      {uploadPortfolioImageMutation.isPending ? "Uploading..." : "Upload Image File"}
                                     </Button>
                                   </div>
                                 </div>
@@ -1063,8 +1089,7 @@ export default function SalesRepManagement() {
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
-                                    const url = URL.createObjectURL(file);
-                                    field.onChange(url);
+                                    uploadPortfolioImageMutation.mutate(file);
                                   }
                                 }}
                                 className="hidden"
@@ -1074,10 +1099,11 @@ export default function SalesRepManagement() {
                                 type="button"
                                 variant="outline"
                                 onClick={() => editFileInputRef.current?.click()}
+                                disabled={uploadPortfolioImageMutation.isPending}
                                 className="w-full"
                               >
                                 <Upload className="w-4 h-4 mr-2" />
-                                Upload Image File
+                                {uploadPortfolioImageMutation.isPending ? "Uploading..." : "Upload Image File"}
                               </Button>
                             </div>
                           </div>

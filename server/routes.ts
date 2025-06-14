@@ -2578,6 +2578,21 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Portfolio image upload route
+  app.post("/api/sales-rep-portfolio/upload-image", requireAuth, uploadLimiter, portfolioImageUpload.single('portfolioImage'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+
+      const imageUrl = `/upload/portfolio-images/${req.file.filename}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error("Portfolio image upload error:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+
   // Sales Rep Profile routes
   app.get("/api/sales-rep-profile", requireAuth, async (req, res) => {
     try {
