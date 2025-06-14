@@ -433,6 +433,14 @@ export default function Inventory() {
       slabWidth: formData.slabWidth ? parseFloat(formData.slabWidth) : null,
       location: formData.location.trim() || null,
       imageUrl: formData.imageUrl.trim() || null,
+      // SEO/Marketing fields
+      seoTitle: formData.seoTitle.trim() || null,
+      seoDescription: formData.seoDescription.trim() || null,
+      seoUrl: formData.seoUrl.trim() || null,
+      metaKeywords: formData.metaKeywords.trim() || null,
+      socialTitle: formData.socialTitle.trim() || null,
+      socialDescription: formData.socialDescription.trim() || null,
+      socialImage: formData.socialImage.trim() || null,
     };
 
     console.log("Frontend submitting data:", JSON.stringify(submitData, null, 2));
@@ -517,7 +525,15 @@ export default function Inventory() {
       slabLength: "",
       slabWidth: "",
       location: "",
-      imageUrl: ""
+      imageUrl: "",
+      // SEO/Marketing fields
+      seoTitle: "",
+      seoDescription: "",
+      seoUrl: "",
+      metaKeywords: "",
+      socialTitle: "",
+      socialDescription: "",
+      socialImage: ""
     });
     setGalleryImages([]);
     setProductTags([]);
@@ -2070,6 +2086,185 @@ export default function Inventory() {
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="e.g. Warehouse A, Section 3"
                   />
+                </div>
+
+                {/* Marketing/SEO Section */}
+                <div className="border-t pt-6 mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Marketing</h3>
+                    <Dialog open={isMarketingDialogOpen} onOpenChange={setIsMarketingDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>SEO</DialogTitle>
+                          <DialogDescription>
+                            Search engine optimization (SEO) allows you to improve your ranking in search results.
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="space-y-6">
+                          <div>
+                            <Label htmlFor="seoUrl" className="text-sm font-medium text-gray-700">URL</Label>
+                            <div className="flex items-center mt-1">
+                              <span className="text-sm text-gray-500">/shop/p/</span>
+                              <Input
+                                id="seoUrl"
+                                value={formData.seoUrl}
+                                onChange={(e) => setFormData({ ...formData, seoUrl: e.target.value })}
+                                placeholder={formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}
+                                className="border-0 border-b rounded-none px-2 focus-visible:ring-0 focus-visible:border-blue-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="seoTitle" className="text-sm font-medium text-gray-700">SEO TITLE</Label>
+                            <div className="relative mt-1">
+                              <Input
+                                id="seoTitle"
+                                value={formData.seoTitle}
+                                onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
+                                placeholder="Enter a title..."
+                                maxLength={100}
+                                className="pr-12"
+                              />
+                              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
+                                {formData.seoTitle.length}/100
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="seoDescription" className="text-sm font-medium text-gray-700">SEO DESCRIPTION</Label>
+                            <div className="relative mt-1">
+                              <textarea
+                                id="seoDescription"
+                                value={formData.seoDescription}
+                                onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
+                                placeholder="Enter a description..."
+                                maxLength={400}
+                                rows={4}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none pr-12"
+                              />
+                              <span className="absolute right-3 bottom-3 text-sm text-gray-400">
+                                {formData.seoDescription.length}/400
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="metaKeywords" className="text-sm font-medium text-gray-700">META KEYWORDS</Label>
+                            <Input
+                              id="metaKeywords"
+                              value={formData.metaKeywords}
+                              onChange={(e) => setFormData({ ...formData, metaKeywords: e.target.value })}
+                              placeholder="granite, countertop, kitchen, natural stone"
+                              className="mt-1"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Separate keywords with commas</p>
+                          </div>
+
+                          <div className="border-t pt-4">
+                            <h4 className="font-medium text-gray-700 mb-3">Social Share</h4>
+                            
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="socialTitle" className="text-sm font-medium text-gray-700">SOCIAL TITLE</Label>
+                                <Input
+                                  id="socialTitle"
+                                  value={formData.socialTitle}
+                                  onChange={(e) => setFormData({ ...formData, socialTitle: e.target.value })}
+                                  placeholder="Title for social media sharing"
+                                  className="mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label htmlFor="socialDescription" className="text-sm font-medium text-gray-700">SOCIAL DESCRIPTION</Label>
+                                <textarea
+                                  id="socialDescription"
+                                  value={formData.socialDescription}
+                                  onChange={(e) => setFormData({ ...formData, socialDescription: e.target.value })}
+                                  placeholder="Description for social media sharing"
+                                  rows={3}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label htmlFor="socialImage" className="text-sm font-medium text-gray-700">SOCIAL IMAGE</Label>
+                                <ImageUpload
+                                  value={formData.socialImage}
+                                  onChange={(value) => setFormData({ ...formData, socialImage: value })}
+                                  className="mt-1"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Recommended size: 1200x630 pixels</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-2 pt-4">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setIsMarketingDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="button" 
+                            onClick={() => setIsMarketingDialogOpen(false)}
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  
+                  {/* Marketing Preview Section */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">SEO and URL</h4>
+                        <div className="border-b-2 border-black w-20 mt-1"></div>
+                      </div>
+                      <div className="text-gray-500">
+                        <h4 className="font-medium">Social Share</h4>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-blue-600 font-medium">
+                        {formData.seoTitle || formData.name || "Bundle Name — Counter Fixtures"}
+                      </div>
+                      <div className="text-green-600 text-sm">
+                        https://www.counterfixtures.com/shop/p/{formData.seoUrl || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || "bundle-name"}
+                      </div>
+                      <div className="text-gray-600 text-sm">
+                        {formData.seoDescription || "This description will automatically be generated by search engines. Click edit above to provide an alternative description."}
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsMarketingDialogOpen(true)}
+                      >
+                        EDIT
+                      </Button>
+                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        Recommended
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex space-x-2 pt-4">
