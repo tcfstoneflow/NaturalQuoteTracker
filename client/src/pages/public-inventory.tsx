@@ -86,17 +86,7 @@ export default function PublicInventory() {
   // Function to generate context-aware message based on selected product
   const getContextualMessage = () => {
     if (selectedProductForQuote) {
-      return (
-        <span>
-          I'm interested in getting a quote for{" "}
-          <Link href={`/product/${selectedProductForQuote.id}`}>
-            <span className="text-blue-600 hover:text-blue-800 underline cursor-pointer">
-              {selectedProductForQuote.name}
-            </span>
-          </Link>
-          . Could you please provide pricing and availability.
-        </span>
-      );
+      return `I'm interested in getting a quote for ${selectedProductForQuote.name}. Could you please provide pricing and availability.`;
     }
     
     // Fallback message when no specific product is selected
@@ -590,8 +580,19 @@ export default function PublicInventory() {
               </DialogDescription>
             </DialogHeader>
             
+            {selectedProductForQuote && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Product of Interest:</p>
+                <Link href={`/product/${selectedProductForQuote.id}`}>
+                  <span className="text-blue-600 hover:text-blue-800 underline font-medium cursor-pointer">
+                    {selectedProductForQuote.name}
+                  </span>
+                </Link>
+              </div>
+            )}
+            
             <Form {...contactForm}>
-              <form onSubmit={contactForm.handleSubmit(onContactSubmit)} className="space-y-4">
+              <form onSubmit={contactForm.handleSubmit((data) => contactMutation.mutate(data))} className="space-y-4">
                 <FormField
                   control={contactForm.control}
                   name="name"
