@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Phone, Mail, Clock, User, MessageSquare, CheckCircle, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, isToday, addMonths, subMonths, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 interface ShowroomVisit {
   id: number;
@@ -85,6 +86,49 @@ export default function ShowroomVisits() {
       return response.json();
     },
   });
+
+  // Fetch products to create clickable links
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/products"],
+  });
+
+  // Function to render message with clickable product names
+  const renderMessageWithLinks = (message: string) => {
+    if (!Array.isArray(products) || products.length === 0) {
+      return <span>{message}</span>;
+    }
+
+    // Simple approach: look for each product name and replace the first occurrence
+    let resultMessage: React.ReactNode = message;
+    
+    products.forEach((product: any, index: number) => {
+      if (product && product.name) {
+        const productName = product.name;
+        const messageStr = typeof resultMessage === 'string' ? resultMessage : message;
+        
+        if (messageStr.includes(productName)) {
+          const parts = messageStr.split(productName);
+          if (parts.length > 1) {
+            resultMessage = (
+              <>
+                {parts[0]}
+                <Link 
+                  key={`product-link-${product.id}-${index}`}
+                  href={`/public-inventory?product=${encodeURIComponent(productName)}`}
+                  className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                >
+                  {productName}
+                </Link>
+                {parts.slice(1).join(productName)}
+              </>
+            );
+          }
+        }
+      }
+    });
+
+    return resultMessage;
+  };
 
   const updateVisitMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
@@ -630,7 +674,7 @@ export default function ShowroomVisits() {
                           </div>
                         ) : (
                           <div className="text-sm text-blue-700 whitespace-pre-wrap">
-                            {visit.message}
+                            {renderMessageWithLinks(visit.message)}
                           </div>
                         )}
                       </div>
