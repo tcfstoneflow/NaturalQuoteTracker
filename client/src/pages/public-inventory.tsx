@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,6 @@ const contactSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(1, "Phone number is required"),
-  preferredDate: z.string().optional(),
   message: z.string().min(1, "Message is required"),
 });
 
@@ -87,7 +86,17 @@ export default function PublicInventory() {
   // Function to generate context-aware message based on selected product
   const getContextualMessage = () => {
     if (selectedProductForQuote) {
-      return `I'm interested in getting a quote for ${selectedProductForQuote.name}. Could you please provide pricing and availability.`;
+      return (
+        <span>
+          I'm interested in getting a quote for{" "}
+          <Link href={`/product/${selectedProductForQuote.id}`}>
+            <span className="text-blue-600 hover:text-blue-800 underline cursor-pointer">
+              {selectedProductForQuote.name}
+            </span>
+          </Link>
+          . Could you please provide pricing and availability.
+        </span>
+      );
     }
     
     // Fallback message when no specific product is selected
@@ -100,7 +109,6 @@ export default function PublicInventory() {
       name: "",
       email: "",
       phone: "",
-      preferredDate: "",
       message: getContextualMessage(),
     },
   });
@@ -207,7 +215,7 @@ export default function PublicInventory() {
         clientName: data.name,
         email: data.email,
         phone: data.phone,
-        preferredDate: data.preferredDate || null,
+        preferredDate: null,
         notes: data.message,
         status: "pending"
       });
@@ -626,20 +634,7 @@ export default function PublicInventory() {
                   )}
                 />
                 
-                <FormField
-                  control={contactForm.control}
-                  name="preferredDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preferred Contact Date (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+
                 <FormField
                   control={contactForm.control}
                   name="message"
