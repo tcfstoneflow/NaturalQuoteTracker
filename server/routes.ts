@@ -227,6 +227,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", logout);
   app.get("/api/auth/user", requireAuth, getCurrentUser);
 
+  // Test endpoint for user creation notifications (remove in production)
+  app.post("/api/test/create-user", async (req, res) => {
+    try {
+      const { hashPassword } = await import('./auth');
+      const { username, email, firstName, lastName, role } = req.body;
+      
+      // Create test user
+      const userDataForDB = {
+        username: username || 'testuser' + Date.now(),
+        email: email || 'test' + Date.now() + '@example.com',
+        firstName: firstName || 'Test',
+        lastName: lastName || 'User',
+        role: role || 'sales_rep',
+        isActive: true,
+        passwordHash: await hashPassword('testpassword123'),
+      };
+
+      const newUser = await storage.createUser(userDataForDB);
+
+      // Broadcast notification
+      const broadcastNotification = (global as any).broadcastNotification;
+      if (typeof broadcastNotification === 'function') {
+        const notification = {
+          type: 'new_user_created',
+          title: 'New User Added',
+          message: `${newUser.firstName} ${newUser.lastName} has joined the team as ${newUser.role}`,
+          data: {
+            userId: newUser.id,
+            userName: `${newUser.firstName} ${newUser.lastName}`,
+            userRole: newUser.role,
+            userEmail: newUser.email
+          }
+        };
+        
+        broadcastNotification(notification);
+        console.log('[TEST USER CREATION] Broadcasted notification:', notification);
+      }
+
+      res.json({
+        success: true,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role,
+        },
+        message: 'Test user created and notification sent'
+      });
+    } catch (error: any) {
+      console.error('Test user creation error:', error);
+      res.status(500).json({ error: error.message || 'Failed to create test user' });
+    }
+  });
+
   // User management routes (admin only)
   app.get("/api/users", requireAuth, requireRole(['admin', 'sales_manager', 'sales_rep']), async (req, res) => {
     try {

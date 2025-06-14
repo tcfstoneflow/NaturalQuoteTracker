@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test User Creation Notification</title>
+</head>
+<body>
+    <h1>Testing User Creation Notification</h1>
+    <button onclick="createTestUser()">Create Test User</button>
+    <div id="result"></div>
+    
+    <script>
+        async function createTestUser() {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        username: 'testuser' + Date.now(),
+                        email: 'test' + Date.now() + '@example.com',
+                        password: 'password123',
+                        firstName: 'Test',
+                        lastName: 'User',
+                        role: 'sales_rep',
+                        isActive: true
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (response.ok) {
+                    console.log('User created successfully:', data);
+                } else {
+                    console.error('Failed to create user:', data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
