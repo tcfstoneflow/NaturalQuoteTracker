@@ -319,10 +319,7 @@ export default function ClientFavorites() {
                       <span className="text-gray-600">Supplier:</span>
                       <span>{favorite.product.supplier}</span>
                     </div>
-                    <div className="flex justify-between text-sm font-semibold">
-                      <span>Price:</span>
-                      <span>${favorite.product.price}</span>
-                    </div>
+
                   </div>
 
                   {favorite.notes && (
