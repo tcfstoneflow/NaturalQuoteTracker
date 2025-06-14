@@ -840,6 +840,138 @@ export default function SalesRepProfile() {
           </div>
         </div>
       </div>
+
+      {/* Appointment Booking Modal */}
+      <Dialog open={isAppointmentOpen} onOpenChange={setIsAppointmentOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Book Consultation</DialogTitle>
+            <DialogDescription>
+              Schedule a consultation with {profile.userName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...appointmentForm}>
+            <form onSubmit={appointmentForm.handleSubmit(handleAppointmentSubmit)} className="space-y-4">
+              <FormField
+                control={appointmentForm.control}
+                name="clientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={appointmentForm.control}
+                name="clientEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Enter your email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={appointmentForm.control}
+                name="clientPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={appointmentForm.control}
+                name="appointmentDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={appointmentForm.control}
+                name="appointmentType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Consultation Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select consultation type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="showroom">Showroom Visit</SelectItem>
+                        <SelectItem value="site">Site Visit</SelectItem>
+                        <SelectItem value="phone">Phone Consultation</SelectItem>
+                        <SelectItem value="video">Video Call</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={appointmentForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Details</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Tell us about your project..." 
+                        className="resize-none" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsAppointmentOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={appointmentMutation.isPending}
+                >
+                  {appointmentMutation.isPending ? 'Booking...' : 'Book Consultation'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

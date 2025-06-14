@@ -1967,10 +1967,7 @@ export class DatabaseStorage implements IStorage {
   }>): Promise<SalesRepPortfolioImage | null> {
     const [image] = await db
       .update(salesRepPortfolioImages)
-      .set({
-        ...updates,
-        updatedAt: new Date()
-      })
+      .set(updates)
       .where(and(
         eq(salesRepPortfolioImages.id, id),
         eq(salesRepPortfolioImages.salesRepId, salesRepId)
