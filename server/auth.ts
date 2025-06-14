@@ -164,24 +164,23 @@ export async function register(req: Request, res: Response) {
 
     const newUser = await storage.createUser(userDataForDB);
 
-    // Import broadcastNotification function if available
+    // Broadcast notification to all connected users if available
     try {
-      const { broadcastNotification } = await import('./routes');
-      
-      // Broadcast notification to all connected users
-      const notification = {
-        type: 'new_user_created',
-        title: 'New User Added',
-        message: `${newUser.firstName} ${newUser.lastName} has joined the team as ${newUser.role}`,
-        data: {
-          userId: newUser.id,
-          userName: `${newUser.firstName} ${newUser.lastName}`,
-          userRole: newUser.role,
-          userEmail: newUser.email
-        }
-      };
+      const broadcastNotification = (global as any).broadcastNotification;
       
       if (typeof broadcastNotification === 'function') {
+        const notification = {
+          type: 'new_user_created',
+          title: 'New User Added',
+          message: `${newUser.firstName} ${newUser.lastName} has joined the team as ${newUser.role}`,
+          data: {
+            userId: newUser.id,
+            userName: `${newUser.firstName} ${newUser.lastName}`,
+            userRole: newUser.role,
+            userEmail: newUser.email
+          }
+        };
+        
         broadcastNotification(notification);
         console.log('[USER CREATION] Broadcasted new user notification:', notification);
       }

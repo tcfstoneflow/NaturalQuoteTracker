@@ -5018,6 +5018,9 @@ Your body text starts here with proper spacing.`;
   // Store broadcast function on the app for use in routes
   (app as any).broadcastNotification = broadcastNotification;
   
+  // Export for use in other modules
+  (global as any).broadcastNotification = broadcastNotification;
+  
   return httpServer;
 }
 
