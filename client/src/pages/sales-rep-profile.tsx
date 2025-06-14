@@ -140,12 +140,6 @@ export default function SalesRepProfile() {
               )}
               
               <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-                {profile.yearsExperience && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4" />
-                    <span>{profile.yearsExperience} years experience</span>
-                  </div>
-                )}
                 {profile.phone && (
                   <div className="flex items-center gap-1">
                     <Phone className="w-4 h-4" />

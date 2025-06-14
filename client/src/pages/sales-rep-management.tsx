@@ -24,7 +24,6 @@ type SalesRepProfile = {
   urlSlug: string;
   bio: string | null;
   title: string | null;
-  yearsExperience: number | null;
   specialties: string[] | null;
   phone: string | null;
   email: string | null;
@@ -86,7 +85,6 @@ const profileSchema = z.object({
   urlSlug: z.string().min(3, "URL slug must be at least 3 characters").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens allowed"),
   bio: z.string().max(500, "Bio must be 500 characters or less").optional(),
   title: z.string().max(100, "Title must be 100 characters or less").optional(),
-  yearsExperience: z.number().min(0).max(50).optional(),
   specialties: z.array(z.string()).optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -146,7 +144,6 @@ export default function SalesRepManagement() {
       urlSlug: "",
       bio: "",
       title: "",
-      yearsExperience: 0,
       specialties: [],
       phone: "",
       email: "",
@@ -582,25 +579,7 @@ export default function SalesRepManagement() {
                       )}
                     />
 
-                    <FormField
-                      control={profileForm.control}
-                      name="yearsExperience"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Years of Experience</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min="0"
-                              max="50"
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+
 
                     <FormField
                       control={profileForm.control}
