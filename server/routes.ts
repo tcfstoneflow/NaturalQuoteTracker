@@ -345,6 +345,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public quote request endpoint (no auth required)
+  app.post("/api/public/quote-request", async (req, res) => {
+    try {
+      const { name, email, phone, message } = req.body;
+      
+      if (!name || !email) {
+        return res.status(400).json({ message: "Name and email are required" });
+      }
+
+      const newVisit = await storage.createShowroomVisit({
+        name,
+        email,
+        phone: phone || null,
+        preferredDate: null,
+        preferredTime: null,
+        message: message || null,
+        status: "pending",
+        assignedToUserId: null,
+        assignedSalesMember: null
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Quote request submitted successfully!",
+        id: newVisit.id
+      });
+    } catch (error: any) {
+      console.error("Create quote request error:", error);
+      res.status(500).json({ message: "Failed to submit quote request" });
+    }
+  });
+
   app.post("/api/showroom-visits", requireAuth, async (req, res) => {
     try {
       const { name, email, phone, preferredDate, preferredTime, message, status, assignedToUserId, assignedSalesMember } = req.body;

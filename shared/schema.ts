@@ -213,8 +213,8 @@ export const showroomVisits = pgTable("showroom_visits", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
-  phone: text("phone").notNull(),
-  preferredDate: text("preferred_date").notNull(),
+  phone: text("phone"),
+  preferredDate: text("preferred_date"),
   preferredTime: text("preferred_time"), // Time in HH:MM format
   message: text("message"),
   status: text("status").default("pending").notNull(), // "pending", "scheduled", "completed", "cancelled"

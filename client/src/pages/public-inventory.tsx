@@ -201,13 +201,11 @@ export default function PublicInventory() {
   // Submit contact form
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      const response = await apiRequest("POST", "/api/showroom-visits", {
-        clientName: data.name,
+      const response = await apiRequest("POST", "/api/public/quote-request", {
+        name: data.name,
         email: data.email,
         phone: data.phone,
-        preferredDate: null,
-        notes: data.message,
-        status: "pending"
+        message: data.message
       });
       return response;
     },
