@@ -1,12 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { Calendar, Clock, Mail, Phone, User, MapPin, Star, ImageIcon, Globe2 } from "lucide-react";
 import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+// Client consultation form schema
+const consultationSchema = z.object({
+  clientName: z.string().min(2, "Name must be at least 2 characters"),
+  clientEmail: z.string().email("Please enter a valid email address"),
+  clientPhone: z.string().min(10, "Please enter a valid phone number"),
+  projectType: z.string().min(1, "Please select a project type"),
+  projectDescription: z.string().min(10, "Please provide project details (at least 10 characters)"),
+  budget: z.string().optional(),
+  timeline: z.string().optional(),
+  preferredContactMethod: z.string().min(1, "Please select a preferred contact method"),
+});
+
+type ConsultationFormData = z.infer<typeof consultationSchema>;
 
 type SalesRepProfileData = {
   profile: {
@@ -65,6 +87,25 @@ export default function SalesRepProfile() {
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [selectedPortfolioImage, setSelectedPortfolioImage] = useState<any>(null);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
+  const [consultationContext, setConsultationContext] = useState<string>("");
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const consultationForm = useForm<ConsultationFormData>({
+    resolver: zodResolver(consultationSchema),
+    defaultValues: {
+      clientName: "",
+      clientEmail: "",
+      clientPhone: "",
+      projectType: "",
+      projectDescription: "",
+      budget: "",
+      timeline: "",
+      preferredContactMethod: "",
+    },
+  });
 
   const { data: profileData, isLoading } = useQuery<SalesRepProfileData>({
     queryKey: [`/api/public/sales-rep/${slug}`],
@@ -84,6 +125,48 @@ export default function SalesRepProfile() {
     queryKey: ['/api/products'],
     queryFn: () => fetch('/api/products').then(res => res.json()),
   });
+
+  // Submit consultation request
+  const submitConsultationMutation = useMutation({
+    mutationFn: async (data: ConsultationFormData) => {
+      const response = await fetch('/api/client-consultations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          salesRepId: profile.id,
+          context: consultationContext,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to submit consultation request');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Consultation Request Submitted",
+        description: "Your consultation request has been sent successfully. The sales representative will contact you soon.",
+      });
+      setIsConsultationModalOpen(false);
+      consultationForm.reset();
+      setConsultationContext("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit consultation request. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const openConsultationModal = (context: string = "") => {
+    setConsultationContext(context);
+    setIsConsultationModalOpen(true);
+  };
+
+  const onSubmitConsultation = (data: ConsultationFormData) => {
+    submitConsultationMutation.mutate(data);
+  };
 
 
 
@@ -570,9 +653,9 @@ export default function SalesRepProfile() {
                       <Button 
                         className="w-full"
                         onClick={() => {
-                          const subject = `Consultation Request - Portfolio Project${selectedPortfolioImage.title ? `: ${selectedPortfolioImage.title}` : ''}`;
-                          const body = `Hi ${profile.userName},\n\nI'm interested in your portfolio project${selectedPortfolioImage.title ? ` "${selectedPortfolioImage.title}"` : ''} and would like to schedule a consultation to discuss creating something similar.\n\nThank you!`;
-                          window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                          const context = `Portfolio Project${selectedPortfolioImage.title ? `: ${selectedPortfolioImage.title}` : ''}`;
+                          setIsPortfolioModalOpen(false);
+                          openConsultationModal(context);
                         }}
                       >
                         Schedule Consultation
@@ -644,11 +727,7 @@ export default function SalesRepProfile() {
               </div>
               <h3 className="font-semibold">Schedule Meeting</h3>
               <Button 
-                onClick={() => {
-                  const subject = `Consultation Request with ${profile.userName}`;
-                  const body = `Hi ${profile.userName},\n\nI'm interested in discussing a natural stone project and would like to schedule a consultation.\n\nThank you!`;
-                  window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-                }}
+                onClick={() => openConsultationModal("General consultation request")}
                 variant="outline"
                 className="bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
               >
@@ -659,6 +738,186 @@ export default function SalesRepProfile() {
         </div>
       </div>
 
+      {/* Client Consultation Modal */}
+      <Dialog open={isConsultationModalOpen} onOpenChange={setIsConsultationModalOpen}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle>Schedule Consultation</DialogTitle>
+            <DialogDescription>
+              Let's connect you with {profile.userName} for your natural stone project.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...consultationForm}>
+            <form onSubmit={consultationForm.handleSubmit(onSubmitConsultation)} className="space-y-4">
+              {consultationContext && (
+                <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                  <strong>Interest:</strong> {consultationContext}
+                </div>
+              )}
+              
+              <FormField
+                control={consultationForm.control}
+                name="clientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter your full name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={consultationForm.control}
+                name="clientEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" placeholder="your.email@example.com" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={consultationForm.control}
+                name="clientPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="(555) 123-4567" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={consultationForm.control}
+                name="projectType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select project type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="kitchen">Kitchen Countertops</SelectItem>
+                        <SelectItem value="bathroom">Bathroom Vanity</SelectItem>
+                        <SelectItem value="fireplace">Fireplace Surround</SelectItem>
+                        <SelectItem value="flooring">Flooring</SelectItem>
+                        <SelectItem value="outdoor">Outdoor/Patio</SelectItem>
+                        <SelectItem value="commercial">Commercial Project</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={consultationForm.control}
+                name="projectDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Details</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        {...field} 
+                        placeholder="Tell us about your project - dimensions, style preferences, timeline, etc."
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={consultationForm.control}
+                  name="budget"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Budget Range (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. $5,000-$10,000" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={consultationForm.control}
+                  name="timeline"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Timeline (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. 2-3 months" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={consultationForm.control}
+                name="preferredContactMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Contact Method</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="How should we contact you?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="phone">Phone Call</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="text">Text Message</SelectItem>
+                        <SelectItem value="either">Either Phone or Email</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsConsultationModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={submitConsultationMutation.isPending}
+                >
+                  {submitConsultationMutation.isPending ? "Submitting..." : "Submit Request"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
