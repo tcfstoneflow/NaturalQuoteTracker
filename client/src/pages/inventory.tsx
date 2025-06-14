@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, Upload } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -57,7 +57,6 @@ export default function Inventory() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -356,22 +355,6 @@ export default function Inventory() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Stone Slab Bundles</CardTitle>
           <div className="flex gap-2">
-            <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Upload size={16} className="mr-2" />
-                  CSV Import
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Import Bundle Updates</DialogTitle>
-                  <DialogDescription>
-                    Upload a CSV file to update existing bundles.
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button>
