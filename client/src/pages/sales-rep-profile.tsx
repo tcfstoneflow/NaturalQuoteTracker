@@ -153,17 +153,7 @@ export default function SalesRepProfile() {
     appointmentMutation.mutate(data);
   };
 
-  const handleBookAppointment = () => {
-    if (!profileData?.profile) return;
-    
-    const appointmentData = {
-      salesRepId: profileData.profile.userId,
-      ...appointmentForm,
-      appointmentDate: new Date(appointmentForm.appointmentDate).toISOString(),
-    };
-    
-    bookAppointmentMutation.mutate(appointmentData);
-  };
+
 
   if (isLoading) {
     return (
@@ -341,11 +331,21 @@ export default function SalesRepProfile() {
                   </div>
                   
                   <Button 
-                    onClick={handleBookAppointment}
-                    disabled={!appointmentForm.clientName || !appointmentForm.clientEmail || !appointmentForm.appointmentDate || bookAppointmentMutation.isPending}
+                    onClick={() => {
+                      const formData = {
+                        clientName: appointmentForm.clientName,
+                        clientEmail: appointmentForm.clientEmail, 
+                        clientPhone: appointmentForm.clientPhone,
+                        appointmentDate: appointmentForm.appointmentDate,
+                        appointmentType: appointmentForm.appointmentType,
+                        notes: appointmentForm.notes
+                      };
+                      appointmentMutation.mutate(formData);
+                    }}
+                    disabled={appointmentMutation.isPending || !appointmentForm.clientName || !appointmentForm.clientEmail || !appointmentForm.appointmentDate}
                     className="w-full"
                   >
-                    {bookAppointmentMutation.isPending ? "Booking..." : "Submit Request"}
+                    {appointmentMutation.isPending ? "Booking..." : "Submit Request"}
                   </Button>
                 </div>
               </DialogContent>
