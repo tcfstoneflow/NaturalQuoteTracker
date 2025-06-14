@@ -1963,6 +1963,7 @@ export class DatabaseStorage implements IStorage {
     title: string;
     description: string;
     projectType: string;
+    productsUsed: string[];
   }>): Promise<SalesRepPortfolioImage | null> {
     const [image] = await db
       .update(salesRepPortfolioImages)

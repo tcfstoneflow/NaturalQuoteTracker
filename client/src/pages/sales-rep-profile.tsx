@@ -55,6 +55,7 @@ type SalesRepProfileData = {
     title: string | null;
     description: string | null;
     projectType: string | null;
+    productsUsed: string[] | null;
     displayOrder: number;
     isActive: boolean;
     createdAt: string;
@@ -414,7 +415,7 @@ export default function SalesRepProfile() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
-                        {(image.title || image.description || image.projectType) && (
+                        {(image.title || image.description || image.projectType || (image.productsUsed && image.productsUsed.length > 0)) && (
                           <div className="p-6">
                             {image.title && (
                               <h4 className="font-semibold text-gray-900 mb-2 text-lg">{image.title}</h4>
@@ -423,7 +424,19 @@ export default function SalesRepProfile() {
                               <Badge variant="outline" className="mb-3 text-sm px-3 py-1">{image.projectType}</Badge>
                             )}
                             {image.description && (
-                              <p className="text-gray-600 leading-relaxed">{image.description}</p>
+                              <p className="text-gray-600 leading-relaxed mb-3">{image.description}</p>
+                            )}
+                            {image.productsUsed && image.productsUsed.length > 0 && (
+                              <div>
+                                <p className="text-sm font-medium text-gray-700 mb-2">Products Used:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {image.productsUsed.map((product, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs">
+                                      {product}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
                             )}
                           </div>
                         )}
