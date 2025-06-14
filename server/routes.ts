@@ -4547,6 +4547,59 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Demonstration endpoint for WebSocket notifications (public access for testing)
+  app.get("/api/demo/notification", async (req, res) => {
+    try {
+      // Get an existing product with bundle for demonstration
+      const product = await storage.getProductByBundleId('BDL-0006');
+      
+      // Create single slab notification
+      const singleSlabNotification = {
+        type: 'new_slab_added',
+        title: 'New Slab Added',
+        message: `A new slab has been added to ${product?.name || 'Ubatuba'}`,
+        data: {
+          bundleId: 'BDL-0006',
+          productName: product?.name || 'Ubatuba',
+          slabNumber: 'DEMO-' + Date.now()
+        }
+      };
+      
+      broadcastNotification(singleSlabNotification);
+      console.log('[DEMO] Broadcasted single slab notification:', singleSlabNotification);
+      
+      // After 2 seconds, send bulk notification
+      setTimeout(() => {
+        const bulkSlabNotification = {
+          type: 'bulk_slabs_added',
+          title: 'Bulk Slabs Added',
+          message: `5 slabs have been added to ${product?.name || 'Ubatuba'}`,
+          data: {
+            bundleId: 'BDL-0006',
+            productName: product?.name || 'Ubatuba',
+            slabCount: 5
+          }
+        };
+        
+        broadcastNotification(bulkSlabNotification);
+        console.log('[DEMO] Broadcasted bulk slabs notification:', bulkSlabNotification);
+      }, 2000);
+      
+      res.json({ 
+        success: true, 
+        message: 'Demo notifications triggered',
+        connectedClients: wss.clients.size,
+        notifications: [
+          'Single slab notification sent immediately',
+          'Bulk slabs notification will be sent in 2 seconds'
+        ]
+      });
+    } catch (error: any) {
+      console.error('Demo notification error:', error);
+      res.status(500).json({ error: "Failed to send demo notifications" });
+    }
+  });
+
   app.post("/api/tags", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
     try {
       const { name, description, category } = req.body;
