@@ -53,40 +53,6 @@ export default function PublicInventory() {
   const [, setLocation] = useLocation();
   const { hasClientEmail } = useClientEmail();
 
-  // Handle URL parameters for category filtering and product redirects
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const categoryParam = urlParams.get('category');
-    const productParam = urlParams.get('product');
-    
-    if (categoryParam) {
-      setCategoryFilter(categoryParam);
-      setActiveTab(categoryParam);
-    }
-    
-    // Handle product parameter - redirect to product page
-    if (productParam && products && Array.isArray(products)) {
-      // Try to find product by name or ID
-      const product = products.find((p: any) => 
-        p.name === productParam || 
-        p.id?.toString() === productParam ||
-        p.bundleId === productParam
-      );
-      
-      if (product) {
-        // Redirect to the correct product page
-        setLocation(`/product/${product.id}`);
-        return;
-      }
-    }
-    
-    // Load recently viewed products from localStorage
-    const recentlyViewedData = localStorage.getItem('recentlyViewed');
-    if (recentlyViewedData) {
-      setRecentlyViewed(JSON.parse(recentlyViewedData));
-    }
-  }, [products, setLocation]);
-
   // Update quote message when selected product changes
   useEffect(() => {
     contactForm.setValue('message', getContextualMessage());
@@ -152,6 +118,42 @@ export default function PublicInventory() {
       setProductsWithSlabs(combined);
     }
   }, [products, allSlabs]);
+
+  // Handle URL parameters for category filtering and product redirects
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    const productParam = urlParams.get('product');
+    
+    if (categoryParam) {
+      setCategoryFilter(categoryParam);
+      setActiveTab(categoryParam);
+    }
+    
+    // Handle product parameter - redirect to product page
+    if (productParam && products && Array.isArray(products)) {
+      // Try to find product by name or ID
+      const product = products.find((p: any) => 
+        p.name === productParam || 
+        p.id?.toString() === productParam ||
+        p.bundleId === productParam
+      );
+      
+      if (product) {
+        // Redirect to the correct product page
+        setLocation(`/product/${product.id}`);
+        return;
+      }
+    }
+  }, [products, setLocation]);
+
+  // Load recently viewed products from localStorage on mount
+  useEffect(() => {
+    const recentlyViewedData = localStorage.getItem('recentlyViewed');
+    if (recentlyViewedData) {
+      setRecentlyViewed(JSON.parse(recentlyViewedData));
+    }
+  }, []);
 
   // Calculate slab area
   // Removed pricing calculations for public page security
