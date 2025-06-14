@@ -349,15 +349,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { name, email, phone, preferredDate, preferredTime, message, status, assignedToUserId, assignedSalesMember } = req.body;
       
-      if (!name || !email || !preferredDate) {
-        return res.status(400).json({ message: "Name, email, and preferred date are required" });
+      if (!name || !email) {
+        return res.status(400).json({ message: "Name and email are required" });
       }
 
       const newVisit = await storage.createShowroomVisit({
         name,
         email,
         phone: phone || null,
-        preferredDate,
+        preferredDate: preferredDate || null,
         preferredTime: preferredTime || null,
         message: message || null,
         status: status || "pending",
