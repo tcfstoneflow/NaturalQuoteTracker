@@ -4149,8 +4149,12 @@ Your body text starts here with proper spacing.`;
         return res.status(400).json({ error: "CSV file is empty or has no valid headers" });
       }
 
-      // Step 1: Determine table type by scanning headers
-      const tableType = determineTableType(headers);
+      // Step 1: Determine table type - check if explicitly provided, otherwise scan headers
+      let tableType = req.body.tableType; // Check if tableType is explicitly provided
+      if (!tableType) {
+        tableType = determineTableType(headers);
+      }
+      
       if (!tableType) {
         // Log table type detection error
         await storage.createActivity({

@@ -132,20 +132,23 @@ export default function SystemHealth() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('csvFile', file);
+      // Force table type to products for stone slab bundles
+      formData.append('tableType', 'products');
       const res = await apiRequest("POST", "/api/admin/bulk-import-csv", formData);
       return await res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/health-report"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] }); // Refresh inventory
       toast({
-        title: "CSV Import Complete",
-        description: `Successfully imported ${data.imported} records. ${data.failed || 0} failed.`,
+        title: "Stone Slab Bundles Import Complete",
+        description: `Successfully imported ${data.imported} stone slab bundles. ${data.failed || 0} failed.`,
       });
       setCsvFile(null);
     },
     onError: (error: Error) => {
       toast({
-        title: "CSV Import Failed",
+        title: "Stone Slab Bundle Import Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -369,12 +372,12 @@ export default function SystemHealth() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Upload className="w-5 h-5 mr-2" />
-                  CSV Bulk Import
+                  Stone Slab Bundle Import
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Import database items from CSV file with exact header mapping
+                  Import multiple stone slab bundles to inventory from CSV file. Required headers: name, supplier, category, grade, thickness, finish, price. Optional: bundleId, description, slabLength, slabWidth, location, stockQuantity.
                 </p>
                 <div className="space-y-3">
                   <input
@@ -393,7 +396,7 @@ export default function SystemHealth() {
                     ) : (
                       <Upload className="w-4 h-4 mr-2" />
                     )}
-                    Import CSV Data
+                    Import Stone Slab Bundles
                   </Button>
                 </div>
               </CardContent>
