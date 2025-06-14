@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Bell, Plus, LogOut, User, Settings, Check, X, Package } from "lucide-react";
+import { Search, Bell, Plus, LogOut, User, Settings, Check, X, Package, UserPlus } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,11 +47,17 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
     n.type === 'new_slab_added' || n.type === 'bulk_slabs_added'
   );
 
+  // Filter real-time notifications for user creation
+  const userNotifications = notifications.filter(n => 
+    n.type === 'new_user_created'
+  );
+
   // Debug notification state
   console.log('All notifications:', notifications);
   console.log('Slab notifications:', slabNotifications);
+  console.log('User notifications:', userNotifications);
 
-  const notificationCount = (pendingVisits?.length || 0) + (lowStockProducts?.length || 0) + slabNotifications.length;
+  const notificationCount = (pendingVisits?.length || 0) + (lowStockProducts?.length || 0) + slabNotifications.length + userNotifications.length;
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -289,6 +295,60 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
                               {notification.data?.bundleId && (
                                 <div className="text-xs text-blue-600 mt-1">
                                   Bundle: {notification.data.bundleId}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-400 mt-1">
+                                {new Date(notification.timestamp).toLocaleString()}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 ml-2"
+                              onClick={() => removeNotification(notification.id)}
+                            >
+                              <X size={12} />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {userNotifications && userNotifications.length > 0 && (
+                    <>
+                      <div className="p-2 border-b bg-green-50 flex justify-between items-center">
+                        <span className="text-xs font-medium text-green-700 flex items-center">
+                          <UserPlus size={12} className="mr-1" />
+                          New Team Members
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => {
+                            userNotifications.forEach(notification => {
+                              removeNotification(notification.id);
+                            });
+                          }}
+                        >
+                          <Check size={12} className="mr-1" />
+                          Clear All
+                        </Button>
+                      </div>
+                      {userNotifications.map((notification) => (
+                        <div key={notification.id} className="p-3 border-b hover:bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm flex items-center">
+                                <UserPlus size={12} className="mr-1 text-green-600" />
+                                {notification.title}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                {notification.message}
+                              </div>
+                              {notification.data?.userRole && (
+                                <div className="text-xs text-green-600 mt-1">
+                                  Role: {notification.data.userRole}
                                 </div>
                               )}
                               <div className="text-xs text-gray-400 mt-1">

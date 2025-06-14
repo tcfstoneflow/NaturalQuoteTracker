@@ -65,9 +65,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           return updated;
         });
 
-        // Show toast for slab-related notifications
-        if (notification.type === 'new_slab_added' || notification.type === 'bulk_slabs_added') {
-          console.log('Showing toast for slab notification');
+        // Show toast for slab-related and user creation notifications
+        if (notification.type === 'new_slab_added' || 
+            notification.type === 'bulk_slabs_added' || 
+            notification.type === 'new_user_created') {
+          console.log('Showing toast for notification:', notification.type);
           toast({
             title: notification.title,
             description: notification.message,

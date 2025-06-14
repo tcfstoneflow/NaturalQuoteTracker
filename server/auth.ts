@@ -164,6 +164,31 @@ export async function register(req: Request, res: Response) {
 
     const newUser = await storage.createUser(userDataForDB);
 
+    // Import broadcastNotification function if available
+    try {
+      const { broadcastNotification } = await import('./routes');
+      
+      // Broadcast notification to all connected users
+      const notification = {
+        type: 'new_user_created',
+        title: 'New User Added',
+        message: `${newUser.firstName} ${newUser.lastName} has joined the team as ${newUser.role}`,
+        data: {
+          userId: newUser.id,
+          userName: `${newUser.firstName} ${newUser.lastName}`,
+          userRole: newUser.role,
+          userEmail: newUser.email
+        }
+      };
+      
+      if (typeof broadcastNotification === 'function') {
+        broadcastNotification(notification);
+        console.log('[USER CREATION] Broadcasted new user notification:', notification);
+      }
+    } catch (error) {
+      console.log('[USER CREATION] WebSocket broadcasting not available');
+    }
+
     res.status(201).json({
       user: {
         id: newUser.id,
