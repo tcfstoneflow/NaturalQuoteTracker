@@ -404,26 +404,26 @@ export default function SalesRepProfile() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {portfolioImages.map((image) => (
-                      <div key={image.id} className="group border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                        <div className="aspect-square bg-gray-100 overflow-hidden">
+                      <div key={image.id} className="group border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
                           <img 
                             src={image.imageUrl} 
                             alt={image.title || "Portfolio image"}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
                         {(image.title || image.description || image.projectType) && (
-                          <div className="p-3">
+                          <div className="p-6">
                             {image.title && (
-                              <h4 className="font-medium text-gray-900 mb-1">{image.title}</h4>
+                              <h4 className="font-semibold text-gray-900 mb-2 text-lg">{image.title}</h4>
                             )}
                             {image.projectType && (
-                              <Badge variant="outline" className="mb-2">{image.projectType}</Badge>
+                              <Badge variant="outline" className="mb-3 text-sm px-3 py-1">{image.projectType}</Badge>
                             )}
                             {image.description && (
-                              <p className="text-sm text-gray-600">{image.description}</p>
+                              <p className="text-gray-600 leading-relaxed">{image.description}</p>
                             )}
                           </div>
                         )}
