@@ -237,7 +237,7 @@ export default function PublicInventory() {
                 }}
               >
                 {/* Image */}
-                <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative">
+                <div className="aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 relative">
                   {product.imageUrl ? (
                     <img 
                       src={product.imageUrl} 
