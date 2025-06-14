@@ -532,6 +532,11 @@ export class DatabaseStorage implements IStorage {
     return product || undefined;
   }
 
+  async getProductByBundleId(bundleId: string): Promise<Product | undefined> {
+    const [product] = await db.select().from(products).where(eq(products.bundleId, bundleId));
+    return product || undefined;
+  }
+
   async createProduct(product: any): Promise<Product> {
     // Bundle ID is now provided manually in the product data
     const [newProduct] = await db

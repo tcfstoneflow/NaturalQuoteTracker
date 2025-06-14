@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema, insertSalesRepProfileSchema, insertSalesRepFavoriteSlabSchema, insertSalesRepPortfolioImageSchema, insertSalesRepAppointmentSchema } from "@shared/schema";
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
@@ -2175,9 +2176,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/slabs", requireAuth, requireInventoryAccess(), async (req, res) => {
+  app.post("/api/slabs", requireAuth, requireInventoryAccess(), async (req: any, res) => {
     try {
       const slab = await storage.createSlab(req.body);
+      
+      // Get product information for the notification
+      const product = await storage.getProductByBundleId(slab.bundleId);
+      
+      // Broadcast notification to all connected users
+      const notification = {
+        type: 'new_slab_added',
+        title: 'New Slab Added',
+        message: `New slab ${slab.slabNumber} added to ${product?.name || slab.bundleId}`,
+        data: {
+          slab,
+          product,
+          bundleId: slab.bundleId,
+          slabNumber: slab.slabNumber,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      if ((req.app as any).broadcastNotification) {
+        (req.app as any).broadcastNotification(notification);
+      }
+      
       res.status(201).json(slab);
     } catch (error: any) {
       res.status(500).json({ error: "Failed to create slab", details: error.message });
@@ -4879,6 +4902,47 @@ Your body text starts here with proper spacing.`;
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server for real-time notifications
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store connected clients for broadcasting
+  const connectedClients = new Set<WebSocket>();
+  
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('Client connected to WebSocket');
+    connectedClients.add(ws);
+    
+    ws.on('close', () => {
+      console.log('Client disconnected from WebSocket');
+      connectedClients.delete(ws);
+    });
+    
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      connectedClients.delete(ws);
+    });
+    
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'connected',
+      message: 'Connected to notification system'
+    }));
+  });
+  
+  // Notification broadcasting function
+  function broadcastNotification(notification: any) {
+    const message = JSON.stringify(notification);
+    connectedClients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+  
+  // Store broadcast function on the app for use in routes
+  (app as any).broadcastNotification = broadcastNotification;
+  
   return httpServer;
 }
 
