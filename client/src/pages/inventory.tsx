@@ -2165,44 +2165,7 @@ export default function Inventory() {
                             <p className="text-xs text-gray-500 mt-1">Separate keywords with commas</p>
                           </div>
 
-                          <div className="border-t pt-4">
-                            <h4 className="font-medium text-gray-700 mb-3">Social Share</h4>
-                            
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="socialTitle" className="text-sm font-medium text-gray-700">SOCIAL TITLE</Label>
-                                <Input
-                                  id="socialTitle"
-                                  value={formData.socialTitle}
-                                  onChange={(e) => setFormData({ ...formData, socialTitle: e.target.value })}
-                                  placeholder="Title for social media sharing"
-                                  className="mt-1"
-                                />
-                              </div>
 
-                              <div>
-                                <Label htmlFor="socialDescription" className="text-sm font-medium text-gray-700">SOCIAL DESCRIPTION</Label>
-                                <textarea
-                                  id="socialDescription"
-                                  value={formData.socialDescription}
-                                  onChange={(e) => setFormData({ ...formData, socialDescription: e.target.value })}
-                                  placeholder="Description for social media sharing"
-                                  rows={3}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mt-1"
-                                />
-                              </div>
-
-                              <div>
-                                <Label htmlFor="socialImage" className="text-sm font-medium text-gray-700">SOCIAL IMAGE</Label>
-                                <ImageUpload
-                                  value={formData.socialImage}
-                                  onChange={(value) => setFormData({ ...formData, socialImage: value })}
-                                  className="mt-1"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Recommended size: 1200x630 pixels</p>
-                              </div>
-                            </div>
-                          </div>
                         </div>
 
                         <div className="flex justify-end space-x-2 pt-4">
@@ -2225,14 +2188,9 @@ export default function Inventory() {
                   
                   {/* Marketing Preview Section */}
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">SEO and URL</h4>
-                        <div className="border-b-2 border-black w-20 mt-1"></div>
-                      </div>
-                      <div className="text-gray-500">
-                        <h4 className="font-medium">Social Share</h4>
-                      </div>
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-900">SEO and URL</h4>
+                      <div className="border-b-2 border-black w-20 mt-1"></div>
                     </div>
                     
                     <div className="space-y-2">
