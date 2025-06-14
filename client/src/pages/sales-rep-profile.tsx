@@ -344,10 +344,8 @@ export default function SalesRepProfile() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* My Favorite Slabs */}
+        <div className="space-y-8">
+          {/* My Favorite Slabs */}
             {favoriteSlabs.length > 0 && (
               <Card>
                 <CardHeader>
@@ -463,58 +461,24 @@ export default function SalesRepProfile() {
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Specialties Section */}
+          {profile.specialties && profile.specialties.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
+                <CardTitle>Specialties</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {profile.phone && (
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <a href={`tel:${profile.phone}`} className="text-blue-600 hover:underline">
-                      {profile.phone}
-                    </a>
-                  </div>
-                )}
-                {profile.email && (
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <a href={`mailto:${profile.email}`} className="text-blue-600 hover:underline">
-                      {profile.email}
-                    </a>
-                  </div>
-                )}
-                <Button 
-                  onClick={() => setIsBookingOpen(true)}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule Consultation
-                </Button>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {profile.specialties.map((specialty, index) => (
+                    <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                      <span className="text-sm font-medium">{specialty}</span>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-
-            {profile.specialties && profile.specialties.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Specialties</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {profile.specialties.map((specialty, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                        <span className="text-sm">{specialty}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
@@ -779,6 +743,62 @@ export default function SalesRepProfile() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Contact Footer */}
+      <div className="bg-gray-900 text-white mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-2">Ready to Work Together?</h2>
+            <p className="text-gray-300">Contact {profile.userName} to discuss your project</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            {profile.phone && (
+              <div className="space-y-3">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto">
+                  <Phone className="w-6 h-6" />
+                </div>
+                <h3 className="font-semibold">Call Direct</h3>
+                <a 
+                  href={`tel:${profile.phone}`} 
+                  className="text-blue-400 hover:text-blue-300 transition-colors block"
+                >
+                  {profile.phone}
+                </a>
+              </div>
+            )}
+            
+            {profile.email && (
+              <div className="space-y-3">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto">
+                  <Mail className="w-6 h-6" />
+                </div>
+                <h3 className="font-semibold">Send Email</h3>
+                <a 
+                  href={`mailto:${profile.email}`} 
+                  className="text-blue-400 hover:text-blue-300 transition-colors block"
+                >
+                  {profile.email}
+                </a>
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <h3 className="font-semibold">Schedule Meeting</h3>
+              <Button 
+                onClick={() => setIsBookingOpen(true)}
+                variant="outline"
+                className="bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
+              >
+                Book Consultation
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
