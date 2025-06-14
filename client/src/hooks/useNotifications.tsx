@@ -41,12 +41,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     ws.onmessage = (event) => {
       try {
+        console.log('Received WebSocket message:', event.data);
         const notification = JSON.parse(event.data);
         
         if (notification.type === 'connected') {
           console.log('WebSocket connection confirmed');
           return;
         }
+
+        console.log('Processing notification:', notification);
 
         // Add notification to state
         const newNotification: Notification = {
@@ -55,10 +58,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           timestamp: notification.data?.timestamp || new Date().toISOString()
         };
 
-        setNotifications(prev => [newNotification, ...prev]);
+        console.log('Adding notification to state:', newNotification);
+        setNotifications(prev => {
+          const updated = [newNotification, ...prev];
+          console.log('Updated notifications:', updated);
+          return updated;
+        });
 
         // Show toast for slab-related notifications
         if (notification.type === 'new_slab_added' || notification.type === 'bulk_slabs_added') {
+          console.log('Showing toast for slab notification');
           toast({
             title: notification.title,
             description: notification.message,

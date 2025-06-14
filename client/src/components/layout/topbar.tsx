@@ -47,6 +47,10 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
     n.type === 'new_slab_added' || n.type === 'bulk_slabs_added'
   );
 
+  // Debug notification state
+  console.log('All notifications:', notifications);
+  console.log('Slab notifications:', slabNotifications);
+
   const notificationCount = (pendingVisits?.length || 0) + (lowStockProducts?.length || 0) + slabNotifications.length;
 
   const logoutMutation = useMutation({
