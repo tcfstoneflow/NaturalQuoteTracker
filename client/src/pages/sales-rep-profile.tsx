@@ -364,7 +364,11 @@ export default function SalesRepProfile() {
                 </a>
               )}
               <Button
-                onClick={() => setIsAppointmentOpen(true)}
+                onClick={() => {
+                  const subject = `Consultation Request from ${profile.userName}`;
+                  const body = `Hi ${profile.userName},\n\nI'm interested in discussing a natural stone project and would like to schedule a consultation.\n\nThank you!`;
+                  window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                }}
                 className="bg-green-600 text-white hover:bg-green-700"
               >
                 <Calendar className="w-5 h-5 mr-2" />
@@ -502,7 +506,11 @@ export default function SalesRepProfile() {
               <div className="flex gap-3 pt-4 border-t">
                 <Button 
                   className="flex-1"
-                  onClick={() => setIsBookingOpen(true)}
+                  onClick={() => {
+                    const subject = `Consultation Request - ${selectedProduct.name}`;
+                    const body = `Hi ${profile.userName},\n\nI'm interested in the ${selectedProduct.name} and would like to schedule a consultation to discuss this product.\n\nThank you!`;
+                    window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                  }}
                 >
                   Schedule Consultation
                 </Button>
@@ -609,8 +617,9 @@ export default function SalesRepProfile() {
                       <Button 
                         className="w-full"
                         onClick={() => {
-                          setIsPortfolioModalOpen(false);
-                          setIsBookingOpen(true);
+                          const subject = `Consultation Request - Portfolio Project${selectedPortfolioImage.title ? `: ${selectedPortfolioImage.title}` : ''}`;
+                          const body = `Hi ${profile.userName},\n\nI'm interested in your portfolio project${selectedPortfolioImage.title ? ` "${selectedPortfolioImage.title}"` : ''} and would like to schedule a consultation to discuss creating something similar.\n\nThank you!`;
+                          window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
                         }}
                       >
                         Schedule Consultation
@@ -682,7 +691,11 @@ export default function SalesRepProfile() {
               </div>
               <h3 className="font-semibold">Schedule Meeting</h3>
               <Button 
-                onClick={() => setIsBookingOpen(true)}
+                onClick={() => {
+                  const subject = `Consultation Request with ${profile.userName}`;
+                  const body = `Hi ${profile.userName},\n\nI'm interested in discussing a natural stone project and would like to schedule a consultation.\n\nThank you!`;
+                  window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                }}
                 variant="outline"
                 className="bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
               >
@@ -693,137 +706,7 @@ export default function SalesRepProfile() {
         </div>
       </div>
 
-      {/* Appointment Booking Modal */}
-      <Dialog open={isAppointmentOpen} onOpenChange={setIsAppointmentOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Book Consultation</DialogTitle>
-            <DialogDescription>
-              Schedule a consultation with {profile.userName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...appointmentForm}>
-            <form onSubmit={appointmentForm.handleSubmit(handleAppointmentSubmit)} className="space-y-4">
-              <FormField
-                control={appointmentForm.control}
-                name="clientName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={appointmentForm.control}
-                name="clientEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Enter your email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={appointmentForm.control}
-                name="clientPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={appointmentForm.control}
-                name="appointmentDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferred Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={appointmentForm.control}
-                name="appointmentType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Consultation Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select consultation type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="showroom">Showroom Visit</SelectItem>
-                        <SelectItem value="site">Site Visit</SelectItem>
-                        <SelectItem value="phone">Phone Consultation</SelectItem>
-                        <SelectItem value="video">Video Call</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={appointmentForm.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project Details</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Tell us about your project..." 
-                        className="resize-none" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsAppointmentOpen(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="flex-1"
-                  disabled={appointmentMutation.isPending}
-                >
-                  {appointmentMutation.isPending ? 'Booking...' : 'Book Consultation'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }
