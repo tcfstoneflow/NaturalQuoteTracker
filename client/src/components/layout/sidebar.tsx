@@ -71,9 +71,9 @@ export default function Sidebar() {
   const visibleNavigation = getVisibleNavigation();
 
   return (
-    <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col">
+    <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col h-screen">
       {/* Logo and Company Name */}
-      <div className="p-6 border-b border-neutral-200">
+      <div className="p-6 border-b border-neutral-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-8 bg-black rounded flex items-center justify-center px-2">
             <span className="text-white font-bold text-sm">TCF</span>
@@ -86,7 +86,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 pt-6">
+      <nav className="flex-1 pt-6 overflow-y-auto">
         <ul className="space-y-2 px-4">
           {visibleNavigation.map((item) => {
             const Icon = item.icon;
@@ -194,7 +194,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-neutral-200">
+      <div className="p-4 border-t border-neutral-200 flex-shrink-0 mt-auto">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
             {user?.avatarUrl ? (
