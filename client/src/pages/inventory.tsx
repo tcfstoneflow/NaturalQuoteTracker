@@ -2090,15 +2090,12 @@ export default function Inventory() {
 
                 {/* Marketing/SEO Section */}
                 <div className="border-t pt-6 mt-6">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4">
                     <h3 className="text-lg font-semibold">Marketing</h3>
-                    <Dialog open={isMarketingDialogOpen} onOpenChange={setIsMarketingDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button type="button" variant="outline" size="sm">
-                          Edit
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
+                  </div>
+                  
+                  <Dialog open={isMarketingDialogOpen} onOpenChange={setIsMarketingDialogOpen}>
+                    <DialogContent className="max-w-2xl">
                         <DialogHeader>
                           <DialogTitle>SEO</DialogTitle>
                           <DialogDescription>
@@ -2225,7 +2222,6 @@ export default function Inventory() {
                         </div>
                       </DialogContent>
                     </Dialog>
-                  </div>
                   
                   {/* Marketing Preview Section */}
                   <div className="bg-gray-50 rounded-lg p-4">
