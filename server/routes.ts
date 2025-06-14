@@ -4383,6 +4383,36 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  app.patch("/api/tags/:id", requireAuth, requireRole(['admin', 'sales_manager']), async (req, res) => {
+    try {
+      const tagId = parseInt(req.params.id);
+      const { name, description, category } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: "Tag name is required" });
+      }
+
+      // Validate category if provided
+      const validCategories = ['color', 'pattern', 'texture', 'finish', 'style'];
+      if (category && !validCategories.includes(category)) {
+        return res.status(400).json({ 
+          error: "Invalid category. Must be one of: " + validCategories.join(', ') 
+        });
+      }
+
+      const updatedTag = await storage.updateTag(tagId, { name, description, category });
+      
+      if (!updatedTag) {
+        return res.status(404).json({ error: "Tag not found" });
+      }
+      
+      res.json(updatedTag);
+    } catch (error: any) {
+      console.error('Update tag error:', error);
+      res.status(500).json({ error: "Failed to update tag" });
+    }
+  });
+
   app.delete("/api/tags/:id", requireAuth, requireRole(['admin']), async (req, res) => {
     try {
       const tagId = parseInt(req.params.id);

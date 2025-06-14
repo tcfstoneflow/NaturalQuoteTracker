@@ -115,6 +115,13 @@ export default function Inventory() {
   const [newTagName, setNewTagName] = useState("");
   const [newTagCategory, setNewTagCategory] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
+  const [editingTag, setEditingTag] = useState<any>(null);
+  const [isTagEditDialogOpen, setIsTagEditDialogOpen] = useState(false);
+  const [tagEditForm, setTagEditForm] = useState({
+    name: "",
+    description: "",
+    category: ""
+  });
   
   // Multi-bundle creation state
   const [multiBundles, setMultiBundles] = useState([
@@ -622,6 +629,75 @@ export default function Inventory() {
     } catch (error: any) {
       toast({ title: error.message || "Failed to create tag", variant: "destructive" });
     }
+  };
+
+  // Delete tag
+  const deleteTag = async (tagId: number) => {
+    if (!confirm("Are you sure you want to delete this tag? This will remove it from all products.")) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/tags/${tagId}`, {
+        method: "DELETE",
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/public/tags"] });
+        toast({ title: "Tag deleted successfully" });
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete tag");
+      }
+    } catch (error: any) {
+      toast({ title: error.message || "Failed to delete tag", variant: "destructive" });
+    }
+  };
+
+  // Update tag
+  const updateTag = async () => {
+    if (!editingTag || !tagEditForm.name.trim()) return;
+    
+    try {
+      const response = await fetch(`/api/tags/${editingTag.id}`, {
+        method: "PATCH",
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: tagEditForm.name.trim(),
+          description: tagEditForm.description.trim() || null,
+          category: tagEditForm.category || null
+        }),
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/public/tags"] });
+        setIsTagEditDialogOpen(false);
+        setEditingTag(null);
+        setTagEditForm({ name: "", description: "", category: "" });
+        toast({ title: "Tag updated successfully" });
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update tag");
+      }
+    } catch (error: any) {
+      toast({ title: error.message || "Failed to update tag", variant: "destructive" });
+    }
+  };
+
+  // Open tag edit dialog
+  const openTagEditDialog = (tag: any) => {
+    setEditingTag(tag);
+    setTagEditForm({
+      name: tag.name,
+      description: tag.description || "",
+      category: tag.category || ""
+    });
+    setIsTagEditDialogOpen(true);
   };
 
   const handleSort = (column: string) => {
@@ -2024,8 +2100,7 @@ export default function Inventory() {
                                         className="h-6 w-6 p-0 hover:bg-blue-100"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setEditingTag(tag);
-                                          setIsTagEditDialogOpen(true);
+                                          openTagEditDialog(tag);
                                         }}
                                       >
                                         <Edit2 className="h-3 w-3 text-blue-600" />
@@ -2432,6 +2507,67 @@ export default function Inventory() {
           )}
         </CardContent>
       </Card>
+
+      {/* Tag Edit Dialog */}
+      <Dialog open={isTagEditDialogOpen} onOpenChange={setIsTagEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Tag</DialogTitle>
+            <DialogDescription>
+              Update the tag name, description, and category.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="tag-name">Tag Name</Label>
+              <Input
+                id="tag-name"
+                value={tagEditForm.name}
+                onChange={(e) => setTagEditForm({ ...tagEditForm, name: e.target.value })}
+                placeholder="Enter tag name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="tag-description">Description (Optional)</Label>
+              <Input
+                id="tag-description"
+                value={tagEditForm.description}
+                onChange={(e) => setTagEditForm({ ...tagEditForm, description: e.target.value })}
+                placeholder="Enter tag description"
+              />
+            </div>
+            <div>
+              <Label htmlFor="tag-category">Category</Label>
+              <Select value={tagEditForm.category} onValueChange={(value) => setTagEditForm({ ...tagEditForm, category: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="color">Color</SelectItem>
+                  <SelectItem value="pattern">Pattern</SelectItem>
+                  <SelectItem value="texture">Texture</SelectItem>
+                  <SelectItem value="finish">Finish</SelectItem>
+                  <SelectItem value="style">Style</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsTagEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={updateTag}
+                disabled={!tagEditForm.name.trim()}
+              >
+                Update Tag
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
