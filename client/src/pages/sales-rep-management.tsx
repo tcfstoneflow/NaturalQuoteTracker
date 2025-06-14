@@ -99,7 +99,10 @@ const favoriteSlabSchema = z.object({
 });
 
 const portfolioImageSchema = z.object({
-  imageUrl: z.string().url("Please enter a valid image URL"),
+  imageUrl: z.string().refine(
+    (val) => val === "" || z.string().url().safeParse(val).success,
+    "Please enter a valid image URL or upload a file"
+  ),
   title: z.string().optional(),
   description: z.string().optional(),
   projectType: z.string().optional(),
@@ -391,6 +394,14 @@ export default function SalesRepManagement() {
   };
 
   const onSubmitPortfolioImage = (data: z.infer<typeof portfolioImageSchema>) => {
+    if (!data.imageUrl || data.imageUrl.trim() === "") {
+      toast({
+        title: "Image Required",
+        description: "Please provide an image URL or upload a file before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
     addPortfolioImageMutation.mutate(data);
   };
 
