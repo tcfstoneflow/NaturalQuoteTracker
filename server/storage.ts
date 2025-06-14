@@ -1856,7 +1856,7 @@ export class DatabaseStorage implements IStorage {
     return profile || undefined;
   }
 
-  async getSalesRepProfileBySlug(slug: string): Promise<(SalesRepProfile & { userName: string }) | undefined> {
+  async getSalesRepProfileBySlug(slug: string): Promise<(SalesRepProfile & { userName: string; firstName: string; lastName: string }) | undefined> {
     const [profile] = await db
       .select({
         id: salesRepProfiles.id,
@@ -1874,6 +1874,8 @@ export class DatabaseStorage implements IStorage {
         createdAt: salesRepProfiles.createdAt,
         updatedAt: salesRepProfiles.updatedAt,
         userName: users.username,
+        firstName: users.firstName,
+        lastName: users.lastName,
       })
       .from(salesRepProfiles)
       .innerJoin(users, eq(salesRepProfiles.userId, users.id))

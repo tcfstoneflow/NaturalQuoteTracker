@@ -47,6 +47,8 @@ type SalesRepProfileData = {
     createdAt: string;
     updatedAt: string;
     userName: string;
+    firstName: string;
+    lastName: string;
   };
   favoriteSlabs: Array<{
     id: number;
@@ -216,7 +218,7 @@ export default function SalesRepProfile() {
             
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                {profile.userName}
+                {profile.firstName.charAt(0).toUpperCase() + profile.firstName.slice(1)} {profile.lastName.charAt(0).toUpperCase() + profile.lastName.slice(1)}
               </h1>
               {profile.title && (
                 <p className="text-xl text-gray-600 mb-4">{profile.title}</p>
@@ -262,14 +264,10 @@ export default function SalesRepProfile() {
             <Button 
               size="lg" 
               className="whitespace-nowrap"
-              onClick={() => {
-                const subject = `Consultation Request from ${profile.userName}`;
-                const body = `Hi ${profile.userName},\n\nI'm interested in discussing a natural stone project and would like to schedule a consultation.\n\nThank you!`;
-                window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-              }}
+              onClick={() => openConsultationModal('contact')}
             >
               <Mail className="w-4 h-4 mr-2" />
-              Contact {profile.userName}
+              Contact {profile.firstName.charAt(0).toUpperCase() + profile.firstName.slice(1)}
             </Button>
           </div>
         </div>
