@@ -99,6 +99,14 @@ export const products = pgTable("products", {
   minOrderQuantity: integer("min_order_quantity").default(1),
   maxOrderQuantity: integer("max_order_quantity"),
   leadTime: integer("lead_time"), // days
+  // SEO/Marketing fields
+  seoTitle: text("seo_title"),
+  seoDescription: text("seo_description"),
+  seoUrl: text("seo_url"), // custom URL slug
+  metaKeywords: text("meta_keywords"),
+  socialTitle: text("social_title"), // Open Graph title
+  socialDescription: text("social_description"), // Open Graph description
+  socialImage: text("social_image"), // Open Graph image URL
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   // High-performance indexes for large inventory (5000+ products)

@@ -86,7 +86,15 @@ export default function Inventory() {
     slabLength: "",
     slabWidth: "",
     location: "",
-    imageUrl: ""
+    imageUrl: "",
+    // SEO/Marketing fields
+    seoTitle: "",
+    seoDescription: "",
+    seoUrl: "",
+    metaKeywords: "",
+    socialTitle: "",
+    socialDescription: "",
+    socialImage: ""
   });
 
   const [galleryImages, setGalleryImages] = useState<Array<{
@@ -99,6 +107,7 @@ export default function Inventory() {
   }>>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isMarketingDialogOpen, setIsMarketingDialogOpen] = useState(false);
   const [productTags, setProductTags] = useState<Array<{
     id: number;
     tag: { id: number; name: string; description?: string };
@@ -452,7 +461,15 @@ export default function Inventory() {
       slabLength: product.slabLength || "",
       slabWidth: product.slabWidth || "",
       location: product.location || "",
-      imageUrl: product.imageUrl || ""
+      imageUrl: product.imageUrl || "",
+      // SEO/Marketing fields
+      seoTitle: (product as any).seoTitle || "",
+      seoDescription: (product as any).seoDescription || "",
+      seoUrl: (product as any).seoUrl || "",
+      metaKeywords: (product as any).metaKeywords || "",
+      socialTitle: (product as any).socialTitle || "",
+      socialDescription: (product as any).socialDescription || "",
+      socialImage: (product as any).socialImage || ""
     });
     
     // Load existing gallery images
