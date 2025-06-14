@@ -243,18 +243,7 @@ export default function SalesRepProfile() {
                 )}
               </div>
 
-              {profile.specialties && profile.specialties.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.specialties.map((specialty, index) => (
-                      <Badge key={index} variant="secondary">
-                        {specialty}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
+
 
               {profile.bio && (
                 <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
