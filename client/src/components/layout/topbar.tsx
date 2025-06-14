@@ -29,6 +29,7 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
   const [isQuoteBuilderOpen, setIsQuoteBuilderOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { notifications, isConnected, removeNotification, clearNotifications } = useNotifications();
 
   // Get notifications - pending showroom visits and other alerts
   const { data: pendingVisits } = useQuery({
@@ -41,7 +42,12 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
     enabled: !!user?.user?.role,
   });
 
-  const notificationCount = (pendingVisits?.length || 0) + (lowStockProducts?.length || 0);
+  // Filter real-time notifications for slab-related updates
+  const slabNotifications = notifications.filter(n => 
+    n.type === 'new_slab_added' || n.type === 'bulk_slabs_added'
+  );
+
+  const notificationCount = (pendingVisits?.length || 0) + (lowStockProducts?.length || 0) + slabNotifications.length;
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -244,9 +250,70 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
                       ))}
                     </>
                   )}
+                  {slabNotifications && slabNotifications.length > 0 && (
+                    <>
+                      <div className="p-2 border-b bg-blue-50 flex justify-between items-center">
+                        <span className="text-xs font-medium text-blue-700 flex items-center">
+                          <Package size={12} className="mr-1" />
+                          Slab Updates
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => {
+                            slabNotifications.forEach(notification => {
+                              removeNotification(notification.id);
+                            });
+                          }}
+                        >
+                          <Check size={12} className="mr-1" />
+                          Clear All
+                        </Button>
+                      </div>
+                      {slabNotifications.map((notification) => (
+                        <div key={notification.id} className="p-3 border-b hover:bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm flex items-center">
+                                <Package size={12} className="mr-1 text-blue-600" />
+                                {notification.title}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                {notification.message}
+                              </div>
+                              {notification.data?.bundleId && (
+                                <div className="text-xs text-blue-600 mt-1">
+                                  Bundle: {notification.data.bundleId}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-400 mt-1">
+                                {new Date(notification.timestamp).toLocaleString()}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 ml-2"
+                              onClick={() => removeNotification(notification.id)}
+                            >
+                              <X size={12} />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
                   {notificationCount === 0 && (
-                    <div className="p-4 text-center text-gray-500 text-sm">
-                      No new notifications
+                    <div className="p-4 text-center text-gray-500 text-sm flex items-center justify-center">
+                      <div className="flex items-center">
+                        {isConnected ? (
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        ) : (
+                          <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                        )}
+                        {isConnected ? 'Connected - No new notifications' : 'Disconnected - Reconnecting...'}
+                      </div>
                     </div>
                   )}
                 </div>
