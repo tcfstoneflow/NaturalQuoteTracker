@@ -100,7 +100,7 @@ const favoriteSlabSchema = z.object({
 
 const portfolioImageSchema = z.object({
   imageUrl: z.string().refine(
-    (val) => val === "" || z.string().url().safeParse(val).success,
+    (val) => val === "" || z.string().url().safeParse(val).success || val.startsWith('/upload/'),
     "Please enter a valid image URL or upload a file"
   ),
   title: z.string().optional(),
