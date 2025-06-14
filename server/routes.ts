@@ -52,6 +52,36 @@ const profileImageUpload = multer({
   }
 });
 
+// Configure multer for portfolio image uploads
+const portfolioImageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = 'upload/portfolio-images';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `portfolio-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const portfolioImageUpload = multer({
+  storage: portfolioImageStorage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, and WebP images are allowed'));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
 // Email function for appointment notifications
 async function sendAppointmentEmail(visit: any, type: 'confirmation' | 'update' | 'cancellation') {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
