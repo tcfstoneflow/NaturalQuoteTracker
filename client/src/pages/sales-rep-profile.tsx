@@ -202,7 +202,7 @@ export default function SalesRepProfile() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[15px] bg-gray-200 flex items-center justify-center overflow-hidden">
               {profile.profileImageUrl ? (
                 <img 
                   src={profile.profileImageUrl} 
@@ -210,7 +210,7 @@ export default function SalesRepProfile() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User className="w-12 h-12 md:w-16 md:h-16 text-gray-400" />
+                <User className="w-16 h-16 md:w-20 md:h-20 text-gray-400" />
               )}
             </div>
             
@@ -242,12 +242,15 @@ export default function SalesRepProfile() {
               </div>
 
               {profile.specialties && profile.specialties.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {profile.specialties.map((specialty, index) => (
-                    <Badge key={index} variant="secondary">
-                      {specialty}
-                    </Badge>
-                  ))}
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.specialties.map((specialty, index) => (
+                      <Badge key={index} variant="secondary">
+                        {specialty}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
 
