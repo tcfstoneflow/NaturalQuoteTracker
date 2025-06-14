@@ -4523,10 +4523,10 @@ Your body text starts here with proper spacing.`;
       // Check current tag count for this product
       const currentTags = await storage.getProductTags(productId);
       
-      // Enforce 3-5 tag limit
-      if (currentTags.length >= 5) {
+      // Enforce reasonable tag limit (allow up to 8 tags to accommodate existing products)
+      if (currentTags.length >= 8) {
         return res.status(400).json({ 
-          error: "Product already has the maximum of 5 tags. Remove a tag before adding a new one." 
+          error: "Product already has the maximum of 8 tags. Remove a tag before adding a new one." 
         });
       }
 
