@@ -373,24 +373,7 @@ export default function SalesRepProfile() {
               </Card>
             )}
 
-          {/* Specialties Section */}
-          {profile.specialties && profile.specialties.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Specialties</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {profile.specialties.map((specialty, index) => (
-                    <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                      <span className="text-sm font-medium">{specialty}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
           </div>
         </div>
 
