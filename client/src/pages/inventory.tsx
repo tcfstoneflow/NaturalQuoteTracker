@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2, Copy, Download } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2, Copy, Download, Edit2 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -2008,14 +2008,41 @@ export default function Inventory() {
                               {availableTags
                                 .filter((tag: any) => !productTags.some(pt => pt.tag.id === tag.id))
                                 .map((tag: any) => (
-                                  <SelectItem key={tag.id} value={tag.id.toString()}>
-                                    {tag.name}
-                                    {tag.description && (
-                                      <span className="text-xs text-gray-500 ml-2">
-                                        - {tag.description}
-                                      </span>
-                                    )}
-                                  </SelectItem>
+                                  <div key={tag.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => setSelectedTagId(tag.id.toString())}>
+                                    <div className="flex-1">
+                                      <span className="text-sm">{tag.name}</span>
+                                      {tag.description && (
+                                        <span className="text-xs text-gray-500 ml-2">
+                                          - {tag.description}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 hover:bg-blue-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingTag(tag);
+                                          setIsTagEditDialogOpen(true);
+                                        }}
+                                      >
+                                        <Edit2 className="h-3 w-3 text-blue-600" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 hover:bg-red-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteTag(tag.id);
+                                        }}
+                                      >
+                                        <Trash2 className="h-3 w-3 text-red-600" />
+                                      </Button>
+                                    </div>
+                                  </div>
                                 ))}
                             </SelectContent>
                           </Select>

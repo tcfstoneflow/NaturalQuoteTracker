@@ -4556,6 +4556,136 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // SEO-friendly URL route for products using custom seoUrl
+  app.get("/product/:seoUrl", async (req, res) => {
+    try {
+      const { seoUrl } = req.params;
+      
+      // Find product by seoUrl field
+      const products = await storage.getProducts();
+      const product = products.find((p: any) => p.seoUrl === seoUrl);
+      
+      if (!product) {
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Product Not Found</title>
+              <meta name="robots" content="noindex">
+            </head>
+            <body>
+              <h1>Product Not Found</h1>
+              <p>The requested product could not be found.</p>
+            </body>
+          </html>
+        `);
+      }
+
+      // Get product with slabs for full details
+      const productWithSlabs = await storage.getProductWithSlabs(product.id);
+      
+      // Generate SEO-optimized HTML page
+      const seoTitle = product.seoTitle || `${product.name} - Premium Natural Stone | Counter Fixtures`;
+      const seoDescription = product.seoDescription || `Discover ${product.name}, a premium ${product.category} stone slab. Available in ${product.finish} finish with ${product.thickness} thickness.`;
+      const metaKeywords = product.metaKeywords || `${product.category}, ${product.material}, ${product.color}, natural stone, countertops`;
+      
+      const htmlResponse = `
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${seoTitle}</title>
+            <meta name="description" content="${seoDescription}">
+            <meta name="keywords" content="${metaKeywords}">
+            
+            <!-- Open Graph tags -->
+            <meta property="og:title" content="${seoTitle}">
+            <meta property="og:description" content="${seoDescription}">
+            <meta property="og:type" content="product">
+            <meta property="og:url" content="${req.protocol}://${req.get('host')}/product/${seoUrl}">
+            ${product.imageUrl ? `<meta property="og:image" content="${product.imageUrl}">` : ''}
+            
+            <!-- Structured data for search engines -->
+            <script type="application/ld+json">
+            {
+              "@context": "https://schema.org/",
+              "@type": "Product",
+              "name": "${product.name}",
+              "description": "${seoDescription}",
+              "category": "${product.category}",
+              "material": "${product.material}",
+              "color": "${product.color}",
+              ${product.imageUrl ? `"image": "${product.imageUrl}",` : ''}
+              "offers": {
+                "@type": "Offer",
+                "availability": "https://schema.org/InStock",
+                "priceCurrency": "USD"
+              }
+            }
+            </script>
+            
+            <!-- Redirect to main app -->
+            <script>
+              // Redirect to the main app with the product ID
+              setTimeout(() => {
+                window.location.href = '/inventory?product=${product.id}';
+              }, 2000);
+            </script>
+          </head>
+          <body>
+            <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+              <h1>${product.name}</h1>
+              <p>${seoDescription}</p>
+              
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0;">
+                <div>
+                  <strong>Material:</strong> ${product.material}<br>
+                  <strong>Category:</strong> ${product.category}<br>
+                  <strong>Color:</strong> ${product.color}
+                </div>
+                <div>
+                  <strong>Finish:</strong> ${product.finish}<br>
+                  <strong>Thickness:</strong> ${product.thickness}<br>
+                  <strong>Available Slabs:</strong> ${productWithSlabs?.slabs?.filter((s: any) => s.status === 'available').length || 0}
+                </div>
+              </div>
+              
+              ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name}" style="max-width: 100%; height: auto; border-radius: 8px;">` : ''}
+              
+              <p style="margin-top: 20px;">
+                <a href="/inventory?product=${product.id}" style="background: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                  View Full Details & Request Quote
+                </a>
+              </p>
+              
+              <p style="color: #666; font-size: 14px;">
+                Redirecting automatically in 2 seconds... If you are not redirected, <a href="/inventory?product=${product.id}">click here</a>.
+              </p>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      res.send(htmlResponse);
+    } catch (error: any) {
+      console.error("SEO URL route error:", error);
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Error</title>
+            <meta name="robots" content="noindex">
+          </head>
+          <body>
+            <h1>Server Error</h1>
+            <p>An error occurred while loading this page.</p>
+          </body>
+        </html>
+      `);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
