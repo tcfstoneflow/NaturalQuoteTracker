@@ -193,7 +193,44 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-
+      {/* User Profile */}
+      <div className="p-4 border-t border-neutral-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+            {user?.avatarUrl ? (
+              <img 
+                src={user.avatarUrl} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-white text-sm font-medium">
+                {user?.firstName && user?.lastName 
+                  ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
+                  : user?.username?.charAt(0)?.toUpperCase() || 'U'
+                }
+              </span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-primary-custom truncate">
+              {user?.firstName && user?.lastName 
+                ? `${user.firstName} ${user.lastName}`
+                : user?.username || 'User'
+              }
+            </p>
+            <p className="text-xs text-secondary-custom truncate">
+              {user?.role === 'admin' ? 'Administrator' :
+               user?.role === 'sales_rep' ? 'Sales Representative' :
+               user?.role === 'inventory_specialist' ? 'Inventory Specialist' :
+               user?.role === 'sales_manager' ? 'Sales Manager' : 'User'}
+            </p>
+          </div>
+          <Link href="/settings" className="text-secondary-custom hover:text-primary">
+            <Settings size={16} />
+          </Link>
+        </div>
+      </div>
     </aside>
   );
 }
