@@ -53,13 +53,31 @@ export default function PublicInventory() {
   const [, setLocation] = useLocation();
   const { hasClientEmail } = useClientEmail();
 
-  // Handle URL parameters for category filtering and load recently viewed
+  // Handle URL parameters for category filtering and product redirects
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const categoryParam = urlParams.get('category');
+    const productParam = urlParams.get('product');
+    
     if (categoryParam) {
       setCategoryFilter(categoryParam);
       setActiveTab(categoryParam);
+    }
+    
+    // Handle product parameter - redirect to product page
+    if (productParam && products && Array.isArray(products)) {
+      // Try to find product by name or ID
+      const product = products.find((p: any) => 
+        p.name === productParam || 
+        p.id?.toString() === productParam ||
+        p.bundleId === productParam
+      );
+      
+      if (product) {
+        // Redirect to the correct product page
+        setLocation(`/product/${product.id}`);
+        return;
+      }
     }
     
     // Load recently viewed products from localStorage
@@ -67,7 +85,7 @@ export default function PublicInventory() {
     if (recentlyViewedData) {
       setRecentlyViewed(JSON.parse(recentlyViewedData));
     }
-  }, []);
+  }, [products, setLocation]);
 
   // Update quote message when selected product changes
   useEffect(() => {

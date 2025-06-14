@@ -114,7 +114,7 @@ export default function ShowroomVisits() {
                 {parts[0]}
                 <Link 
                   key={`product-link-${product.id}-${index}`}
-                  href={`/public-inventory?product=${encodeURIComponent(productName)}`}
+                  href={`/product/${product.id}`}
                   className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
                 >
                   {productName}
