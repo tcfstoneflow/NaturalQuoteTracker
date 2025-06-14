@@ -15,8 +15,8 @@ interface ShowroomVisit {
   id: number;
   name: string;
   email: string;
-  phone: string;
-  preferredDate: string;
+  phone: string | null;
+  preferredDate: string | null;
   preferredTime: string | null;
   message: string | null;
   status: string;
@@ -207,7 +207,7 @@ export default function ShowroomVisits() {
     setEditName(visit.name);
     setEditEmail(visit.email);
     setEditPhone(visit.phone || "");
-    setEditVisitDate(visit.preferredDate);
+    setEditVisitDate(visit.preferredDate || "");
     setEditVisitTime(visit.preferredTime || "");
   };
 
@@ -243,15 +243,25 @@ export default function ShowroomVisits() {
   
   // Filter visits for current month
   const monthVisits = visits.filter((visit: ShowroomVisit) => {
-    const visitDate = parseISO(visit.preferredDate);
-    return visitDate >= monthStart && visitDate <= monthEnd;
+    if (!visit.preferredDate) return false;
+    try {
+      const visitDate = parseISO(visit.preferredDate);
+      return visitDate >= monthStart && visitDate <= monthEnd;
+    } catch {
+      return false;
+    }
   });
   
   // Get visits for a specific day
   const getVisitsForDay = (day: Date) => {
     return monthVisits.filter((visit: ShowroomVisit) => {
-      const visitDate = parseISO(visit.preferredDate);
-      return isSameDay(visitDate, day);
+      if (!visit.preferredDate) return false;
+      try {
+        const visitDate = parseISO(visit.preferredDate);
+        return isSameDay(visitDate, day);
+      } catch {
+        return false;
+      }
     });
   };
 
@@ -505,17 +515,21 @@ export default function ShowroomVisits() {
                 <Mail className="h-4 w-4 text-gray-400" />
                 <span className="text-gray-600">{visit.email}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">{visit.phone}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">
-                  Showroom Visit: {visit.preferredDate}
-                  {visit.preferredTime && ` at ${visit.preferredTime}`}
-                </span>
-              </div>
+              {visit.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-600">{visit.phone}</span>
+                </div>
+              )}
+              {visit.preferredDate && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-600">
+                    Showroom Visit: {visit.preferredDate}
+                    {visit.preferredTime && ` at ${visit.preferredTime}`}
+                  </span>
+                </div>
+              )}
               {visit.assignedSalesMember && (
                 <div className="flex items-center gap-2 text-sm">
                   <User className="h-4 w-4 text-gray-400" />
