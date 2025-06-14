@@ -85,7 +85,6 @@ const profileSchema = z.object({
   urlSlug: z.string().min(3, "URL slug must be at least 3 characters").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens allowed"),
   bio: z.string().max(500, "Bio must be 500 characters or less").optional(),
   title: z.string().max(100, "Title must be 100 characters or less").optional(),
-  specialties: z.array(z.string()).optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
   profileImageUrl: z.string().optional(),
@@ -111,7 +110,7 @@ const portfolioImageSchema = z.object({
 export default function SalesRepManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [newSpecialty, setNewSpecialty] = useState("");
+
   const [isAddingFavorite, setIsAddingFavorite] = useState(false);
   const [isAddingPortfolioImage, setIsAddingPortfolioImage] = useState(false);
   const [editingPortfolioImage, setEditingPortfolioImage] = useState<any>(null);
@@ -144,7 +143,6 @@ export default function SalesRepManagement() {
       urlSlug: "",
       bio: "",
       title: "",
-      specialties: [],
       phone: "",
       email: "",
       profileImageUrl: "",
@@ -189,8 +187,6 @@ export default function SalesRepManagement() {
         urlSlug: profile.urlSlug || "",
         bio: profile.bio || "",
         title: profile.title || "",
-        yearsExperience: profile.yearsExperience || 0,
-        specialties: profile.specialties || [],
         phone: profile.phone || "",
         email: profile.email || "",
         profileImageUrl: profile.profileImageUrl || "",
@@ -427,20 +423,7 @@ export default function SalesRepManagement() {
     });
   };
 
-  const addSpecialty = () => {
-    if (newSpecialty.trim()) {
-      const currentSpecialties = profileForm.getValues('specialties') || [];
-      if (!currentSpecialties.includes(newSpecialty.trim())) {
-        profileForm.setValue('specialties', [...currentSpecialties, newSpecialty.trim()]);
-        setNewSpecialty("");
-      }
-    }
-  };
 
-  const removeSpecialty = (specialty: string) => {
-    const currentSpecialties = profileForm.getValues('specialties') || [];
-    profileForm.setValue('specialties', currentSpecialties.filter(s => s !== specialty));
-  };
 
   const copyProfileUrl = () => {
     const url = `${window.location.origin}/sales-rep/${profileForm.getValues('urlSlug')}`;
@@ -659,36 +642,7 @@ export default function SalesRepManagement() {
                     )}
                   />
 
-                  <div>
-                    <Label>Specialties</Label>
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <Input
-                          value={newSpecialty}
-                          onChange={(e) => setNewSpecialty(e.target.value)}
-                          placeholder="e.g., Kitchen Countertops, Bathroom Vanities"
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSpecialty())}
-                        />
-                        <Button type="button" onClick={addSpecialty} variant="outline">
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {(profileForm.watch('specialties') || []).map((specialty, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {specialty}
-                            <button
-                              type="button"
-                              onClick={() => removeSpecialty(specialty)}
-                              className="ml-1 hover:text-red-600"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+
 
                   <FormField
                     control={profileForm.control}
