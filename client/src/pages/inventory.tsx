@@ -356,18 +356,6 @@ export default function Inventory() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Stone Slab Bundles</CardTitle>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                toast({
-                  title: "Export Complete",
-                  description: "Downloaded bundles as CSV file",
-                });
-              }}
-            >
-              <Package size={16} className="mr-2" />
-              Export CSV
-            </Button>
             <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
