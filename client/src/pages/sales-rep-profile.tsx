@@ -78,6 +78,8 @@ export default function SalesRepProfile() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
+  const [selectedPortfolioImage, setSelectedPortfolioImage] = useState<any>(null);
+  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [appointmentForm, setAppointmentForm] = useState<AppointmentForm>({
     clientName: "",
     clientEmail: "",
@@ -407,7 +409,14 @@ export default function SalesRepProfile() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {portfolioImages.map((image) => (
-                      <div key={image.id} className="group border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                      <div 
+                        key={image.id} 
+                        className="group border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                        onClick={() => {
+                          setSelectedPortfolioImage(image);
+                          setIsPortfolioModalOpen(true);
+                        }}
+                      >
                         <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
                           <img 
                             src={image.imageUrl} 
@@ -644,6 +653,108 @@ export default function SalesRepProfile() {
                 >
                   Contact About This Slab
                 </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Portfolio Image Modal */}
+      <Dialog open={isPortfolioModalOpen} onOpenChange={setIsPortfolioModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              {selectedPortfolioImage?.title || "Portfolio Project"}
+            </DialogTitle>
+            <DialogDescription>
+              Project details and information
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedPortfolioImage && (
+            <div className="space-y-6">
+              {/* Main Image */}
+              <div className="aspect-[16/10] bg-gray-100 rounded-lg overflow-hidden">
+                <img 
+                  src={selectedPortfolioImage.imageUrl} 
+                  alt={selectedPortfolioImage.title || "Portfolio image"}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Project Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  {selectedPortfolioImage.title && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Project Title</h3>
+                      <p className="text-gray-700">{selectedPortfolioImage.title}</p>
+                    </div>
+                  )}
+                  
+                  {selectedPortfolioImage.projectType && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Project Type</h3>
+                      <Badge variant="outline" className="text-sm px-3 py-1">
+                        {selectedPortfolioImage.projectType}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  {selectedPortfolioImage.description && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
+                      <p className="text-gray-700 leading-relaxed">{selectedPortfolioImage.description}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  {selectedPortfolioImage.productsUsed && selectedPortfolioImage.productsUsed.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">Products Used in This Project</h3>
+                      <div className="space-y-2">
+                        {selectedPortfolioImage.productsUsed.map((product, index) => (
+                          <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                            <span className="text-sm font-medium">{product}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3">Interested in This Project?</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Contact {profile.userName} to discuss similar projects or get more details about the materials used.
+                    </p>
+                    <div className="space-y-2">
+                      <Button 
+                        className="w-full"
+                        onClick={() => {
+                          setIsPortfolioModalOpen(false);
+                          setIsBookingOpen(true);
+                        }}
+                      >
+                        Schedule Consultation
+                      </Button>
+                      {profile.email && (
+                        <Button 
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => {
+                            const subject = `Interest in Portfolio Project${selectedPortfolioImage.title ? `: ${selectedPortfolioImage.title}` : ''}`;
+                            const body = `Hello ${profile.userName},\n\nI'm interested in learning more about one of your portfolio projects${selectedPortfolioImage.title ? ` - "${selectedPortfolioImage.title}"` : ''}.\n\nI'd like to discuss creating something similar for my space.\n\nPlease contact me to discuss details.\n\nThank you!`;
+                            window.location.href = `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                          }}
+                        >
+                          Email About This Project
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
