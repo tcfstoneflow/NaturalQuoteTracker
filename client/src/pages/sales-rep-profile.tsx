@@ -1,20 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Calendar, Clock, Mail, Phone, User, MapPin, Star, ImageIcon, CalendarPlus, Globe2 } from "lucide-react";
+import { Calendar, Clock, Mail, Phone, User, MapPin, Star, ImageIcon, Globe2 } from "lucide-react";
 import { format } from "date-fns";
 
 type SalesRepProfileData = {
@@ -66,39 +57,14 @@ type SalesRepProfileData = {
   }>;
 };
 
-const appointmentSchema = z.object({
-  clientName: z.string().min(1, "Name is required"),
-  clientEmail: z.string().email("Valid email is required"),
-  clientPhone: z.string().min(1, "Phone number is required"),
-  appointmentDate: z.string().min(1, "Date is required"),
-  appointmentType: z.string().min(1, "Consultation type is required"),
-  notes: z.string().optional(),
-});
 
-type AppointmentForm = z.infer<typeof appointmentSchema>;
 
 export default function SalesRepProfile() {
   const { slug } = useParams<{ slug: string }>();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [selectedPortfolioImage, setSelectedPortfolioImage] = useState<any>(null);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
-  
-  const appointmentForm = useForm<AppointmentForm>({
-    resolver: zodResolver(appointmentSchema),
-    defaultValues: {
-      clientName: "",
-      clientEmail: "",
-      clientPhone: "",
-      appointmentDate: "",
-      appointmentType: "showroom",
-      notes: "",
-    },
-  });
 
   const { data: profileData, isLoading } = useQuery<SalesRepProfileData>({
     queryKey: [`/api/public/sales-rep/${slug}`],
@@ -119,39 +85,7 @@ export default function SalesRepProfile() {
     queryFn: () => fetch('/api/products').then(res => res.json()),
   });
 
-  const appointmentMutation = useMutation({
-    mutationFn: async (appointmentData: AppointmentForm) => {
-      const response = await fetch("/api/sales-rep-appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...appointmentData,
-          salesRepId: profile?.id,
-        }),
-      });
-      if (!response.ok) throw new Error("Failed to book appointment");
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Appointment Requested",
-        description: "Your appointment request has been submitted. We'll contact you soon to confirm.",
-      });
-      setIsAppointmentOpen(false);
-      appointmentForm.reset();
-    },
-    onError: () => {
-      toast({
-        title: "Booking Failed",
-        description: "Failed to submit appointment request. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handleAppointmentSubmit = (data: AppointmentForm) => {
-    appointmentMutation.mutate(data);
-  };
 
 
 
@@ -245,111 +179,18 @@ export default function SalesRepProfile() {
               )}
             </div>
 
-            <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
-              <DialogTrigger asChild>
-                <Button size="lg" className="whitespace-nowrap">
-                  <CalendarPlus className="w-4 h-4 mr-2" />
-                  Book Appointment
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Book an Appointment</DialogTitle>
-                  <DialogDescription>
-                    Schedule a consultation with our sales representative
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="clientName">Your Name</Label>
-                    <Input
-                      id="clientName"
-                      value={appointmentForm.clientName}
-                      onChange={(e) => setAppointmentForm(prev => ({ ...prev, clientName: e.target.value }))}
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="clientEmail">Email</Label>
-                    <Input
-                      id="clientEmail"
-                      type="email"
-                      value={appointmentForm.clientEmail}
-                      onChange={(e) => setAppointmentForm(prev => ({ ...prev, clientEmail: e.target.value }))}
-                      placeholder="your.email@example.com"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="clientPhone">Phone Number</Label>
-                    <Input
-                      id="clientPhone"
-                      value={appointmentForm.clientPhone}
-                      onChange={(e) => setAppointmentForm(prev => ({ ...prev, clientPhone: e.target.value }))}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="appointmentDate">Preferred Date & Time</Label>
-                    <Input
-                      id="appointmentDate"
-                      type="datetime-local"
-                      value={appointmentForm.appointmentDate}
-                      onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointmentDate: e.target.value }))}
-                      min={new Date().toISOString().slice(0, 16)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="appointmentType">Appointment Type</Label>
-                    <Select
-                      value={appointmentForm.appointmentType}
-                      onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, appointmentType: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="consultation">Consultation</SelectItem>
-                        <SelectItem value="showroom_visit">Showroom Visit</SelectItem>
-                        <SelectItem value="site_visit">Site Visit</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="notes">Notes (Optional)</Label>
-                    <Textarea
-                      id="notes"
-                      value={appointmentForm.notes}
-                      onChange={(e) => setAppointmentForm(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Tell us about your project or any specific requirements..."
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <Button 
-                    onClick={() => {
-                      const formData = {
-                        clientName: appointmentForm.clientName,
-                        clientEmail: appointmentForm.clientEmail, 
-                        clientPhone: appointmentForm.clientPhone,
-                        appointmentDate: appointmentForm.appointmentDate,
-                        appointmentType: appointmentForm.appointmentType,
-                        notes: appointmentForm.notes
-                      };
-                      appointmentMutation.mutate(formData);
-                    }}
-                    disabled={appointmentMutation.isPending || !appointmentForm.clientName || !appointmentForm.clientEmail || !appointmentForm.appointmentDate}
-                    className="w-full"
-                  >
-                    {appointmentMutation.isPending ? "Booking..." : "Submit Request"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              size="lg" 
+              className="whitespace-nowrap"
+              onClick={() => {
+                const subject = `Consultation Request from ${profile.userName}`;
+                const body = `Hi ${profile.userName},\n\nI'm interested in discussing a natural stone project and would like to schedule a consultation.\n\nThank you!`;
+                window.open(`mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+              }}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Contact {profile.userName}
+            </Button>
           </div>
         </div>
       </div>
