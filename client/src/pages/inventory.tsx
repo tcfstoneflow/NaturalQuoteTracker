@@ -2084,22 +2084,25 @@ export default function Inventory() {
                               {availableTags
                                 .filter((tag: any) => !productTags.some(pt => pt.tag.id === tag.id))
                                 .map((tag: any) => (
-                                  <div key={tag.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-gray-100 cursor-pointer" onClick={() => setSelectedTagId(tag.id.toString())}>
-                                    <div className="flex-1">
-                                      <span className="text-sm">{tag.name}</span>
-                                      {tag.description && (
-                                        <span className="text-xs text-gray-500 ml-2">
-                                          - {tag.description}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+                                  <div key={tag.id} className="relative">
+                                    <SelectItem value={tag.id.toString()} className="pr-16">
+                                      <div className="flex-1">
+                                        <span className="text-sm">{tag.name}</span>
+                                        {tag.description && (
+                                          <span className="text-xs text-gray-500 ml-2">
+                                            - {tag.description}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </SelectItem>
+                                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1 z-10">
                                       <Button
                                         variant="ghost"
                                         size="sm"
                                         className="h-6 w-6 p-0 hover:bg-blue-100"
                                         onClick={(e) => {
                                           e.stopPropagation();
+                                          e.preventDefault();
                                           openTagEditDialog(tag);
                                         }}
                                       >
@@ -2111,6 +2114,7 @@ export default function Inventory() {
                                         className="h-6 w-6 p-0 hover:bg-red-100"
                                         onClick={(e) => {
                                           e.stopPropagation();
+                                          e.preventDefault();
                                           deleteTag(tag.id);
                                         }}
                                       >
