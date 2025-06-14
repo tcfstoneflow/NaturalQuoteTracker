@@ -62,6 +62,7 @@ type SalesRepPortfolioImage = {
   title: string | null;
   description: string | null;
   projectType: string | null;
+  productsUsed: string[] | null;
   displayOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -365,6 +366,7 @@ export default function SalesRepManagement() {
           title: data.title,
           description: data.description,
           projectType: data.projectType,
+          productsUsed: data.productsUsed,
         }),
       });
       if (!response.ok) throw new Error('Failed to update portfolio image');
@@ -424,6 +426,7 @@ export default function SalesRepManagement() {
       title: image.title || "",
       description: image.description || "",
       projectType: image.projectType || "",
+      productsUsed: image.productsUsed || [],
     });
   };
 
@@ -999,6 +1002,69 @@ export default function SalesRepManagement() {
                             </FormItem>
                           )}
                         />
+
+                        <FormField
+                          control={portfolioForm.control}
+                          name="productsUsed"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Products Used (Optional)</FormLabel>
+                              <FormControl>
+                                <div className="space-y-2">
+                                  {products && products.length > 0 ? (
+                                    <Select
+                                      onValueChange={(value) => {
+                                        const currentProducts = field.value || [];
+                                        if (!currentProducts.includes(value)) {
+                                          field.onChange([...currentProducts, value]);
+                                        }
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select products used in this project" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {products.map((product) => (
+                                          <SelectItem key={product.id} value={product.name}>
+                                            {product.name} - {product.category}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  ) : (
+                                    <Input
+                                      placeholder="Enter product names (comma separated)"
+                                      onChange={(e) => {
+                                        const products = e.target.value.split(',').map(p => p.trim()).filter(p => p);
+                                        field.onChange(products);
+                                      }}
+                                    />
+                                  )}
+                                  {field.value && field.value.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                      {field.value.map((product, index) => (
+                                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                                          {product}
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const newProducts = field.value?.filter((_, i) => i !== index) || [];
+                                              field.onChange(newProducts);
+                                            }}
+                                            className="ml-1 text-xs hover:text-red-600"
+                                          >
+                                            ×
+                                          </button>
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         
                         <Button type="submit" disabled={addPortfolioImageMutation.isPending} className="w-full">
                           {addPortfolioImageMutation.isPending ? "Adding..." : "Add to Portfolio"}
@@ -1037,6 +1103,18 @@ export default function SalesRepManagement() {
                         )}
                         {image.description && (
                           <p className="text-sm text-gray-700 mb-3">{image.description}</p>
+                        )}
+                        {image.productsUsed && image.productsUsed.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-xs text-gray-500 mb-1">Products Used:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {image.productsUsed.map((product, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {product}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
                         )}
                         <div className="flex gap-2">
                           <Button
@@ -1178,6 +1256,70 @@ export default function SalesRepManagement() {
                             rows={3}
                             {...field}
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editPortfolioForm.control}
+                    name="productsUsed"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Products Used (Optional)</FormLabel>
+                        <FormControl>
+                          <div className="space-y-2">
+                            {products && products.length > 0 ? (
+                              <Select
+                                onValueChange={(value) => {
+                                  const currentProducts = field.value || [];
+                                  if (!currentProducts.includes(value)) {
+                                    field.onChange([...currentProducts, value]);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select products used in this project" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {products.map((product) => (
+                                    <SelectItem key={product.id} value={product.name}>
+                                      {product.name} - {product.category}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                placeholder="Enter product names (comma separated)"
+                                value={(field.value || []).join(', ')}
+                                onChange={(e) => {
+                                  const products = e.target.value.split(',').map(p => p.trim()).filter(p => p);
+                                  field.onChange(products);
+                                }}
+                              />
+                            )}
+                            {field.value && field.value.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {field.value.map((product, index) => (
+                                  <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                                    {product}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newProducts = field.value?.filter((_, i) => i !== index) || [];
+                                        field.onChange(newProducts);
+                                      }}
+                                      className="ml-1 text-xs hover:text-red-600"
+                                    >
+                                      ×
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
