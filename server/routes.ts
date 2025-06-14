@@ -181,6 +181,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })();
   });
 
+  // Client consultation submission endpoint
+  app.post('/api/client-consultations', async (req, res) => {
+    try {
+      const { clientConsultations, insertClientConsultationSchema, activities } = await import('@shared/schema');
+      
+      // Validate the request body
+      const validatedData = insertClientConsultationSchema.parse(req.body);
+      
+      // Insert the consultation request into the database
+      const [consultation] = await db.insert(clientConsultations).values(validatedData).returning();
+      
+      // Log the activity
+      await db.insert(activities).values({
+        type: 'consultation_request',
+        description: `New consultation request from ${validatedData.clientName} for ${validatedData.projectType}`,
+        entityType: 'consultation',
+        entityId: consultation.id,
+        metadata: {
+          salesRepId: validatedData.salesRepId,
+          clientEmail: validatedData.clientEmail,
+          projectType: validatedData.projectType,
+          context: validatedData.context
+        }
+      });
+      
+      res.json({ 
+        success: true, 
+        consultation,
+        message: 'Consultation request submitted successfully' 
+      });
+    } catch (error) {
+      console.error('Error submitting consultation request:', error);
+      res.status(400).json({ 
+        error: 'Failed to submit consultation request',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Authentication routes with rate limiting
   app.post("/api/auth/login", authLimiter, login);
   app.post("/api/auth/register", requireAuth, requireRole(['admin']), authLimiter, register);
