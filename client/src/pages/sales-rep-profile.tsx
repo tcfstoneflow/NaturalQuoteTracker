@@ -344,8 +344,10 @@ export default function SalesRepProfile() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* My Favorite Slabs */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* My Favorite Slabs */}
             {favoriteSlabs.length > 0 && (
               <Card>
                 <CardHeader>
@@ -398,9 +400,9 @@ export default function SalesRepProfile() {
               </Card>
             )}
 
-            {/* Portfolio Gallery */}
-            {portfolioImages.length > 0 && (
-              <Card>
+          {/* Portfolio Gallery */}
+          {portfolioImages.length > 0 && (
+            <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ImageIcon className="w-5 h-5" />
@@ -459,7 +461,6 @@ export default function SalesRepProfile() {
                 </CardContent>
               </Card>
             )}
-          </div>
 
           {/* Specialties Section */}
           {profile.specialties && profile.specialties.length > 0 && (
@@ -479,6 +480,46 @@ export default function SalesRepProfile() {
               </CardContent>
             </Card>
           )}
+          </div>
+        </div>
+
+        {/* Contact Footer */}
+        <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-8">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              Ready to Start Your Project?
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              Contact {profile.userName} today to discuss your natural stone needs and schedule a consultation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {profile.phone && (
+                <a
+                  href={`tel:${profile.phone}`}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Phone className="w-5 h-5" />
+                  {profile.phone}
+                </a>
+              )}
+              {profile.email && (
+                <a
+                  href={`mailto:${profile.email}`}
+                  className="flex items-center gap-2 bg-white text-blue-600 border-2 border-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  <Mail className="w-5 h-5" />
+                  {profile.email}
+                </a>
+              )}
+              <Button
+                onClick={() => setIsAppointmentOpen(true)}
+                className="bg-green-600 text-white hover:bg-green-700"
+              >
+                <Calendar className="w-5 h-5 mr-2" />
+                Book Consultation
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
