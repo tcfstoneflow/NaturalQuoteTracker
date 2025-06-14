@@ -15,8 +15,7 @@ import {
   Target,
   Activity,
   ShoppingCart,
-  Layers,
-  Upload
+  Layers
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -35,7 +34,6 @@ const navigation = [
 
 const adminNavigation = [
   { name: "User Management", href: "/user-management", icon: UserCog },
-  { name: "Bulk Import", href: "/bulk-import", icon: Upload },
   { name: "System Health", href: "/system-health", icon: Activity },
 ];
 
