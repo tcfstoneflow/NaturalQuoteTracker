@@ -21,11 +21,7 @@ const consultationSchema = z.object({
   clientName: z.string().min(2, "Name must be at least 2 characters"),
   clientEmail: z.string().email("Please enter a valid email address"),
   clientPhone: z.string().min(10, "Please enter a valid phone number"),
-  projectType: z.string().min(1, "Please select a project type"),
   projectDescription: z.string().min(10, "Please provide project details (at least 10 characters)"),
-  budget: z.string().optional(),
-  timeline: z.string().optional(),
-  preferredContactMethod: z.string().min(1, "Please select a preferred contact method"),
 });
 
 type ConsultationFormData = z.infer<typeof consultationSchema>;
@@ -101,11 +97,7 @@ export default function SalesRepProfile() {
       clientName: "",
       clientEmail: "",
       clientPhone: "",
-      projectType: "",
       projectDescription: "",
-      budget: "",
-      timeline: "",
-      preferredContactMethod: "",
     },
   });
 
@@ -256,7 +248,7 @@ export default function SalesRepProfile() {
               onClick={() => openConsultationModal('contact')}
             >
               <Mail className="w-4 h-4 mr-2" />
-              Contact {profile.firstName.charAt(0).toUpperCase() + profile.firstName.slice(1)}
+              Book Consultation
             </Button>
           </div>
         </div>
@@ -788,32 +780,7 @@ export default function SalesRepProfile() {
                 )}
               />
               
-              <FormField
-                control={consultationForm.control}
-                name="projectType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select project type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="kitchen">Kitchen Countertops</SelectItem>
-                        <SelectItem value="bathroom">Bathroom Vanity</SelectItem>
-                        <SelectItem value="fireplace">Fireplace Surround</SelectItem>
-                        <SelectItem value="flooring">Flooring</SelectItem>
-                        <SelectItem value="outdoor">Outdoor/Patio</SelectItem>
-                        <SelectItem value="commercial">Commercial Project</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               
               <FormField
                 control={consultationForm.control}
@@ -833,59 +800,7 @@ export default function SalesRepProfile() {
                 )}
               />
               
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={consultationForm.control}
-                  name="budget"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Budget Range (Optional)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. $5,000-$10,000" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={consultationForm.control}
-                  name="timeline"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timeline (Optional)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. 2-3 months" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={consultationForm.control}
-                name="preferredContactMethod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferred Contact Method</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="How should we contact you?" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="phone">Phone Call</SelectItem>
-                        <SelectItem value="email">Email</SelectItem>
-                        <SelectItem value="text">Text Message</SelectItem>
-                        <SelectItem value="either">Either Phone or Email</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               
               <div className="flex gap-3 pt-4">
                 <Button
