@@ -102,6 +102,12 @@ export default function SalesRepProfile() {
     enabled: !!selectedProduct?.bundleId,
   });
 
+  // Fetch all products for linking
+  const { data: allProducts } = useQuery({
+    queryKey: ['/api/products'],
+    queryFn: () => fetch('/api/products').then(res => res.json()),
+  });
+
   const bookAppointmentMutation = useMutation({
     mutationFn: async (appointmentData: any) => {
       const response = await fetch("/api/sales-rep-appointments", {
@@ -715,9 +721,22 @@ export default function SalesRepProfile() {
                       <h3 className="font-semibold text-gray-900 mb-3">Products Used in This Project</h3>
                       <div className="space-y-2">
                         {selectedPortfolioImage.productsUsed.map((product, index) => (
-                          <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                          <div 
+                            key={index} 
+                            className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                            onClick={() => {
+                              // Find the product by name and open its page
+                              const foundProduct = allProducts?.find((p: any) => p.name === product);
+                              if (foundProduct) {
+                                window.open(`/inventory?product=${foundProduct.id}`, '_blank');
+                              } else {
+                                // Fallback: search for the product name in inventory
+                                window.open(`/inventory?search=${encodeURIComponent(product)}`, '_blank');
+                              }
+                            }}
+                          >
                             <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                            <span className="text-sm font-medium">{product}</span>
+                            <span className="text-sm font-medium text-blue-600 hover:text-blue-800">{product}</span>
                           </div>
                         ))}
                       </div>
