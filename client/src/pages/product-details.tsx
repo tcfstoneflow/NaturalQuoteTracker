@@ -149,29 +149,9 @@ export default function ProductDetails() {
 
   // Function to generate context-aware message based on product category
   const getProductContextualMessage = () => {
-    if (!product) return "I'm interested in getting a quote for this product. Please provide pricing and availability information.";
+    if (!product) return "I'm interested in getting a quote for this slab. Could you please provide pricing and availability.";
     
-    const baseMessage = `I'm interested in getting a quote for ${product.name}. `;
-    const category = product.category?.toLowerCase();
-    
-    switch (category) {
-      case "granite":
-        return baseMessage + "This granite slab would be perfect for my project. Please provide pricing, availability, and installation information for this granite material.";
-      case "marble":
-        return baseMessage + "This marble slab caught my attention for my project. Please provide pricing, availability, and installation information for this marble material.";
-      case "quartzite":
-        return baseMessage + "This quartzite slab looks ideal for my needs. Please provide pricing, availability, and installation information for this quartzite material.";
-      case "quartz":
-        return baseMessage + "This quartz slab would work well for my project. Please provide pricing, availability, and installation information for this quartz material.";
-      case "limestone":
-        return baseMessage + "This limestone slab fits my project requirements. Please provide pricing, availability, and installation information for this limestone material.";
-      case "travertine":
-        return baseMessage + "This travertine slab is exactly what I'm looking for. Please provide pricing, availability, and installation information for this travertine material.";
-      case "onyx":
-        return baseMessage + "This onyx slab would be stunning for my project. Please provide pricing, availability, and installation information for this onyx material.";
-      default:
-        return baseMessage + "Please provide pricing, availability, and installation information for this natural stone material.";
-    }
+    return `I'm interested in getting a quote for ${product.name}. Could you please provide pricing and availability.`;
   };
 
   // Quote request form

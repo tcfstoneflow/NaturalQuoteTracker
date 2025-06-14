@@ -37,6 +37,7 @@ export default function PublicInventory() {
   const [sortBy, setSortBy] = useState("name");
   const [productsWithSlabs, setProductsWithSlabs] = useState<any[]>([]);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [selectedProductForQuote, setSelectedProductForQuote] = useState<any>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxTitle, setLightboxTitle] = useState("");
@@ -69,10 +70,10 @@ export default function PublicInventory() {
     }
   }, []);
 
-  // Update quote message when tab changes
+  // Update quote message when selected product changes
   useEffect(() => {
     contactForm.setValue('message', getContextualMessage());
-  }, [activeTab]);
+  }, [selectedProductForQuote]);
 
   // Function to add product to recently viewed
   const addToRecentlyViewed = (product: any) => {
@@ -83,28 +84,14 @@ export default function PublicInventory() {
     setRecentlyViewed(updated);
   };
 
-  // Function to generate context-aware message based on active tab
+  // Function to generate context-aware message based on selected product
   const getContextualMessage = () => {
-    const baseMessage = "I'm interested in getting a quote for natural stone materials. ";
-    
-    switch (activeTab) {
-      case "granite":
-        return baseMessage + "I'm specifically looking for granite slabs for my project. Please provide pricing and availability information for your granite collection.";
-      case "marble":
-        return baseMessage + "I'm specifically looking for marble slabs for my project. Please provide pricing and availability information for your marble collection.";
-      case "quartzite":
-        return baseMessage + "I'm specifically looking for quartzite slabs for my project. Please provide pricing and availability information for your quartzite collection.";
-      case "quartz":
-        return baseMessage + "I'm specifically looking for quartz slabs for my project. Please provide pricing and availability information for your quartz collection.";
-      case "limestone":
-        return baseMessage + "I'm specifically looking for limestone slabs for my project. Please provide pricing and availability information for your limestone collection.";
-      case "travertine":
-        return baseMessage + "I'm specifically looking for travertine slabs for my project. Please provide pricing and availability information for your travertine collection.";
-      case "onyx":
-        return baseMessage + "I'm specifically looking for onyx slabs for my project. Please provide pricing and availability information for your onyx collection.";
-      default:
-        return baseMessage + "Please provide pricing and availability information for your stone slab collection. I'd like to explore different material options for my project.";
+    if (selectedProductForQuote) {
+      return `I'm interested in getting a quote for ${selectedProductForQuote.name}. Could you please provide pricing and availability.`;
     }
+    
+    // Fallback message when no specific product is selected
+    return "I'm interested in getting a quote for your stone slabs. Could you please provide pricing and availability.";
   };
 
   const contactForm = useForm<ContactFormData>({
@@ -509,6 +496,7 @@ export default function PublicInventory() {
                         className="flex-1"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setSelectedProductForQuote(product);
                           setContactDialogOpen(true);
                         }}
                       >
@@ -701,7 +689,10 @@ export default function PublicInventory() {
             Get personalized recommendations and professional installation guidance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => setContactDialogOpen(true)}>
+            <Button size="lg" onClick={() => {
+              setSelectedProductForQuote(null);
+              setContactDialogOpen(true);
+            }}>
               <Phone className="h-4 w-4 mr-2" />
               Schedule Consultation
             </Button>
