@@ -69,6 +69,11 @@ export default function PublicInventory() {
     }
   }, []);
 
+  // Update quote message when tab changes
+  useEffect(() => {
+    contactForm.setValue('message', getContextualMessage());
+  }, [activeTab]);
+
   // Function to add product to recently viewed
   const addToRecentlyViewed = (product: any) => {
     const currentViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
@@ -78,6 +83,30 @@ export default function PublicInventory() {
     setRecentlyViewed(updated);
   };
 
+  // Function to generate context-aware message based on active tab
+  const getContextualMessage = () => {
+    const baseMessage = "I'm interested in getting a quote for natural stone materials. ";
+    
+    switch (activeTab) {
+      case "granite":
+        return baseMessage + "I'm specifically looking for granite slabs for my project. Please provide pricing and availability information for your granite collection.";
+      case "marble":
+        return baseMessage + "I'm specifically looking for marble slabs for my project. Please provide pricing and availability information for your marble collection.";
+      case "quartzite":
+        return baseMessage + "I'm specifically looking for quartzite slabs for my project. Please provide pricing and availability information for your quartzite collection.";
+      case "quartz":
+        return baseMessage + "I'm specifically looking for quartz slabs for my project. Please provide pricing and availability information for your quartz collection.";
+      case "limestone":
+        return baseMessage + "I'm specifically looking for limestone slabs for my project. Please provide pricing and availability information for your limestone collection.";
+      case "travertine":
+        return baseMessage + "I'm specifically looking for travertine slabs for my project. Please provide pricing and availability information for your travertine collection.";
+      case "onyx":
+        return baseMessage + "I'm specifically looking for onyx slabs for my project. Please provide pricing and availability information for your onyx collection.";
+      default:
+        return baseMessage + "Please provide pricing and availability information for your stone slab collection. I'd like to explore different material options for my project.";
+    }
+  };
+
   const contactForm = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
@@ -85,7 +114,7 @@ export default function PublicInventory() {
       email: "",
       phone: "",
       preferredDate: "",
-      message: "",
+      message: getContextualMessage(),
     },
   });
 
