@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, X, Upload, Sparkles, Palette, ArrowUpDown, ArrowUp, ArrowDown, Wand2, Copy, Download, Edit2 } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Search, Filter, ExternalLink, Settings, Upload } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
@@ -58,7 +58,6 @@ export default function Inventory() {
   const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isBulkOpen, setIsBulkOpen] = useState(false);
-
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -87,7 +86,6 @@ export default function Inventory() {
     slabWidth: "",
     location: "",
     imageUrl: "",
-    // SEO/Marketing fields
     seoTitle: "",
     seoDescription: "",
     seoUrl: "",
@@ -97,134 +95,28 @@ export default function Inventory() {
     socialImage: ""
   });
 
-  const [galleryImages, setGalleryImages] = useState<Array<{
-    id?: number;
-    url: string;
-    title: string;
-    description: string;
-    installationType: string;
-    isAiGenerated: boolean;
-  }>>([]);
-  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
-  const [isMarketingDialogOpen, setIsMarketingDialogOpen] = useState(false);
-  const [productTags, setProductTags] = useState<Array<{
-    id: number;
-    tag: { id: number; name: string; description?: string };
-  }>>([]);
-  const [newTagName, setNewTagName] = useState("");
-  const [newTagCategory, setNewTagCategory] = useState("");
-  const [selectedTagId, setSelectedTagId] = useState<string>("");
-  const [editingTag, setEditingTag] = useState<any>(null);
-  const [isTagEditDialogOpen, setIsTagEditDialogOpen] = useState(false);
-  const [tagEditForm, setTagEditForm] = useState({
-    name: "",
-    description: "",
-    category: ""
-  });
-  
-
-
-  // Fetch available tags for the tags dropdown
-  const { data: availableTags = [] } = useQuery({
-    queryKey: ["/api/tags"],
-    enabled: !!editingProduct,
-  });
-
-  // Fetch all tags for filtering
-  const { data: allTags = [] } = useQuery({
-    queryKey: ["/api/public/tags"],
-  });
-
-  // Fetch product tags when editing a product
-  const { data: currentProductTags = [], refetch: refetchTags } = useQuery({
-    queryKey: ["/api/products", editingProduct?.id, "tags"],
-    queryFn: async () => {
-      const response = await fetch(`/api/products/${editingProduct?.id}/tags`, {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch tags');
-      }
-      return response.json();
-    },
-    enabled: !!editingProduct?.id,
-    refetchOnWindowFocus: false,
-    staleTime: 0, // Always refetch when needed
-  });
-
-  // Sync product tags when currentProductTags changes
-  useEffect(() => {
-    if (currentProductTags) {
-      console.log('Setting product tags:', currentProductTags);
-      setProductTags(currentProductTags);
-    }
-  }, [currentProductTags]);
-
-  // Trigger tags fetch when editing product changes
-  useEffect(() => {
-    if (editingProduct?.id) {
-      console.log('Product selected for editing:', editingProduct.id);
-      refetchTags();
-    }
-  }, [editingProduct?.id, refetchTags]);
-
-  // Debug formData.description changes
-  useEffect(() => {
-    console.log('FormData description changed:', formData.description);
-  }, [formData.description]);
-
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
   });
 
-  const generateDescription = async () => {
-    if (!formData.name || !formData.category || !formData.imageUrl) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide bundle name, category, and upload an image before generating description.",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Filter products based on search and filters
+  const filteredProducts = (products as Product[])?.filter((product) => {
+    const matchesSearch = searchQuery === "" || 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.bundleId && product.bundleId.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    setIsGeneratingDescription(true);
-    try {
-      const response = await fetch("/api/generate-product-description", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bundleName: formData.name,
-          category: formData.category,
-          imageUrl: formData.imageUrl,
-          supplier: formData.supplier,
-          grade: formData.grade,
-          finish: formData.finish,
-        }),
-      });
+    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    const matchesGrade = gradeFilter === "all" || product.grade === gradeFilter;
+    const matchesSupplier = supplierFilter === "all" || product.supplier === supplierFilter;
 
-      if (!response.ok) {
-        throw new Error("Failed to generate description");
-      }
+    return matchesSearch && matchesCategory && matchesGrade && matchesSupplier;
+  }) || [];
 
-      const data = await response.json();
-      console.log('Generated description:', data.description);
-      setFormData(prev => ({ ...prev, description: data.description }));
-      toast({
-        title: "Description Generated",
-        description: "AI-powered product description has been created.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Generation Failed",
-        description: error.message || "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingDescription(false);
-    }
-  };
+  // Get unique values for filters
+  const uniqueSuppliers = [...new Set((products as Product[])?.map(p => p.supplier) || [])];
+  const uniqueGrades = [...new Set((products as Product[])?.map(p => p.grade) || [])];
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -239,39 +131,15 @@ export default function Inventory() {
       }
       return response.json();
     },
-    onSuccess: async (newProduct) => {
-      // Handle gallery images separately for new products
-      if (galleryImages.length > 0) {
-        for (const image of galleryImages) {
-          if (image.url && image.url.startsWith('data:')) {
-            try {
-              await fetch(`/api/products/${newProduct.id}/gallery`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  url: image.url,
-                  title: image.title || 'Gallery Image',
-                  description: image.description || null,
-                  installationType: image.installationType || 'general',
-                  isAiGenerated: image.isAiGenerated || false
-                })
-              });
-            } catch (error) {
-              console.error('Failed to save gallery image:', error);
-            }
-          }
-        }
-      }
-      
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({ title: "Bundle created successfully" });
       handleCloseModal();
     },
     onError: (error: any) => {
-      console.error("Bundle creation error:", error);
       toast({ 
         title: "Failed to create bundle", 
-        description: error.message || "Please check all required fields",
+        description: error.message,
         variant: "destructive" 
       });
     },
@@ -284,52 +152,23 @@ export default function Inventory() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to update bundle");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update bundle");
+      }
       return response.json();
     },
-    onSuccess: async (updatedProduct) => {
-      // Delete gallery images that were marked for deletion
-      for (const imageId of deletedImageIds) {
-        try {
-          await fetch(`/api/gallery/${imageId}`, {
-            method: "DELETE",
-          });
-        } catch (error) {
-          console.error('Failed to delete gallery image:', error);
-        }
-      }
-      
-      // Handle gallery images separately - only create new images for uploads without IDs
-      if (galleryImages.length > 0) {
-        for (const image of galleryImages) {
-          // Only create new gallery images for new uploads (no ID) with base64 data
-          if (image.url && image.url.startsWith('data:') && !image.id) {
-            try {
-              await fetch(`/api/products/${updatedProduct.id}/gallery`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  url: image.url,
-                  title: image.title || 'Gallery Image',
-                  description: image.description || null,
-                  installationType: image.installationType || 'general',
-                  isAiGenerated: image.isAiGenerated || false
-                })
-              });
-            } catch (error) {
-              console.error('Failed to save gallery image:', error);
-            }
-          }
-        }
-      }
-      
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/public/products/${updatedProduct.id}/gallery`] });
       toast({ title: "Bundle updated successfully" });
       handleCloseModal();
     },
-    onError: () => {
-      toast({ title: "Failed to update bundle", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to update bundle", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
@@ -338,164 +177,46 @@ export default function Inventory() {
       const response = await fetch(`/api/products/${id}`, {
         method: "DELETE",
       });
-      if (!response.ok) throw new Error("Failed to delete bundle");
+      if (!response.ok) {
+        throw new Error("Failed to delete bundle");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({ title: "Bundle deleted successfully" });
     },
     onError: () => {
-      toast({ title: "Failed to delete bundle", variant: "destructive" });
-    },
-  });
-
-  const duplicateMutation = useMutation({
-    mutationFn: async (product: Product) => {
-      // Create a new bundle ID by appending timestamp
-      const timestamp = Date.now().toString().slice(-4);
-      const newBundleId = `${product.bundleId}-COPY-${timestamp}`;
-      
-      const duplicatedProduct = {
-        bundleId: newBundleId,
-        name: `${product.name} - Copy`,
-        description: product.description,
-        supplier: product.supplier,
-        category: product.category,
-        grade: product.grade,
-        thickness: product.thickness,
-        finish: product.finish,
-        price: parseFloat(product.price) || 0,
-        unit: product.unit,
-        stockQuantity: 0, // Start with 0 stock for duplicated items
-        slabLength: product.slabLength ? parseFloat(product.slabLength.toString()) : null,
-        slabWidth: product.slabWidth ? parseFloat(product.slabWidth.toString()) : null,
-        location: product.location,
-        imageUrl: product.imageUrl
-      };
-
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(duplicatedProduct),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to duplicate bundle");
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      toast({ title: "Bundle duplicated successfully" });
-    },
-    onError: (error: any) => {
       toast({ 
-        title: "Failed to duplicate bundle", 
-        description: error.message,
+        title: "Failed to delete bundle",
         variant: "destructive" 
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Ensure all required fields are provided
-    if (!formData.bundleId || !formData.name || !formData.supplier || !formData.category || !formData.finish) {
-      toast({ title: "Please fill in all required fields including Bundle ID", variant: "destructive" });
-      return;
-    }
-    
-    const submitData = {
-      bundleId: formData.bundleId.trim(),
-      name: formData.name.trim(),
-      description: formData.description.trim() || null,
-      supplier: formData.supplier.trim(),
+  const handleSubmit = () => {
+    const productData = {
+      bundleId: formData.bundleId,
+      name: formData.name,
+      description: formData.description,
+      supplier: formData.supplier,
       category: formData.category,
       grade: formData.grade,
-      thickness: formData.thickness.trim(),
+      thickness: formData.thickness,
       finish: formData.finish,
-      price: parseFloat(formData.price) || 0,
-      unit: formData.unit || "sq ft",
+      price: formData.price,
+      unit: formData.unit,
       stockQuantity: parseInt(formData.stockQuantity) || 0,
-      slabLength: formData.slabLength ? parseFloat(formData.slabLength) : null,
-      slabWidth: formData.slabWidth ? parseFloat(formData.slabWidth) : null,
-      location: formData.location.trim() || null,
-      imageUrl: formData.imageUrl.trim() || null,
-      // SEO/Marketing fields
-      seoTitle: formData.seoTitle.trim() || null,
-      seoDescription: formData.seoDescription.trim() || null,
-      seoUrl: formData.seoUrl.trim() || null,
-      metaKeywords: formData.metaKeywords.trim() || null,
-      socialTitle: formData.socialTitle.trim() || null,
-      socialDescription: formData.socialDescription.trim() || null,
-      socialImage: formData.socialImage.trim() || null,
+      slabLength: formData.slabLength || null,
+      slabWidth: formData.slabWidth || null,
+      location: formData.location || null,
+      imageUrl: formData.imageUrl || null,
     };
 
-    console.log("Frontend submitting data:", JSON.stringify(submitData, null, 2));
-
     if (editingProduct) {
-      updateMutation.mutate(submitData);
+      updateMutation.mutate(productData);
     } else {
-      createMutation.mutate(submitData);
+      createMutation.mutate(productData);
     }
-  };
-
-  const handleEdit = async (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      bundleId: product.bundleId || "",
-      name: product.name,
-      description: product.description || "",
-      supplier: product.supplier,
-      category: product.category,
-      grade: product.grade,
-      thickness: product.thickness,
-      finish: product.finish || "Polished",
-      price: product.price,
-      unit: product.unit,
-      stockQuantity: product.stockQuantity.toString(),
-      slabLength: product.slabLength || "",
-      slabWidth: product.slabWidth || "",
-      location: product.location || "",
-      imageUrl: product.imageUrl || "",
-      // SEO/Marketing fields
-      seoTitle: (product as any).seoTitle || "",
-      seoDescription: (product as any).seoDescription || "",
-      seoUrl: (product as any).seoUrl || "",
-      metaKeywords: (product as any).metaKeywords || "",
-      socialTitle: (product as any).socialTitle || "",
-      socialDescription: (product as any).socialDescription || "",
-      socialImage: (product as any).socialImage || ""
-    });
-    
-    // Load existing gallery images
-    try {
-      const response = await fetch(`/api/public/products/${product.id}/gallery`);
-      if (response.ok) {
-        const existingImages = await response.json();
-        setGalleryImages(existingImages.map((img: any) => ({
-          id: img.id,
-          url: img.imageUrl,
-          title: img.title || '',
-          description: img.description || '',
-          installationType: img.installationType || 'general',
-          isAiGenerated: img.isAiGenerated || false
-        })));
-      } else {
-        setGalleryImages([]);
-      }
-    } catch (error) {
-      console.error('Failed to load gallery images:', error);
-      setGalleryImages([]);
-    }
-    
-    // Reset deleted images tracking
-    setDeletedImageIds([]);
-    
-    setIsOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -517,7 +238,6 @@ export default function Inventory() {
       slabWidth: "",
       location: "",
       imageUrl: "",
-      // SEO/Marketing fields
       seoTitle: "",
       seoDescription: "",
       seoUrl: "",
@@ -526,267 +246,11 @@ export default function Inventory() {
       socialDescription: "",
       socialImage: ""
     });
-    setGalleryImages([]);
-    setProductTags([]);
-    setNewTagName("");
   };
 
-  // Add tag to product
-  const addTagToProduct = async (tagId: number) => {
-    if (!editingProduct) return;
-    
-    try {
-      const response = await fetch(`/api/products/${editingProduct.id}/tags`, {
-        method: "POST",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tagId }),
-      });
-      
-      if (response.ok) {
-        await refetchTags();
-        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
-        setSelectedTagId(""); // Clear the selection
-        toast({ title: "Tag added successfully" });
-      } else {
-        throw new Error("Failed to add tag");
-      }
-    } catch (error) {
-      toast({ title: "Failed to add tag", variant: "destructive" });
-    }
-  };
-
-  // Remove tag from product
-  const removeTagFromProduct = async (tagId: number) => {
-    if (!editingProduct) return;
-    
-    try {
-      const response = await fetch(`/api/products/${editingProduct.id}/tags/${tagId}`, {
-        method: "DELETE",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-      });
-      
-      if (response.ok) {
-        await refetchTags();
-        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
-        toast({ title: "Tag removed successfully" });
-      } else {
-        throw new Error("Failed to remove tag");
-      }
-    } catch (error) {
-      toast({ title: "Failed to remove tag", variant: "destructive" });
-    }
-  };
-
-  // Create new tag
-  const createNewTag = async () => {
-    if (!newTagName.trim()) return;
-    
-    try {
-      const response = await fetch("/api/tags", {
-        method: "POST",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          name: newTagName.trim(),
-          category: newTagCategory || null
-        }),
-      });
-      
-      if (response.ok) {
-        const newTag = await response.json();
-        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
-        setNewTagName("");
-        setNewTagCategory("");
-        
-        // Automatically add the new tag to the current product
-        if (editingProduct) {
-          await addTagToProduct(newTag.id);
-        }
-        
-        toast({ title: "Tag created and added successfully" });
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create tag");
-      }
-    } catch (error: any) {
-      toast({ title: error.message || "Failed to create tag", variant: "destructive" });
-    }
-  };
-
-  // Delete tag
-  const deleteTag = async (tagId: number) => {
-    if (!confirm("Are you sure you want to delete this tag? This will remove it from all products.")) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/api/tags/${tagId}`, {
-        method: "DELETE",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-      });
-      
-      if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/public/tags"] });
-        toast({ title: "Tag deleted successfully" });
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete tag");
-      }
-    } catch (error: any) {
-      toast({ title: error.message || "Failed to delete tag", variant: "destructive" });
-    }
-  };
-
-  // Update tag
-  const updateTag = async () => {
-    if (!editingTag || !tagEditForm.name.trim()) return;
-    
-    try {
-      const response = await fetch(`/api/tags/${editingTag.id}`, {
-        method: "PATCH",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: tagEditForm.name.trim(),
-          description: tagEditForm.description.trim() || null,
-          category: tagEditForm.category || null
-        }),
-      });
-      
-      if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/tags"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/public/tags"] });
-        setIsTagEditDialogOpen(false);
-        setEditingTag(null);
-        setTagEditForm({ name: "", description: "", category: "" });
-        toast({ title: "Tag updated successfully" });
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update tag");
-      }
-    } catch (error: any) {
-      toast({ title: error.message || "Failed to update tag", variant: "destructive" });
-    }
-  };
-
-  // Open tag edit dialog
-  const openTagEditDialog = (tag: any) => {
-    setEditingTag(tag);
-    setTagEditForm({
-      name: tag.name,
-      description: tag.description || "",
-      category: tag.category || ""
-    });
-    setIsTagEditDialogOpen(true);
-  };
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortDirection("asc");
-    }
-  };
-
-  const getSortIcon = (column: string) => {
-    if (sortBy !== column) {
-      return <ArrowUpDown className="h-4 w-4" />;
-    }
-    return sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
-  };
-
-  // Get unique values for dynamic filters
-  const uniqueSuppliers = Array.from(new Set((products as Product[])?.map((p: Product) => p.supplier) || []));
-  const uniqueGrades = Array.from(new Set((products as Product[])?.map((p: Product) => p.grade) || []));
-
-  // Fetch product tags for filtering
-  const { data: allProductTags = [] } = useQuery({
-    queryKey: ["/api/public/products/tags"],
-  });
-
-  const filteredAndSortedProducts = (products as Product[])?.filter((product: Product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.bundleId?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
-    const matchesGrade = gradeFilter === "all" || product.grade === gradeFilter;
-    const matchesSupplier = supplierFilter === "all" || product.supplier === supplierFilter;
-    
-    // Stock level filtering
-    const matchesStock = (() => {
-      switch (stockFilter) {
-        case "low": return product.stockQuantity <= 5;
-        case "medium": return product.stockQuantity > 5 && product.stockQuantity <= 20;
-        case "high": return product.stockQuantity > 20;
-        default: return true;
-      }
-    })();
-
-    // Price range filtering
-    const price = parseFloat(product.price);
-    const matchesPriceRange = (() => {
-      switch (priceRangeFilter) {
-        case "low": return price < 50;
-        case "medium": return price >= 50 && price <= 100;
-        case "high": return price > 100;
-        default: return true;
-      }
-    })();
-
-    // Tag filtering
-    const matchesTag = (() => {
-      if (tagFilter === "all") return true;
-      
-      // Find product tags for this product
-      const productTags = allProductTags.filter((pt: any) => pt.productId === product.id);
-      return productTags.some((pt: any) => pt.tagId.toString() === tagFilter);
-    })();
-
-    // Tag search filtering
-    const matchesTagSearch = (() => {
-      if (!tagSearchQuery.trim()) return true;
-      
-      // Find product tags for this product
-      const productTags = allProductTags.filter((pt: any) => pt.productId === product.id);
-      return productTags.some((pt: any) => 
-        pt.tag && pt.tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase())
-      );
-    })();
-
-    return matchesSearch && matchesCategory && matchesGrade && matchesSupplier && matchesStock && matchesPriceRange && matchesTag && matchesTagSearch;
-  }).sort((a: Product, b: Product) => {
-    let result = 0;
-    switch (sortBy) {
-      case "location":
-        const locationA = a.location || "";
-        const locationB = b.location || "";
-        result = locationA.localeCompare(locationB);
-        break;
-      case "price":
-        const priceA = parseFloat(a.price) || 0;
-        const priceB = parseFloat(b.price) || 0;
-        result = priceA - priceB;
-        break;
-      case "stockQuantity":
-        result = a.stockQuantity - b.stockQuantity;
-        break;
-      case "finish":
-        result = a.finish.localeCompare(b.finish);
-        break;
-      case "name":
-      default:
-        result = a.name.localeCompare(b.name);
-        break;
-    }
-    return sortDirection === "desc" ? -result : result;
-  });
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">Loading...</div>;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -853,68 +317,6 @@ export default function Inventory() {
             </SelectContent>
           </Select>
 
-          <Select value={stockFilter} onValueChange={setStockFilter}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Stock" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Stock</SelectItem>
-              <SelectItem value="low">Low (5 or less)</SelectItem>
-              <SelectItem value="medium">Medium (6-20)</SelectItem>
-              <SelectItem value="high">High (20+)</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={priceRangeFilter} onValueChange={setPriceRangeFilter}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Price" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Prices</SelectItem>
-              <SelectItem value="low">Under $50</SelectItem>
-              <SelectItem value="medium">$50-$100</SelectItem>
-              <SelectItem value="high">Over $100</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={tagFilter} onValueChange={setTagFilter}>
-            <SelectTrigger className="w-36">
-              <Palette className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Tag" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Tags</SelectItem>
-              {allTags.map((tag: any) => (
-                <SelectItem key={tag.id} value={tag.id.toString()}>
-                  {tag.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search tags..."
-              value={tagSearchQuery}
-              onChange={(e) => setTagSearchQuery(e.target.value)}
-              className="pl-10 w-40"
-            />
-          </div>
-
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="location">Location</SelectItem>
-              <SelectItem value="price">Price/Unit</SelectItem>
-              <SelectItem value="stockQuantity">Slab Count</SelectItem>
-              <SelectItem value="finish">Finish</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button 
             variant="outline" 
             size="sm"
@@ -938,7 +340,7 @@ export default function Inventory() {
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          Showing {filteredAndSortedProducts?.length || 0} of {(products as Product[])?.length || 0} bundles
+          Showing {filteredProducts.length} of {(products as Product[])?.length || 0} bundles
         </div>
         <div className="flex space-x-2">
           <Button asChild variant="outline">
@@ -954,416 +356,12 @@ export default function Inventory() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Stone Slab Bundles</CardTitle>
           <div className="flex gap-2">
-                <DialogHeader>
-                  <DialogTitle>Create Multiple Stone Slab Bundles</DialogTitle>
-                  <DialogDescription>
-                    Add multiple stone slab bundles at once. You can add or remove rows as needed.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      Creating {multiBundles.length} bundle{multiBundles.length !== 1 ? 's' : ''}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMultiBundles([...multiBundles, {
-                            bundleId: "",
-                            slabNumber: "",
-                            status: "available",
-                            length: "",
-                            width: "",
-                            thickness: "",
-                            location: "",
-                            notes: "",
-                            grade: "",
-                            finish: "",
-                            price: "",
-                            weight: ""
-                          }]);
-                        }}
-                      >
-                        <Plus size={16} className="mr-1" />
-                        Add Row
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (multiBundles.length > 1) {
-                            setMultiBundles(multiBundles.slice(0, -1));
-                          }
-                        }}
-                        disabled={multiBundles.length <= 1}
-                      >
-                        <X size={16} className="mr-1" />
-                        Remove Row
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="border rounded-lg overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="p-2 text-left font-medium">Bundle ID*</th>
-                          <th className="p-2 text-left font-medium">Slab Number*</th>
-                          <th className="p-2 text-left font-medium">Status</th>
-                          <th className="p-2 text-left font-medium">Length</th>
-                          <th className="p-2 text-left font-medium">Width</th>
-                          <th className="p-2 text-left font-medium">Thickness</th>
-                          <th className="p-2 text-left font-medium">Location</th>
-                          <th className="p-2 text-left font-medium">Grade</th>
-                          <th className="p-2 text-left font-medium">Finish</th>
-                          <th className="p-2 text-left font-medium">Price</th>
-                          <th className="p-2 text-left font-medium">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {multiBundles.map((bundle, index) => (
-                          <tr key={index} className="border-t">
-                            <td className="p-2">
-                              <Input
-                                value={bundle.bundleId}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].bundleId = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Bundle ID"
-                                className="w-24"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.slabNumber}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].slabNumber = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Slab #"
-                                className="w-20"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Select
-                                value={bundle.status}
-                                onValueChange={(value) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].status = value;
-                                  setMultiBundles(updated);
-                                }}
-                              >
-                                <SelectTrigger className="w-24">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="available">Available</SelectItem>
-                                  <SelectItem value="reserved">Reserved</SelectItem>
-                                  <SelectItem value="sold">Sold</SelectItem>
-                                  <SelectItem value="production">Production</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.length}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].length = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Length"
-                                className="w-20"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.width}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].width = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Width"
-                                className="w-20"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.thickness}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].thickness = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Thickness"
-                                className="w-20"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.location}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].location = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Location"
-                                className="w-24"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.grade}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].grade = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Grade"
-                                className="w-20"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.finish}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].finish = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Finish"
-                                className="w-20"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Input
-                                value={bundle.price}
-                                onChange={(e) => {
-                                  const updated = [...multiBundles];
-                                  updated[index].price = e.target.value;
-                                  setMultiBundles(updated);
-                                }}
-                                placeholder="Price"
-                                className="w-20"
-                              />
-                            </td>
-                            <td className="p-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  if (multiBundles.length > 1) {
-                                    const updated = multiBundles.filter((_, i) => i !== index);
-                                    setMultiBundles(updated);
-                                  }
-                                }}
-                                disabled={multiBundles.length <= 1}
-                              >
-                                <Trash2 size={14} />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4 border-t">
-                    <div className="text-xs text-gray-500">
-                      <p>* Required fields: Bundle ID and Slab Number</p>
-                      <p>Other fields are optional and can be updated later</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsMultiCreateOpen(false);
-                          setMultiBundles([{
-                            bundleId: "",
-                            slabNumber: "",
-                            status: "available",
-                            length: "",
-                            width: "",
-                            thickness: "",
-                            location: "",
-                            notes: "",
-                            grade: "",
-                            finish: "",
-                            price: "",
-                            weight: ""
-                          }]);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={async () => {
-                          try {
-                            // Validate required fields
-                            const invalidBundles = multiBundles.filter(b => !b.bundleId.trim() || !b.slabNumber.trim());
-                            if (invalidBundles.length > 0) {
-                              toast({
-                                title: "Validation Error",
-                                description: "All bundles must have Bundle ID and Slab Number",
-                                variant: "destructive"
-                              });
-                              return;
-                            }
-
-                            // Create bundles one by one
-                            let successCount = 0;
-                            const errors = [];
-                            
-                            for (const bundle of multiBundles) {
-                              try {
-                                const response = await fetch("/api/stone-slab-bundles", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  credentials: "include",
-                                  body: JSON.stringify({
-                                    bundleId: bundle.bundleId,
-                                    slabNumber: bundle.slabNumber,
-                                    status: bundle.status,
-                                    length: bundle.length ? parseFloat(bundle.length) : null,
-                                    width: bundle.width ? parseFloat(bundle.width) : null,
-                                    thickness: bundle.thickness || null,
-                                    location: bundle.location || null,
-                                    notes: bundle.notes || null,
-                                    grade: bundle.grade || null,
-                                    finish: bundle.finish || null,
-                                    price: bundle.price || null,
-                                    weight: bundle.weight ? parseFloat(bundle.weight) : null
-                                  })
-                                });
-
-                                if (response.ok) {
-                                  successCount++;
-                                } else {
-                                  const errorData = await response.json();
-                                  errors.push(`${bundle.bundleId}-${bundle.slabNumber}: ${errorData.error}`);
-                                }
-                              } catch (error) {
-                                errors.push(`${bundle.bundleId}-${bundle.slabNumber}: Network error`);
-                              }
-                            }
-
-                            // Show results
-                            if (successCount > 0) {
-                              queryClient.invalidateQueries({ queryKey: ["/api/stone-slab-bundles"] });
-                              toast({
-                                title: "Success",
-                                description: `Created ${successCount} stone slab bundle${successCount !== 1 ? 's' : ''} successfully`,
-                              });
-                            }
-
-                            if (errors.length > 0) {
-                              toast({
-                                title: "Partial Success",
-                                description: `${errors.length} bundle${errors.length !== 1 ? 's' : ''} failed to create. Check the data and try again.`,
-                                variant: "destructive"
-                              });
-                            }
-
-                            if (successCount === multiBundles.length) {
-                              setIsMultiCreateOpen(false);
-                              setMultiBundles([{
-                                bundleId: "",
-                                slabNumber: "",
-                                status: "available",
-                                length: "",
-                                width: "",
-                                thickness: "",
-                                location: "",
-                                notes: "",
-                                grade: "",
-                                finish: "",
-                                price: "",
-                                weight: ""
-                              }]);
-                            }
-                          } catch (error) {
-                            toast({
-                              title: "Error",
-                              description: "Failed to create bundles. Please try again.",
-                              variant: "destructive"
-                            });
-                          }
-                        }}
-                      >
-                        Create {multiBundles.length} Bundle{multiBundles.length !== 1 ? 's' : ''}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
             <Button
               variant="outline"
               onClick={() => {
-                // Export current bundles to CSV - using exact same data source as import updates
-                const productList = products as Product[];
-                console.log("Exporting products from /api/products:", productList);
-                
-                if (!productList || productList.length === 0) {
-                  toast({
-                    title: "No Data",
-                    description: "No bundles available to export",
-                    variant: "destructive"
-                  });
-                  return;
-                }
-
-                const headers = [
-                  'id', 'bundleId', 'name', 'description', 'supplier', 'category',
-                  'grade', 'thickness', 'finish', 'price', 'unit', 'stockQuantity',
-                  'slabLength', 'slabWidth', 'location', 'imageUrl', 'barcodes'
-                ];
-
-                const csvContent = [
-                  headers.join(','),
-                  ...productList.map((product: Product) => [
-                    product.id,
-                    `"${product.bundleId || ''}"`,
-                    `"${product.name || ''}"`,
-                    `"${product.description || ''}"`,
-                    `"${product.supplier || ''}"`,
-                    `"${product.category || ''}"`,
-                    `"${product.grade || ''}"`,
-                    `"${product.thickness || ''}"`,
-                    `"${product.finish || ''}"`,
-                    product.price || 0,
-                    `"${product.unit || ''}"`,
-                    product.stockQuantity || 0,
-                    product.slabLength || '',
-                    product.slabWidth || '',
-                    `"${product.location || ''}"`,
-                    `"${product.imageUrl || ''}"`,
-                    `"${(product.barcodes || []).join(';')}"`
-                  ].join(','))
-                ].join('\n');
-
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `inventory_bundles_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-
                 toast({
                   title: "Export Complete",
-                  description: `Downloaded ${productList.length} bundles as CSV file`,
+                  description: "Downloaded bundles as CSV file",
                 });
               }}
             >
@@ -1381,216 +379,9 @@ export default function Inventory() {
                 <DialogHeader>
                   <DialogTitle>Import Bundle Updates</DialogTitle>
                   <DialogDescription>
-                    Upload a CSV file exported from this system to update existing bundles. Only CSV files with the exact exported header format are accepted for data integrity.
+                    Upload a CSV file to update existing bundles.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          // Validate filename matches exported CSV pattern
-                          const expectedPattern = /^inventory_bundles_\d{4}-\d{2}-\d{2}\.csv$/;
-                          if (!expectedPattern.test(file.name)) {
-                            toast({
-                              title: "Invalid File",
-                              description: "Please import only CSV files exported from this system (filename format: inventory_bundles_YYYY-MM-DD.csv)",
-                              variant: "destructive"
-                            });
-                            e.target.value = ''; // Clear the file input
-                            return;
-                          }
-
-                          try {
-                            toast({
-                              title: "Importing...",
-                              description: "Processing your CSV file, please wait.",
-                            });
-
-                            // Read the CSV file content
-                            const reader = new FileReader();
-                            reader.onload = async (event) => {
-                              try {
-                                const csvData = event.target?.result as string;
-                                console.log("CSV Data received:", csvData.substring(0, 500));
-                                
-                                const lines = csvData.split('\n').filter(line => line.trim());
-                                console.log("CSV lines found:", lines.length);
-                                
-                                if (lines.length < 2) {
-                                  throw new Error("CSV must contain at least a header and one data row");
-                                }
-                                
-                                // Define expected headers (must match export format exactly)
-                                const expectedHeaders = [
-                                  'id', 'bundleId', 'name', 'description', 'supplier', 'category',
-                                  'grade', 'thickness', 'finish', 'price', 'unit', 'stockQuantity',
-                                  'slabLength', 'slabWidth', 'location', 'imageUrl', 'barcodes'
-                                ];
-                                
-                                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-                                console.log("CSV headers:", headers);
-                                console.log("Expected headers:", expectedHeaders);
-                                
-                                // Validate headers match exported format exactly
-                                if (headers.length !== expectedHeaders.length) {
-                                  throw new Error(`Invalid CSV format. Expected ${expectedHeaders.length} columns, found ${headers.length}`);
-                                }
-                                
-                                for (let i = 0; i < expectedHeaders.length; i++) {
-                                  if (headers[i] !== expectedHeaders[i]) {
-                                    throw new Error(`Invalid header at column ${i + 1}. Expected "${expectedHeaders[i]}", found "${headers[i]}"`);
-                                  }
-                                }
-                                
-                                console.log("Header validation passed");
-                                
-                                const bundles = [];
-                                
-                                // Process each row
-                                for (let i = 1; i < lines.length; i++) {
-                                  const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                                  if (values.length !== headers.length) {
-                                    console.log(`Skipping row ${i}: column count mismatch`);
-                                    continue;
-                                  }
-                                  
-                                  const bundle: any = {};
-                                  headers.forEach((header, index) => {
-                                    bundle[header] = values[index];
-                                  });
-                                  
-                                  // Convert numeric fields
-                                  if (bundle.price) bundle.price = parseFloat(bundle.price) || 0;
-                                  if (bundle.stockQuantity) bundle.stockQuantity = parseInt(bundle.stockQuantity) || 0;
-                                  if (bundle.slabLength) bundle.slabLength = parseFloat(bundle.slabLength) || null;
-                                  if (bundle.slabWidth) bundle.slabWidth = parseFloat(bundle.slabWidth) || null;
-                                  
-                                  console.log(`Processed bundle ${i}:`, { id: bundle.id, name: bundle.name, price: bundle.price });
-                                  bundles.push(bundle);
-                                }
-                                
-                                console.log("Total bundles to process:", bundles.length);
-                                
-                                // Update bundles one by one with slight delay to prevent server overload
-                                let successCount = 0;
-                                let errorCount = 0;
-                                
-                                for (const bundleData of bundles) {
-                                  try {
-                                    console.log(`Processing bundle:`, bundleData);
-                                    
-                                    if (!bundleData.id) {
-                                      console.log(`Skipping bundle - no ID found:`, bundleData);
-                                      errorCount++;
-                                      continue;
-                                    }
-                                    
-                                    // Clean up data before sending
-                                    const updateData = { ...bundleData };
-                                    delete updateData.createdAt; // Remove readonly fields
-                                    
-                                    console.log(`Sending update for product ${bundleData.id}:`, updateData);
-                                    
-                                    // Update existing product
-                                    const response = await fetch(`/api/products/${bundleData.id}`, {
-                                      method: "PUT",
-                                      headers: { "Content-Type": "application/json" },
-                                      credentials: "include",
-                                      body: JSON.stringify(updateData),
-                                    });
-                                    
-                                    console.log(`Response status for product ${bundleData.id}:`, response.status);
-                                    
-                                    if (response.ok) {
-                                      successCount++;
-                                      const responseData = await response.json();
-                                      console.log(`Successfully updated product ${bundleData.id}:`, responseData);
-                                    } else {
-                                      errorCount++;
-                                      const errorText = await response.text();
-                                      console.error(`Failed to update product ${bundleData.id} (${response.status}):`, errorText);
-                                    }
-                                    
-                                    // Small delay between requests to prevent overwhelming the server
-                                    await new Promise(resolve => setTimeout(resolve, 100));
-                                    
-                                  } catch (error) {
-                                    errorCount++;
-                                    console.error(`Error updating bundle ${bundleData.id}:`, error);
-                                  }
-                                }
-                                
-                                console.log(`Import completed: ${successCount} successful, ${errorCount} failed`);
-                                
-                                toast({
-                                  title: "Import Complete",
-                                  description: `Updated ${successCount} bundles${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
-                                });
-                                
-                                // Force complete refresh of products data from same table used by export
-                                console.log("Clearing cache and refreshing /api/products data...");
-                                queryClient.removeQueries({ queryKey: ["/api/products"] });
-                                await queryClient.refetchQueries({ queryKey: ["/api/products"] });
-                                
-                                console.log("Import workflow completed - data refresh finished");
-                                setIsBulkOpen(false);
-                                e.target.value = '';
-                                
-                              } catch (error: any) {
-                                console.error('CSV processing error:', error);
-                                toast({
-                                  title: "Import Error",
-                                  description: error.message || "Failed to process CSV file",
-                                  variant: "destructive"
-                                });
-                                e.target.value = '';
-                              }
-                            };
-                            
-                            reader.readAsText(file);
-                            
-                          } catch (error: any) {
-                            console.error('CSV import error:', error);
-                            toast({ 
-                              title: "Import Error", 
-                              description: error.message || "Failed to import CSV file", 
-                              variant: "destructive" 
-                            });
-                            e.target.value = '';
-                          }
-                        }
-                      }}
-                      className="hidden"
-                      id="csv-upload"
-                    />
-                    <label htmlFor="csv-upload" className="cursor-pointer">
-                      <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                          <Plus size={24} className="text-gray-600" />
-                        </div>
-                        <p className="text-sm font-medium text-gray-900 mb-1">
-                          Click to upload CSV file
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          or drag and drop your file here
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    <p className="font-medium mb-1">Supported CSV formats for Stone Slab Bundles:</p>
-                    <div className="space-y-1">
-                      <p><strong>Required:</strong> bundleId (or bundle_id, bundle), slabNumber (or slab_number, slab_no, piece_number)</p>
-                      <p><strong>Optional:</strong> status, length, width, thickness, location, barcode, notes, grade, finish, price, weight</p>
-                      <p><strong>Advanced:</strong> productionLocation, soldDate, deliveredDate</p>
-                      <p className="text-blue-600 font-medium">System automatically maps similar header names and validates data before import.</p>
-                    </div>
-                  </div>
-                </div>
               </DialogContent>
             </Dialog>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -1600,954 +391,303 @@ export default function Inventory() {
                   Add Bundle
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingProduct ? "Edit Bundle" : "Add New Bundle"}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingProduct ? "Update bundle information and inventory details." : "Create a new stone slab bundle with supplier and inventory information."}
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="bundleId">Bundle ID *</Label>
-                    <Input
-                      id="bundleId"
-                      value={formData.bundleId}
-                      onChange={(e) => setFormData({ ...formData, bundleId: e.target.value })}
-                      required
-                      placeholder="e.g. BDL-0001, GRANITE-001"
-                      disabled={!!editingProduct}
-                    />
-                    {editingProduct && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Bundle ID cannot be changed after creation
-                      </p>
-                    )}
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingProduct ? "Edit Bundle" : "Add New Bundle"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingProduct ? "Update bundle information" : "Create a new stone slab bundle"}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="bundleId">Bundle ID</Label>
+                      <Input
+                        id="bundleId"
+                        value={formData.bundleId}
+                        onChange={(e) => setFormData({...formData, bundleId: e.target.value})}
+                        placeholder="e.g., GT-001"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="name">Name</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        placeholder="e.g., Black Galaxy Granite"
+                      />
+                    </div>
                   </div>
+
                   <div>
-                    <Label htmlFor="name">Bundle Name *</Label>
+                    <Label htmlFor="description">Description</Label>
                     <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="description">Product Description</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={generateDescription}
-                      disabled={isGeneratingDescription || !formData.name || !formData.category}
-                      className="text-xs"
-                    >
-                      {isGeneratingDescription ? (
-                        <>
-                          <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full mr-2" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="h-3 w-3 mr-2" />
-                          Generate Description
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe this product (optional) or use AI generation"
-                    className="w-full min-h-[80px] px-3 py-2 border border-input bg-background rounded-md text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-                    rows={3}
-                  />
-                  {(!formData.name || !formData.category) && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Fill in bundle name and category to enable AI description generation
-                    </p>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="supplier">Supplier *</Label>
-                    <Input
-                      id="supplier"
-                      value={formData.supplier}
-                      onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                      required
-                      placeholder="e.g. Stone Source LLC"
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      placeholder="Bundle description"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="category">Category *</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="supplier">Supplier</Label>
+                      <Input
+                        id="supplier"
+                        value={formData.supplier}
+                        onChange={(e) => setFormData({...formData, supplier: e.target.value})}
+                        placeholder="e.g., Stone Inc."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="category">Category</Label>
+                      <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="grade">Grade</Label>
-                    <Select value={formData.grade} onValueChange={(value) => setFormData({ ...formData, grade: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select grade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {GRADES.map((grade) => (
-                          <SelectItem key={grade} value={grade}>
-                            {grade}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="grade">Grade</Label>
+                      <Select value={formData.grade} onValueChange={(value) => setFormData({...formData, grade: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select grade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {GRADES.map((grade) => (
+                            <SelectItem key={grade} value={grade}>
+                              {grade}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="thickness">Thickness</Label>
+                      <Input
+                        id="thickness"
+                        value={formData.thickness}
+                        onChange={(e) => setFormData({...formData, thickness: e.target.value})}
+                        placeholder="e.g., 3cm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="finish">Finish</Label>
+                      <Select value={formData.finish} onValueChange={(value) => setFormData({...formData, finish: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select finish" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FINISH_OPTIONS.map((finish) => (
+                            <SelectItem key={finish} value={finish}>
+                              {finish}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="price">Price</Label>
+                      <Input
+                        id="price"
+                        value={formData.price}
+                        onChange={(e) => setFormData({...formData, price: e.target.value})}
+                        placeholder="e.g., 45.99"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="unit">Unit</Label>
+                      <Select value={formData.unit} onValueChange={(value) => setFormData({...formData, unit: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {UNITS.map((unit) => (
+                            <SelectItem key={unit} value={unit}>
+                              {unit}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="stockQuantity">Stock Quantity</Label>
+                      <Input
+                        id="stockQuantity"
+                        value={formData.stockQuantity}
+                        onChange={(e) => setFormData({...formData, stockQuantity: e.target.value})}
+                        placeholder="e.g., 50"
+                        type="number"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="slabLength">Slab Length</Label>
+                      <Input
+                        id="slabLength"
+                        value={formData.slabLength}
+                        onChange={(e) => setFormData({...formData, slabLength: e.target.value})}
+                        placeholder="e.g., 120"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="slabWidth">Slab Width</Label>
+                      <Input
+                        id="slabWidth"
+                        value={formData.slabWidth}
+                        onChange={(e) => setFormData({...formData, slabWidth: e.target.value})}
+                        placeholder="e.g., 60"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="thickness">Thickness</Label>
+                    <Label htmlFor="location">Location</Label>
                     <Input
-                      id="thickness"
-                      value={formData.thickness}
-                      onChange={(e) => setFormData({ ...formData, thickness: e.target.value })}
-                      placeholder="e.g. 3cm, 2cm"
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      placeholder="e.g., Warehouse A, Section 3"
                     />
                   </div>
+
                   <div>
-                    <Label htmlFor="finish">Finish *</Label>
-                    <Select value={formData.finish} onValueChange={(value) => setFormData({ ...formData, finish: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select finish" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {FINISH_OPTIONS.map((finish) => (
-                          <SelectItem key={finish} value={finish}>
-                            {finish}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="price">Price per {formData.unit} *</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="unit">Unit</Label>
-                    <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {UNITS.map((unit) => (
-                          <SelectItem key={unit} value={unit}>
-                            {unit}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="stockQuantity">Slab Count *</Label>
-                    <Input
-                      id="stockQuantity"
-                      type="number"
-                      value={formData.stockQuantity}
-                      onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="slabLength">Slab Length (inches)</Label>
-                    <Input
-                      id="slabLength"
-                      type="number"
-                      step="0.25"
-                      value={formData.slabLength}
-                      onChange={(e) => setFormData({ ...formData, slabLength: e.target.value })}
-                      placeholder="120"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="slabWidth">Slab Width (inches)</Label>
-                    <Input
-                      id="slabWidth"
-                      type="number"
-                      step="0.25"
-                      value={formData.slabWidth}
-                      onChange={(e) => setFormData({ ...formData, slabWidth: e.target.value })}
-                      placeholder="66"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="image">Product Image</Label>
+                    <Label htmlFor="imageUrl">Image</Label>
                     <ImageUpload
                       value={formData.imageUrl}
-                      onChange={(value) => setFormData({ ...formData, imageUrl: value })}
-                      className="mt-2"
+                      onChange={(url) => setFormData({...formData, imageUrl: url})}
+                      className="w-full"
                     />
-
                   </div>
-                </div>
 
-                {/* Visualization Tools Section */}
-                {formData.imageUrl && (
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold flex items-center gap-2">
-                      <Palette className="h-4 w-4" />
-                      Visualization Tools
-                    </Label>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm text-gray-600 mb-3">
-                        Generate realistic countertop visualizations using this slab
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(`/api/products/${editingProduct?.id}/generate-python-render`, {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                              },
-                            });
-                            
-                            if (response.ok) {
-                              toast({
-                                title: "Render Started",
-                                description: "Generating kitchen countertop with your slab texture. Check gallery in a few moments.",
-                              });
-                            } else {
-                              const error = await response.json();
-                              toast({
-                                title: "Render Failed",
-                                description: error.error || "Failed to generate kitchen render",
-                                variant: "destructive",
-                              });
-                            }
-                          } catch (error) {
-                            toast({
-                              title: "Render Failed",
-                              description: "Failed to generate kitchen render",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                      >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Generate Kitchen Render
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Gallery Images Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Gallery Images</Label>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={handleCloseModal}>
+                      Cancel
+                    </Button>
                     <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setGalleryImages([...galleryImages, { 
-                        url: '', 
-                        title: '', 
-                        description: '', 
-                        installationType: 'kitchen', 
-                        isAiGenerated: false 
-                      }])}
+                      onClick={handleSubmit}
+                      disabled={createMutation.isPending || updateMutation.isPending}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Gallery Image
+                      {editingProduct ? "Update" : "Create"} Bundle
                     </Button>
                   </div>
-                  
-                  {galleryImages.map((image, index) => (
-                    <div key={index} className="border rounded-lg p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Gallery Image {index + 1}</h4>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const imageToDelete = galleryImages[index];
-                            // If image has an ID, track it for deletion from database
-                            if (imageToDelete.id) {
-                              setDeletedImageIds([...deletedImageIds, imageToDelete.id]);
-                            }
-                            // Remove from local state
-                            setGalleryImages(galleryImages.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      {image.url && !image.url.startsWith('data:') ? (
-                        <div>
-                          <Label>Current Image</Label>
-                          <div className="relative">
-                            <img 
-                              src={image.url} 
-                              alt={image.title || `Gallery Image ${index + 1}`}
-                              className="w-full h-32 object-cover rounded-md mt-2 border"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  // Create DOM elements safely to prevent XSS
-                                  const container = document.createElement('div');
-                                  container.className = 'w-full h-32 bg-gray-100 border border-gray-300 rounded-md mt-2 flex items-center justify-center';
-                                  
-                                  const innerDiv = document.createElement('div');
-                                  innerDiv.className = 'text-center text-gray-500';
-                                  
-                                  const p1 = document.createElement('p');
-                                  p1.className = 'text-sm';
-                                  p1.textContent = 'Image no longer available';
-                                  
-                                  const p2 = document.createElement('p');
-                                  p2.className = 'text-xs';
-                                  p2.textContent = image.title || 'Gallery image';
-                                  
-                                  innerDiv.appendChild(p1);
-                                  innerDiv.appendChild(p2);
-                                  container.appendChild(innerDiv);
-                                  
-                                  parent.innerHTML = '';
-                                  parent.appendChild(container);
-                                }
-                              }}
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="mt-2"
-                            onClick={() => {
-                              const newImages = [...galleryImages];
-                              newImages[index].url = '';
-                              setGalleryImages(newImages);
-                            }}
-                          >
-                            Replace Image
-                          </Button>
-                        </div>
-                      ) : (
-                        <div>
-                          <Label>Upload Image</Label>
-                          <ImageUpload
-                            value={image.url}
-                            onChange={(value) => {
-                              const newImages = [...galleryImages];
-                              newImages[index].url = value;
-                              setGalleryImages(newImages);
-                            }}
-                            className="mt-2"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {galleryImages.length === 0 && (
-                    <div 
-                      className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
-                      onClick={() => setGalleryImages([...galleryImages, { 
-                        url: '', 
-                        title: '', 
-                        description: '', 
-                        installationType: 'kitchen', 
-                        isAiGenerated: false 
-                      }])}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const files = Array.from(e.dataTransfer.files);
-                        files.forEach((file) => {
-                          if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                              const result = e.target?.result as string;
-                              setGalleryImages(prev => [...prev, {
-                                url: result,
-                                title: `Gallery Image ${prev.length + 1}`,
-                                description: '',
-                                installationType: 'kitchen',
-                                isAiGenerated: false
-                              }]);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        });
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
-                      }}
-                      onDragLeave={(e) => {
-                        e.preventDefault();
-                        e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
-                      }}
-                    >
-                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                      <p className="text-gray-500">No gallery images added yet</p>
-                      <p className="text-sm text-gray-400">Click here or drag & drop images to showcase this stone in real installations</p>
-                    </div>
-                  )}
                 </div>
-
-                {/* Tags Management Section */}
-                {editingProduct && (
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
-                      Product Tags (Internal Use)
-                    </Label>
-                    
-                    {/* Current Tags Display */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {productTags.map((productTag) => (
-                          <Badge 
-                            key={productTag.id} 
-                            variant="secondary" 
-                            className="flex items-center gap-1"
-                          >
-                            {productTag.tag.name}
-                            <X 
-                              className="h-3 w-3 cursor-pointer hover:text-red-500" 
-                              onClick={() => removeTagFromProduct(productTag.tag.id)}
-                            />
-                          </Badge>
-                        ))}
-                        {productTags.length === 0 && (
-                          <p className="text-sm text-gray-500">No tags assigned</p>
-                        )}
-                      </div>
-                      
-                      {/* Add Existing Tag */}
-                      <div className="space-y-2">
-                        <Label className="text-sm">Add Existing Tag</Label>
-                        <div className="flex gap-2">
-                          <Select value={selectedTagId} onValueChange={setSelectedTagId}>
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Select a tag to add" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableTags
-                                .filter((tag: any) => !productTags.some(pt => pt.tag.id === tag.id))
-                                .map((tag: any) => (
-                                  <div key={tag.id} className="relative">
-                                    <SelectItem value={tag.id.toString()} className="pr-16">
-                                      <div className="flex-1">
-                                        <span className="text-sm">{tag.name}</span>
-                                        {tag.description && (
-                                          <span className="text-xs text-gray-500 ml-2">
-                                            - {tag.description}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </SelectItem>
-                                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1 z-10">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0 hover:bg-blue-100"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          e.preventDefault();
-                                          openTagEditDialog(tag);
-                                        }}
-                                      >
-                                        <Edit2 className="h-3 w-3 text-blue-600" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0 hover:bg-red-100"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          e.preventDefault();
-                                          deleteTag(tag.id);
-                                        }}
-                                      >
-                                        <Trash2 className="h-3 w-3 text-red-600" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <Button 
-                            type="button"
-                            size="sm"
-                            onClick={() => selectedTagId && addTagToProduct(parseInt(selectedTagId))}
-                            disabled={!selectedTagId}
-                          >
-                            Add
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {/* Create New Tag */}
-                      <div className="space-y-2 mt-3">
-                        <Label className="text-sm">Create New Tag</Label>
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="Enter new tag name"
-                              value={newTagName}
-                              onChange={(e) => setNewTagName(e.target.value)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter' && newTagName.trim()) {
-                                  e.preventDefault();
-                                  createNewTag();
-                                }
-                              }}
-                              className="flex-1"
-                            />
-                            <Select value={newTagCategory} onValueChange={setNewTagCategory}>
-                              <SelectTrigger className="w-32">
-                                <SelectValue placeholder="Category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="color">Color</SelectItem>
-                                <SelectItem value="pattern">Pattern</SelectItem>
-                                <SelectItem value="texture">Texture</SelectItem>
-                                <SelectItem value="finish">Finish</SelectItem>
-                                <SelectItem value="style">Style</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={createNewTag}
-                              disabled={!newTagName.trim()}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Use 3-5 tags total: one color-focused tag and 2-4 visual/texture details
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div>
-                  <Label htmlFor="location">Storage Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="e.g. Warehouse A, Section 3"
-                  />
-                </div>
-
-                {/* Marketing/SEO Section */}
-                <div className="border-t pt-6 mt-6">
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold">Marketing</h3>
-                  </div>
-                  
-                  <Dialog open={isMarketingDialogOpen} onOpenChange={setIsMarketingDialogOpen}>
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>SEO</DialogTitle>
-                          <DialogDescription>
-                            Search engine optimization (SEO) allows you to improve your ranking in search results.
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <div className="space-y-6">
-                          <div>
-                            <Label htmlFor="seoUrl" className="text-sm font-medium text-gray-700">URL</Label>
-                            <div className="flex items-center mt-1">
-                              <span className="text-sm text-gray-500">/shop/p/</span>
-                              <Input
-                                id="seoUrl"
-                                value={formData.seoUrl}
-                                onChange={(e) => setFormData({ ...formData, seoUrl: e.target.value })}
-                                placeholder={formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}
-                                className="border-0 border-b rounded-none px-2 focus-visible:ring-0 focus-visible:border-blue-500"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label htmlFor="seoTitle" className="text-sm font-medium text-gray-700">SEO TITLE</Label>
-                            <div className="relative mt-1">
-                              <Input
-                                id="seoTitle"
-                                value={formData.seoTitle}
-                                onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-                                placeholder="Enter a title..."
-                                maxLength={100}
-                                className="pr-12"
-                              />
-                              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
-                                {formData.seoTitle.length}/100
-                              </span>
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label htmlFor="seoDescription" className="text-sm font-medium text-gray-700">SEO DESCRIPTION</Label>
-                            <div className="relative mt-1">
-                              <textarea
-                                id="seoDescription"
-                                value={formData.seoDescription}
-                                onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
-                                placeholder="Enter a description..."
-                                maxLength={400}
-                                rows={4}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none pr-12"
-                              />
-                              <span className="absolute right-3 bottom-3 text-sm text-gray-400">
-                                {formData.seoDescription.length}/400
-                              </span>
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label htmlFor="metaKeywords" className="text-sm font-medium text-gray-700">META KEYWORDS</Label>
-                            <Input
-                              id="metaKeywords"
-                              value={formData.metaKeywords}
-                              onChange={(e) => setFormData({ ...formData, metaKeywords: e.target.value })}
-                              placeholder="granite, countertop, kitchen, natural stone"
-                              className="mt-1"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Separate keywords with commas</p>
-                          </div>
-
-
-                        </div>
-
-                        <div className="flex justify-end space-x-2 pt-4">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            onClick={() => setIsMarketingDialogOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            type="button" 
-                            onClick={() => setIsMarketingDialogOpen(false)}
-                          >
-                            Apply
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  
-                  {/* Marketing Preview Section */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900">SEO and URL</h4>
-                      <div className="border-b-2 border-black w-20 mt-1"></div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="text-blue-600 font-medium">
-                        {formData.seoTitle || formData.name || "Bundle Name — Counter Fixtures"}
-                      </div>
-                      <div className="text-green-600 text-sm">
-                        https://www.counterfixtures.com/shop/p/{formData.seoUrl || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || "bundle-name"}
-                      </div>
-                      <div className="text-gray-600 text-sm">
-                        {formData.seoDescription || "This description will automatically be generated by search engines. Click edit above to provide an alternative description."}
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center mt-4 pt-3 border-t">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setIsMarketingDialogOpen(true)}
-                      >
-                        EDIT
-                      </Button>
-                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                        Recommended
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleCloseModal}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1"
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                  >
-                    {editingProduct ? "Update Bundle" : "Create Bundle"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading bundles...</div>
-          ) : !filteredAndSortedProducts || filteredAndSortedProducts.length === 0 ? (
-            <div className="text-center py-8">
-              <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No bundles found</h3>
-              <p className="text-gray-500">
-                {searchQuery || categoryFilter !== "all" 
-                  ? "Try adjusting your search or filter criteria." 
-                  : "Get started by adding your first bundle."}
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Bundle ID</TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50 select-none"
-                    onClick={() => handleSort("name")}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Bundle Name</span>
-                      {getSortIcon("name")}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Bundle ID</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Supplier</TableHead>
+                <TableHead>Grade</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <Badge variant="outline">{product.bundleId}</Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.category}</TableCell>
+                  <TableCell>{product.supplier}</TableCell>
+                  <TableCell>{product.grade}</TableCell>
+                  <TableCell>
+                    <Badge variant={product.stockQuantity > 10 ? "default" : "destructive"}>
+                      {product.stockQuantity}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>${product.price}/{product.unit}</TableCell>
+                  <TableCell>{product.location || "-"}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setEditingProduct(product);
+                          setFormData({
+                            bundleId: product.bundleId || "",
+                            name: product.name,
+                            description: product.description || "",
+                            supplier: product.supplier,
+                            category: product.category,
+                            grade: product.grade,
+                            thickness: product.thickness,
+                            finish: product.finish,
+                            price: product.price,
+                            unit: product.unit,
+                            stockQuantity: product.stockQuantity.toString(),
+                            slabLength: product.slabLength || "",
+                            slabWidth: product.slabWidth || "",
+                            location: product.location || "",
+                            imageUrl: product.imageUrl || "",
+                            seoTitle: "",
+                            seoDescription: "",
+                            seoUrl: "",
+                            metaKeywords: "",
+                            socialTitle: "",
+                            socialDescription: "",
+                            socialImage: ""
+                          });
+                          setIsOpen(true);
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLocation(`/slab-management/${product.id}`)}
+                      >
+                        <Settings size={16} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this bundle?")) {
+                            deleteMutation.mutate(product.id);
+                          }
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
                     </div>
-                  </TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50 select-none"
-                    onClick={() => handleSort("finish")}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Finish</span>
-                      {getSortIcon("finish")}
-                    </div>
-                  </TableHead>
-                  <TableHead>Thickness</TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50 select-none"
-                    onClick={() => handleSort("price")}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Price/Unit</span>
-                      {getSortIcon("price")}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50 select-none"
-                    onClick={() => handleSort("stockQuantity")}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Slab Count</span>
-                      {getSortIcon("stockQuantity")}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50 select-none"
-                    onClick={() => handleSort("location")}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Location</span>
-                      {getSortIcon("location")}
-                    </div>
-                  </TableHead>
-                  <TableHead>Actions</TableHead>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSortedProducts.map((product: Product) => {
-                  const getProductImage = (category: string) => {
-                    const images = {
-                      marble: "https://images.unsplash.com/photo-1541123437800-1bb1317badc2?w=60&h=60&fit=crop",
-                      granite: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=60&h=60&fit=crop",
-                      travertine: "https://images.unsplash.com/photo-1615971677499-5467cbab01dc?w=60&h=60&fit=crop",
-                      quartz: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=60&h=60&fit=crop",
-                    };
-                    return images[category as keyof typeof images] || images.marble;
-                  };
-
-                  return (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <img 
-                          src={product.imageUrl || getProductImage(product.category.toLowerCase())}
-                          alt={product.name}
-                          className="w-12 h-12 rounded-lg object-cover border cursor-pointer hover:scale-105 transition-transform duration-200 hover:shadow-lg"
-                          onClick={() => handleEdit(product)}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = getProductImage(product.category.toLowerCase());
-                          }}
-                          title={`Click to edit ${product.name}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {product.bundleId || `B${product.id.toString().padStart(4, '0')}`}
-                      </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.supplier}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{product.category}</Badge>
-                      </TableCell>
-                      <TableCell>{product.grade}</TableCell>
-                      <TableCell>{product.finish}</TableCell>
-                      <TableCell>{product.thickness}</TableCell>
-                      <TableCell>${product.price}/{product.unit}</TableCell>
-                      <TableCell>
-                        <span className={product.stockQuantity <= 5 ? "text-red-600 font-medium" : ""}>
-                          {product.stockQuantity}
-                        </span>
-                      </TableCell>
-                      <TableCell>{product.location || "Not specified"}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setLocation(`/slab-management/${product.id}`)}
-                            title="Manage individual slabs"
-                          >
-                            <Settings size={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(product)}
-                            title="Edit bundle"
-                          >
-                            <Pencil size={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => duplicateMutation.mutate(product)}
-                            disabled={duplicateMutation.isPending}
-                            title="Duplicate bundle"
-                          >
-                            <Copy size={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteMutation.mutate(product.id)}
-                            disabled={deleteMutation.isPending}
-                            title="Delete bundle"
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
-
-      {/* Tag Edit Dialog */}
-      <Dialog open={isTagEditDialogOpen} onOpenChange={setIsTagEditDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Tag</DialogTitle>
-            <DialogDescription>
-              Update the tag name, description, and category.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="tag-name">Tag Name</Label>
-              <Input
-                id="tag-name"
-                value={tagEditForm.name}
-                onChange={(e) => setTagEditForm({ ...tagEditForm, name: e.target.value })}
-                placeholder="Enter tag name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="tag-description">Description (Optional)</Label>
-              <Input
-                id="tag-description"
-                value={tagEditForm.description}
-                onChange={(e) => setTagEditForm({ ...tagEditForm, description: e.target.value })}
-                placeholder="Enter tag description"
-              />
-            </div>
-            <div>
-              <Label htmlFor="tag-category">Category</Label>
-              <Select value={tagEditForm.category} onValueChange={(value) => setTagEditForm({ ...tagEditForm, category: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="color">Color</SelectItem>
-                  <SelectItem value="pattern">Pattern</SelectItem>
-                  <SelectItem value="texture">Texture</SelectItem>
-                  <SelectItem value="finish">Finish</SelectItem>
-                  <SelectItem value="style">Style</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsTagEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={updateTag}
-                disabled={!tagEditForm.name.trim()}
-              >
-                Update Tag
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
