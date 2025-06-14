@@ -2593,6 +2593,48 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Product image upload route
+  const productImageUpload = multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        const uploadDir = 'upload/product-images';
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`);
+      }
+    }),
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only JPEG, PNG, and WebP images are allowed'));
+      }
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+  });
+
+  app.post("/api/products/upload-image", requireAuth, requireInventoryAccess(), uploadLimiter, productImageUpload.single('productImage'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+
+      const imageUrl = `/upload/product-images/${req.file.filename}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error("Product image upload error:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+
   // Sales Rep Profile routes
   app.get("/api/sales-rep-profile", requireAuth, async (req, res) => {
     try {

@@ -6,9 +6,17 @@ interface ImageUploadProps {
   value?: string;
   onChange: (value: string) => void;
   className?: string;
+  uploadEndpoint?: string;
+  uploadFieldName?: string;
 }
 
-export function ImageUpload({ value, onChange, className = "" }: ImageUploadProps) {
+export function ImageUpload({ 
+  value, 
+  onChange, 
+  className = "", 
+  uploadEndpoint = "/api/sales-rep-portfolio/upload-image",
+  uploadFieldName = "portfolioImage"
+}: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +48,7 @@ export function ImageUpload({ value, onChange, className = "" }: ImageUploadProp
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file');
       return;
@@ -53,14 +61,28 @@ export function ImageUpload({ value, onChange, className = "" }: ImageUploadProp
 
     setIsUploading(true);
     
-    // Convert to base64 for preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      onChange(base64);
+    try {
+      // Upload file to server
+      const formData = new FormData();
+      formData.append(uploadFieldName, file);
+
+      const response = await fetch(uploadEndpoint, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      onChange(result.imageUrl);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
       setIsUploading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleRemove = () => {

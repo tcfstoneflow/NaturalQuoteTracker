@@ -546,6 +546,8 @@ export default function Inventory() {
                       value={formData.imageUrl}
                       onChange={(url) => setFormData({...formData, imageUrl: url})}
                       className="w-full"
+                      uploadEndpoint="/api/products/upload-image"
+                      uploadFieldName="productImage"
                     />
                   </div>
 
