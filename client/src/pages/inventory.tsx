@@ -58,7 +58,7 @@ export default function Inventory() {
   const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isBulkOpen, setIsBulkOpen] = useState(false);
-  const [isMultiCreateOpen, setIsMultiCreateOpen] = useState(false);
+
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -123,23 +123,7 @@ export default function Inventory() {
     category: ""
   });
   
-  // Multi-bundle creation state
-  const [multiBundles, setMultiBundles] = useState([
-    {
-      bundleId: "",
-      slabNumber: "",
-      status: "available",
-      length: "",
-      width: "",
-      thickness: "",
-      location: "",
-      notes: "",
-      grade: "",
-      finish: "",
-      price: "",
-      weight: ""
-    }
-  ]);
+
 
   // Fetch available tags for the tags dropdown
   const { data: availableTags = [] } = useQuery({
@@ -970,14 +954,6 @@ export default function Inventory() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Stone Slab Bundles</CardTitle>
           <div className="flex gap-2">
-            <Dialog open={isMultiCreateOpen} onOpenChange={setIsMultiCreateOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus size={16} className="mr-2" />
-                  Add Multiple
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create Multiple Stone Slab Bundles</DialogTitle>
                   <DialogDescription>
