@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Search, Bell, Plus, LogOut, User, Settings, Check, X } from "lucide-react";
+import { Search, Bell, Plus, LogOut, User, Settings, Check, X, Package } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { 

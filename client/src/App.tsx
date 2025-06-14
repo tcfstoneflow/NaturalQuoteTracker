@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
+import { NotificationProvider } from "@/hooks/useNotifications";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
@@ -116,8 +117,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <NotificationProvider>
+          <Toaster />
+          <Router />
+        </NotificationProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -2282,7 +2282,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slabPromises.push(storage.createSlab(slabData));
       }
 
-      await Promise.all(slabPromises);
+      const createdSlabs = await Promise.all(slabPromises);
+      
+      // Broadcast notification to all connected users about the bulk slab creation
+      const notification = {
+        type: 'bulk_slabs_added',
+        title: 'Bulk Slabs Added',
+        message: `${product.stockQuantity} slabs automatically created for ${product.name}`,
+        data: {
+          product,
+          slabCount: product.stockQuantity,
+          bundleId: product.bundleId,
+          timestamp: new Date().toISOString(),
+          createdSlabs: createdSlabs.map(slab => ({
+            id: slab.id,
+            slabNumber: slab.slabNumber,
+            barcode: slab.barcode
+          }))
+        }
+      };
+      
+      if ((req.app as any).broadcastNotification) {
+        (req.app as any).broadcastNotification(notification);
+      }
       
       // Log activity
       await storage.createActivity({
