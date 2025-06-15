@@ -492,10 +492,10 @@ export default function AllSlabs() {
         </div>
       )}
 
-      {/* Stone Slab Bundles Section */}
+      {/* Materials Section */}
       <Card className="mt-8">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Stone Slab Bundles</CardTitle>
+          <CardTitle>Materials</CardTitle>
           <div className="flex gap-2">
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
@@ -718,8 +718,8 @@ export default function AllSlabs() {
                 <TableHead>Category</TableHead>
                 <TableHead>Supplier</TableHead>
                 <TableHead>Grade</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Price</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Area</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -735,11 +735,16 @@ export default function AllSlabs() {
                   <TableCell>{product.supplier}</TableCell>
                   <TableCell>{product.grade}</TableCell>
                   <TableCell>
-                    <Badge variant={product.stockQuantity > 10 ? "default" : "destructive"}>
-                      {product.stockQuantity}
+                    <Badge variant="default">
+                      Available
                     </Badge>
                   </TableCell>
-                  <TableCell>${product.price}/{product.unit}</TableCell>
+                  <TableCell>
+                    {product.slabLength && product.slabWidth 
+                      ? `${((parseInt(product.slabLength) * parseInt(product.slabWidth)) / 144).toFixed(1)} sq ft`
+                      : `${product.stockQuantity} ${product.unit}`
+                    }
+                  </TableCell>
                   <TableCell>{product.location || "-"}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
