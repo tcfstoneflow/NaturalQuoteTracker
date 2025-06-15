@@ -995,6 +995,21 @@ export const workflowStepInstances = pgTable("workflow_step_instances", {
   rejectionReason: text("rejection_reason"),
 });
 
+export const pipeline = pgTable("pipeline", {
+  id: serial("id").primaryKey(),
+  cartId: integer("cart_id").references(() => carts.id).notNull(),
+  cartName: text("cart_name").notNull(),
+  clientId: integer("client_id").references(() => clients.id).notNull(),
+  stage: text("stage").default("quote").notNull(), // quote, approved, production, delivery, completed
+  priority: text("priority").default("medium").notNull(), // low, medium, high, urgent
+  estimatedCompletionDate: timestamp("estimated_completion_date"),
+  actualCompletionDate: timestamp("actual_completion_date"),
+  notes: text("notes"),
+  assignedUserId: integer("assigned_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const workflowTemplates = pgTable("workflow_templates", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -1183,3 +1198,7 @@ export type WorkflowInstanceWithDetails = WorkflowInstance & {
   quote?: Quote;
   product?: Product;
 };
+
+export type Pipeline = typeof pipeline.$inferSelect;
+export type InsertPipeline = z.infer<typeof insertPipelineSchema>;
+export const insertPipelineSchema = createInsertSchema(pipeline);

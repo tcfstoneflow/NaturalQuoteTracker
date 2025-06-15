@@ -2028,7 +2028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the quote
       const quote = await storage.createQuote(validatedQuote, validatedLineItems);
       
-      // Generate cart name with admin ID + date + daily count format
+      // Generate cart name with admin ID + date + daily count format (without QT prefix)
       const today = new Date();
       const dateStr = String(today.getDate()).padStart(2, '0') + 
                      String(today.getMonth() + 1).padStart(2, '0') + 
