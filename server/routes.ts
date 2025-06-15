@@ -2028,11 +2028,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the quote
       const quote = await storage.createQuote(validatedQuote, validatedLineItems);
       
+      // Generate cart name with admin ID + date + daily count format
+      const today = new Date();
+      const dateStr = String(today.getDate()).padStart(2, '0') + 
+                     String(today.getMonth() + 1).padStart(2, '0') + 
+                     String(today.getFullYear()).slice(-2);
+      
+      // Get count of quotes created today by this user
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+      
+      const todayQuotesCount = await storage.getQuoteCountByUserAndDate(userId, startOfDay, endOfDay);
+      const cartName = `${userId}${dateStr}-${todayQuotesCount}`;
+      
       // Create cart for the quote (assign cart ID)
       const cartData = {
         clientId: quote.clientId,
         userId: userId,
-        name: `Quote Cart - ${quote.quoteNumber}`,
+        name: cartName,
         type: 'quote',
         status: 'active',
         notes: `Cart created for quote ${quote.quoteNumber}`,

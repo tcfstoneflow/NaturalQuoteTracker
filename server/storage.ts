@@ -129,6 +129,7 @@ export interface IStorage {
   addQuoteLineItem(lineItem: InsertQuoteLineItem): Promise<QuoteLineItem>;
   updateQuoteLineItem(id: number, lineItem: Partial<InsertQuoteLineItem>): Promise<QuoteLineItem>;
   deleteQuoteLineItem(id: number): Promise<boolean>;
+  getQuoteCountByUserAndDate(userId: number, startDate: Date, endDate: Date): Promise<number>;
 
   // Activities
   getRecentActivities(limit?: number): Promise<Activity[]>;
@@ -1205,6 +1206,22 @@ export class DatabaseStorage implements IStorage {
     return withRetry(async () => {
       const [newActivity] = await db.insert(activities).values(data).returning();
       return newActivity;
+    });
+  }
+
+  async getQuoteCountByUserAndDate(userId: number, startDate: Date, endDate: Date): Promise<number> {
+    return withRetry(async () => {
+      const [result] = await db
+        .select({ count: count() })
+        .from(quotes)
+        .where(
+          and(
+            eq(quotes.createdBy, userId),
+            sql`${quotes.createdAt} >= ${startDate}`,
+            sql`${quotes.createdAt} < ${endDate}`
+          )
+        );
+      return result.count + 1; // Return next number for the new quote
     });
   }
 
