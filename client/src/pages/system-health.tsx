@@ -16,7 +16,11 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
-  Upload
+  Upload,
+  GitBranch,
+  Play,
+  Pause,
+  Square
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -197,7 +201,7 @@ export default function SystemHealth() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="specs">System Specs</TabsTrigger>
+          <TabsTrigger value="workflows">Workflows</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">

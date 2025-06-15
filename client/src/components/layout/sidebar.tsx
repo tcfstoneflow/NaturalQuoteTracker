@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
+  { name: "Clients", href: "/clients", icon: Users },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
@@ -37,7 +38,6 @@ const navigation = [
 ];
 
 const featureFolderNavigation = [
-  { name: "Clients", href: "/clients", icon: Users },
   { name: "Cart", href: "/cart", icon: ShoppingCart },
   { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
   { name: "Sales Leader", href: "/sales-leader", icon: Users, roles: ['sales_leader'] },
@@ -47,7 +47,6 @@ const adminNavigation = [
   { name: "System Access", href: "/user-management", icon: UserCog },
   { name: "System Health", href: "/system-health", icon: Activity },
   { name: "Feature Folder", href: "/feature-folder", icon: Folder },
-  { name: "Workflows", href: "/workflows", icon: GitBranch },
 ];
 
 const salesRepNavigation = [
@@ -74,14 +73,14 @@ export default function Sidebar() {
         ['/', '/inventory', '/all-slabs', '/reports'].includes(item.href)
       );
     } else if (isSalesRep) {
-      // Sales reps can see dashboard, quotes, showroom visits, and reports
+      // Sales reps can see dashboard, clients, quotes, showroom visits, and reports
       return navigation.filter(item => 
-        ['/', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
+        ['/', '/clients', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
       );
     } else if (isSalesLeader) {
-      // Sales leaders can see dashboard, quotes, showroom visits, AR, reports, and pipeline
+      // Sales leaders can see dashboard, clients, quotes, showroom visits, AR, reports, and pipeline
       return navigation.filter(item => 
-        ['/', '/quotes', '/showroom-visits', '/purchase-orders', '/reports', '/pipeline'].includes(item.href)
+        ['/', '/clients', '/quotes', '/showroom-visits', '/purchase-orders', '/reports', '/pipeline'].includes(item.href)
       );
     }
     return navigation;
@@ -128,34 +127,7 @@ export default function Sidebar() {
             );
           })}
           
-          {/* Feature Folder Section */}
-          <li className="pt-4">
-            <div className="px-4 py-2">
-              <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">
-                Feature Folder
-              </p>
-            </div>
-          </li>
-          {featureFolderNavigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href;
-            
-            return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    isActive
-                      ? "text-primary bg-blue-50"
-                      : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span>{item.name}</span>
-                </Link>
-              </li>
-            );
-          })}
+
           
           {/* Admin navigation */}
           {isAdmin && (
