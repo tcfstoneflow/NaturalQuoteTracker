@@ -2,8 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema, insertSalesRepProfileSchema, insertSalesRepFavoriteSlabSchema, insertSalesRepPortfolioImageSchema, insertSalesRepAppointmentSchema, insertWorkflowSchema, insertWorkflowStepSchema, insertWorkflowInstanceSchema, insertWorkflowStepInstanceSchema, insertWorkflowTemplateSchema, insertWorkflowCommentSchema, insertVendorSchema, vendors, users } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema, insertSalesRepProfileSchema, insertSalesRepFavoriteSlabSchema, insertSalesRepPortfolioImageSchema, insertSalesRepAppointmentSchema, insertWorkflowSchema, insertWorkflowStepSchema, insertWorkflowInstanceSchema, insertWorkflowStepInstanceSchema, insertWorkflowTemplateSchema, insertWorkflowCommentSchema } from "@shared/schema";
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";
@@ -5027,125 +5026,6 @@ Your body text starts here with proper spacing.`;
     } catch (error: any) {
       console.error('Get workflow templates error:', error);
       res.status(500).json({ error: 'Failed to fetch workflow templates' });
-    }
-  });
-
-  // Vendor management routes (Admin only)
-  app.get("/api/vendors", requireAuth, requireRole(['admin']), async (req, res) => {
-    try {
-      const result = await db.select({
-        id: vendors.id,
-        userId: vendors.userId,
-        companyName: vendors.companyName,
-        businessType: vendors.businessType,
-        taxId: vendors.taxId,
-        website: vendors.website,
-        description: vendors.description,
-        specialties: vendors.specialties,
-        certifications: vendors.certifications,
-        primaryContactName: vendors.primaryContactName,
-        primaryContactPhone: vendors.primaryContactPhone,
-        primaryContactEmail: vendors.primaryContactEmail,
-        address: vendors.address,
-        city: vendors.city,
-        state: vendors.state,
-        zipCode: vendors.zipCode,
-        country: vendors.country,
-        yearsInBusiness: vendors.yearsInBusiness,
-        numberOfEmployees: vendors.numberOfEmployees,
-        annualRevenue: vendors.annualRevenue,
-        verificationStatus: vendors.verificationStatus,
-        isActive: vendors.isActive,
-        paymentTerms: vendors.paymentTerms,
-        preferredPaymentMethod: vendors.preferredPaymentMethod,
-        overallRating: vendors.overallRating,
-        qualityRating: vendors.qualityRating,
-        deliveryRating: vendors.deliveryRating,
-        serviceRating: vendors.serviceRating,
-        totalOrders: vendors.totalOrders,
-        createdAt: vendors.createdAt,
-        updatedAt: vendors.updatedAt,
-        lastContactDate: vendors.lastContactDate,
-        user: {
-          id: users.id,
-          username: users.username,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          role: users.role,
-        }
-      })
-      .from(vendors)
-      .leftJoin(users, eq(vendors.userId, users.id))
-      .orderBy(desc(vendors.createdAt));
-
-      res.json(result);
-    } catch (error: any) {
-      console.error('Get vendors error:', error);
-      res.status(500).json({ error: 'Failed to fetch vendors' });
-    }
-  });
-
-  app.post("/api/vendors", requireAuth, requireRole(['admin']), async (req, res) => {
-    try {
-      const validatedData = insertVendorSchema.parse(req.body);
-      
-      const [vendor] = await db.insert(vendors)
-        .values({
-          ...validatedData,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-
-      res.status(201).json(vendor);
-    } catch (error: any) {
-      console.error('Create vendor error:', error);
-      res.status(500).json({ error: 'Failed to create vendor' });
-    }
-  });
-
-  app.patch("/api/vendors/:id", requireAuth, requireRole(['admin']), async (req, res) => {
-    try {
-      const vendorId = parseInt(req.params.id);
-      const updates = req.body;
-      
-      const [updatedVendor] = await db.update(vendors)
-        .set({
-          ...updates,
-          updatedAt: new Date(),
-        })
-        .where(eq(vendors.id, vendorId))
-        .returning();
-
-      if (!updatedVendor) {
-        return res.status(404).json({ error: 'Vendor not found' });
-      }
-
-      res.json(updatedVendor);
-    } catch (error: any) {
-      console.error('Update vendor error:', error);
-      res.status(500).json({ error: 'Failed to update vendor' });
-    }
-  });
-
-  app.get("/api/vendors/:id", requireAuth, requireRole(['admin']), async (req, res) => {
-    try {
-      const vendorId = parseInt(req.params.id);
-      
-      const [vendor] = await db.select()
-        .from(vendors)
-        .leftJoin(users, eq(vendors.userId, users.id))
-        .where(eq(vendors.id, vendorId));
-
-      if (!vendor) {
-        return res.status(404).json({ error: 'Vendor not found' });
-      }
-
-      res.json(vendor);
-    } catch (error: any) {
-      console.error('Get vendor error:', error);
-      res.status(500).json({ error: 'Failed to fetch vendor' });
     }
   });
 
