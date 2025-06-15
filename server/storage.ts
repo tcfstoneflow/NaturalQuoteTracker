@@ -1,6 +1,7 @@
 import { 
   users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags, salesTargets,
   salesRepProfiles, salesRepFavoriteSlabs, salesRepPortfolioImages, salesRepAppointments,
+  workflows, workflowSteps, workflowInstances, workflowStepInstances, workflowTemplates, workflowComments,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -19,7 +20,13 @@ import {
   type SalesRepFavoriteSlab, type InsertSalesRepFavoriteSlab,
   type SalesRepPortfolioImage, type InsertSalesRepPortfolioImage,
   type SalesRepAppointment, type InsertSalesRepAppointment,
-  type DashboardStats
+  type DashboardStats,
+  type Workflow, type InsertWorkflow, type WorkflowWithSteps,
+  type WorkflowStep, type InsertWorkflowStep,
+  type WorkflowInstance, type InsertWorkflowInstance, type WorkflowInstanceWithDetails,
+  type WorkflowStepInstance, type InsertWorkflowStepInstance,
+  type WorkflowTemplate, type InsertWorkflowTemplate,
+  type WorkflowComment, type InsertWorkflowComment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, gte, lte, count } from "drizzle-orm";
@@ -2018,6 +2025,412 @@ export class DatabaseStorage implements IStorage {
       .where(eq(salesRepAppointments.id, id))
       .returning();
     return appointment || undefined;
+  }
+
+  // Workflow management methods
+  async getWorkflows(): Promise<WorkflowWithSteps[]> {
+    return await withRetry(async () => {
+      const workflowsData = await db
+        .select()
+        .from(workflows)
+        .leftJoin(workflowSteps, eq(workflows.id, workflowSteps.workflowId))
+        .orderBy(desc(workflows.createdAt), asc(workflowSteps.stepOrder));
+
+      // Group workflows with their steps
+      const workflowMap = new Map<number, WorkflowWithSteps>();
+      
+      for (const row of workflowsData) {
+        const workflow = row.workflows;
+        const step = row.workflow_steps;
+        
+        if (!workflowMap.has(workflow.id)) {
+          workflowMap.set(workflow.id, {
+            ...workflow,
+            steps: []
+          });
+        }
+        
+        if (step) {
+          workflowMap.get(workflow.id)!.steps.push(step);
+        }
+      }
+      
+      return Array.from(workflowMap.values());
+    });
+  }
+
+  async getWorkflow(id: number): Promise<WorkflowWithSteps | undefined> {
+    const [workflow] = await db.select().from(workflows).where(eq(workflows.id, id));
+    if (!workflow) return undefined;
+
+    const steps = await db
+      .select()
+      .from(workflowSteps)
+      .where(eq(workflowSteps.workflowId, id))
+      .orderBy(asc(workflowSteps.stepOrder));
+
+    return {
+      ...workflow,
+      steps
+    };
+  }
+
+  async createWorkflow(workflowData: InsertWorkflow): Promise<Workflow> {
+    const [workflow] = await db
+      .insert(workflows)
+      .values(workflowData)
+      .returning();
+    return workflow;
+  }
+
+  async updateWorkflow(id: number, updates: Partial<InsertWorkflow>): Promise<Workflow> {
+    const [workflow] = await db
+      .update(workflows)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(workflows.id, id))
+      .returning();
+    return workflow;
+  }
+
+  async deleteWorkflow(id: number): Promise<boolean> {
+    // Delete associated steps first
+    await db.delete(workflowSteps).where(eq(workflowSteps.workflowId, id));
+    
+    const result = await db.delete(workflows).where(eq(workflows.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Workflow steps methods
+  async createWorkflowStep(stepData: InsertWorkflowStep): Promise<WorkflowStep> {
+    const [step] = await db
+      .insert(workflowSteps)
+      .values(stepData)
+      .returning();
+    return step;
+  }
+
+  async updateWorkflowStep(id: number, updates: Partial<InsertWorkflowStep>): Promise<WorkflowStep> {
+    const [step] = await db
+      .update(workflowSteps)
+      .set(updates)
+      .where(eq(workflowSteps.id, id))
+      .returning();
+    return step;
+  }
+
+  async deleteWorkflowStep(id: number): Promise<boolean> {
+    const result = await db.delete(workflowSteps).where(eq(workflowSteps.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Workflow instances methods
+  async getWorkflowInstances(): Promise<WorkflowInstanceWithDetails[]> {
+    return await withRetry(async () => {
+      const instancesData = await db
+        .select()
+        .from(workflowInstances)
+        .leftJoin(workflows, eq(workflowInstances.workflowId, workflows.id))
+        .leftJoin(users, eq(workflowInstances.assignedTo, users.id))
+        .leftJoin(clients, eq(workflowInstances.clientId, clients.id))
+        .leftJoin(quotes, eq(workflowInstances.quoteId, quotes.id))
+        .leftJoin(products, eq(workflowInstances.productId, products.id))
+        .orderBy(desc(workflowInstances.startedAt));
+
+      const instancesMap = new Map<number, any>();
+      
+      for (const row of instancesData) {
+        const instance = row.workflow_instances;
+        if (!instancesMap.has(instance.id)) {
+          instancesMap.set(instance.id, {
+            ...instance,
+            workflow: row.workflows,
+            assignedTo: row.users,
+            client: row.clients,
+            quote: row.quotes,
+            product: row.products,
+            stepInstances: []
+          });
+        }
+      }
+
+      // Get step instances for each workflow instance
+      for (const [instanceId, instanceData] of instancesMap) {
+        const stepInstances = await db
+          .select()
+          .from(workflowStepInstances)
+          .leftJoin(workflowSteps, eq(workflowStepInstances.stepId, workflowSteps.id))
+          .leftJoin(users, eq(workflowStepInstances.assignedTo, users.id))
+          .where(eq(workflowStepInstances.workflowInstanceId, instanceId))
+          .orderBy(asc(workflowSteps.stepOrder));
+
+        instanceData.stepInstances = stepInstances.map(row => ({
+          ...row.workflow_step_instances,
+          step: row.workflow_steps,
+          assignedTo: row.users
+        }));
+      }
+
+      return Array.from(instancesMap.values());
+    });
+  }
+
+  async getWorkflowInstance(id: number): Promise<WorkflowInstanceWithDetails | undefined> {
+    const [instance] = await db
+      .select()
+      .from(workflowInstances)
+      .leftJoin(workflows, eq(workflowInstances.workflowId, workflows.id))
+      .leftJoin(users, eq(workflowInstances.assignedTo, users.id))
+      .leftJoin(clients, eq(workflowInstances.clientId, clients.id))
+      .leftJoin(quotes, eq(workflowInstances.quoteId, quotes.id))
+      .leftJoin(products, eq(workflowInstances.productId, products.id))
+      .where(eq(workflowInstances.id, id));
+
+    if (!instance) return undefined;
+
+    // Get workflow steps
+    const workflowStepsData = await db
+      .select()
+      .from(workflowSteps)
+      .where(eq(workflowSteps.workflowId, instance.workflows.id))
+      .orderBy(asc(workflowSteps.stepOrder));
+
+    // Get step instances
+    const stepInstances = await db
+      .select()
+      .from(workflowStepInstances)
+      .leftJoin(workflowSteps, eq(workflowStepInstances.stepId, workflowSteps.id))
+      .leftJoin(users, eq(workflowStepInstances.assignedTo, users.id))
+      .where(eq(workflowStepInstances.workflowInstanceId, id))
+      .orderBy(asc(workflowSteps.stepOrder));
+
+    return {
+      ...instance.workflow_instances,
+      workflow: {
+        ...instance.workflows,
+        steps: workflowStepsData
+      },
+      assignedTo: instance.users,
+      client: instance.clients,
+      quote: instance.quotes,
+      product: instance.products,
+      stepInstances: stepInstances.map(row => ({
+        ...row.workflow_step_instances,
+        step: row.workflow_steps,
+        assignedTo: row.users
+      }))
+    };
+  }
+
+  async createWorkflowInstance(instanceData: InsertWorkflowInstance): Promise<WorkflowInstance> {
+    const [instance] = await db
+      .insert(workflowInstances)
+      .values(instanceData)
+      .returning();
+    
+    // Create step instances for all workflow steps
+    const workflowStepsData = await db
+      .select()
+      .from(workflowSteps)
+      .where(eq(workflowSteps.workflowId, instance.workflowId))
+      .orderBy(asc(workflowSteps.stepOrder));
+
+    for (const step of workflowStepsData) {
+      await db.insert(workflowStepInstances).values({
+        workflowInstanceId: instance.id,
+        stepId: step.id,
+        status: 'pending',
+        assignedTo: step.assigneeId
+      });
+    }
+
+    return instance;
+  }
+
+  async updateWorkflowInstance(id: number, updates: Partial<InsertWorkflowInstance>): Promise<WorkflowInstance> {
+    const [instance] = await db
+      .update(workflowInstances)
+      .set(updates)
+      .where(eq(workflowInstances.id, id))
+      .returning();
+    return instance;
+  }
+
+  async deleteWorkflowInstance(id: number): Promise<boolean> {
+    // Delete step instances first
+    await db.delete(workflowStepInstances).where(eq(workflowStepInstances.workflowInstanceId, id));
+    
+    const result = await db.delete(workflowInstances).where(eq(workflowInstances.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Workflow step instances methods
+  async updateWorkflowStepInstance(id: number, updates: Partial<InsertWorkflowStepInstance>): Promise<WorkflowStepInstance> {
+    const [stepInstance] = await db
+      .update(workflowStepInstances)
+      .set(updates)
+      .where(eq(workflowStepInstances.id, id))
+      .returning();
+    return stepInstance;
+  }
+
+  async completeWorkflowStep(stepInstanceId: number, output?: any, notes?: string): Promise<WorkflowStepInstance> {
+    const [stepInstance] = await db
+      .update(workflowStepInstances)
+      .set({
+        status: 'completed',
+        completedAt: new Date(),
+        output,
+        notes
+      })
+      .where(eq(workflowStepInstances.id, stepInstanceId))
+      .returning();
+    
+    // Check if all steps are completed to update workflow instance status
+    const allSteps = await db
+      .select()
+      .from(workflowStepInstances)
+      .where(eq(workflowStepInstances.workflowInstanceId, stepInstance.workflowInstanceId));
+    
+    const completedSteps = allSteps.filter(step => step.status === 'completed');
+    const progress = Math.round((completedSteps.length / allSteps.length) * 100);
+    
+    const instanceStatus = progress === 100 ? 'completed' : 'in_progress';
+    const completedAt = progress === 100 ? new Date() : null;
+    
+    await db
+      .update(workflowInstances)
+      .set({
+        status: instanceStatus,
+        progress,
+        completedAt
+      })
+      .where(eq(workflowInstances.id, stepInstance.workflowInstanceId));
+    
+    return stepInstance;
+  }
+
+  // Workflow templates methods
+  async getWorkflowTemplates(): Promise<WorkflowTemplate[]> {
+    return await db
+      .select()
+      .from(workflowTemplates)
+      .orderBy(desc(workflowTemplates.usageCount), desc(workflowTemplates.createdAt));
+  }
+
+  async getWorkflowTemplate(id: number): Promise<WorkflowTemplate | undefined> {
+    const [template] = await db.select().from(workflowTemplates).where(eq(workflowTemplates.id, id));
+    return template;
+  }
+
+  async createWorkflowTemplate(templateData: InsertWorkflowTemplate): Promise<WorkflowTemplate> {
+    const [template] = await db
+      .insert(workflowTemplates)
+      .values(templateData)
+      .returning();
+    return template;
+  }
+
+  async createWorkflowFromTemplate(templateId: number, instanceData: Partial<InsertWorkflowInstance>): Promise<WorkflowInstance> {
+    const template = await this.getWorkflowTemplate(templateId);
+    if (!template) {
+      throw new Error('Template not found');
+    }
+
+    // Create workflow from template
+    const workflowData = template.templateData as any;
+    const [workflow] = await db
+      .insert(workflows)
+      .values({
+        name: workflowData.name,
+        description: workflowData.description,
+        category: workflowData.category,
+        priority: workflowData.priority,
+        triggerType: 'manual',
+        status: 'active',
+        createdBy: instanceData.startedBy!,
+        estimatedDuration: workflowData.estimatedDuration
+      })
+      .returning();
+
+    // Create workflow steps
+    for (const stepData of workflowData.steps) {
+      await db.insert(workflowSteps).values({
+        workflowId: workflow.id,
+        stepOrder: stepData.stepOrder,
+        name: stepData.name,
+        description: stepData.description,
+        stepType: stepData.stepType,
+        requiredRole: stepData.requiredRole,
+        estimatedDuration: stepData.estimatedDuration,
+        isOptional: stepData.isOptional || false
+      });
+    }
+
+    // Create workflow instance
+    const instance = await this.createWorkflowInstance({
+      workflowId: workflow.id,
+      startedBy: instanceData.startedBy!,
+      instanceName: instanceData.instanceName,
+      assignedTo: instanceData.assignedTo,
+      clientId: instanceData.clientId,
+      quoteId: instanceData.quoteId,
+      productId: instanceData.productId,
+      dueDate: instanceData.dueDate,
+      priority: instanceData.priority || 'medium'
+    });
+
+    // Increment template usage count
+    await db
+      .update(workflowTemplates)
+      .set({ usageCount: template.usageCount + 1 })
+      .where(eq(workflowTemplates.id, templateId));
+
+    return instance;
+  }
+
+  // Workflow comments methods
+  async getWorkflowComments(workflowInstanceId: number): Promise<(WorkflowComment & { author: User })[]> {
+    const comments = await db
+      .select()
+      .from(workflowComments)
+      .leftJoin(users, eq(workflowComments.authorId, users.id))
+      .where(eq(workflowComments.workflowInstanceId, workflowInstanceId))
+      .orderBy(desc(workflowComments.createdAt));
+
+    return comments.map(row => ({
+      ...row.workflow_comments,
+      author: row.users!
+    }));
+  }
+
+  async createWorkflowComment(commentData: InsertWorkflowComment): Promise<WorkflowComment> {
+    const [comment] = await db
+      .insert(workflowComments)
+      .values(commentData)
+      .returning();
+    return comment;
+  }
+
+  async getUserWorkflowInstances(userId: number): Promise<WorkflowInstanceWithDetails[]> {
+    const instances = await db
+      .select()
+      .from(workflowInstances)
+      .leftJoin(workflows, eq(workflowInstances.workflowId, workflows.id))
+      .leftJoin(clients, eq(workflowInstances.clientId, clients.id))
+      .where(
+        or(
+          eq(workflowInstances.assignedTo, userId),
+          eq(workflowInstances.startedBy, userId)
+        )
+      )
+      .orderBy(desc(workflowInstances.startedAt));
+
+    return instances.map(row => ({
+      ...row.workflow_instances,
+      workflow: row.workflows,
+      client: row.clients,
+      stepInstances: []
+    })) as WorkflowInstanceWithDetails[];
   }
 }
 

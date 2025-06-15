@@ -836,3 +836,270 @@ export type DashboardStats = {
   lowStockCount: number;
   expiringQuotesCount: number;
 };
+
+// Workflow system tables
+export const workflows = pgTable("workflows", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  triggerType: text("trigger_type").notNull(), // "manual", "schedule", "event", "api"
+  triggerConditions: jsonb("trigger_conditions"), // conditions for automated triggers
+  status: text("status").default("active").notNull(), // "active", "inactive", "draft"
+  category: text("category").notNull(), // "sales", "inventory", "client_management", "operations"
+  priority: text("priority").default("medium").notNull(), // "low", "medium", "high", "urgent"
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  assignedToRole: text("assigned_to_role"), // auto-assign to specific role
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  lastModifiedBy: integer("last_modified_by").references(() => users.id),
+  isTemplate: boolean("is_template").default(false),
+  templateCategory: text("template_category"),
+  automationEnabled: boolean("automation_enabled").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const workflowSteps = pgTable("workflow_steps", {
+  id: serial("id").primaryKey(),
+  workflowId: integer("workflow_id").references(() => workflows.id).notNull(),
+  stepOrder: integer("step_order").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  stepType: text("step_type").notNull(), // "task", "decision", "automation", "notification", "approval"
+  requiredRole: text("required_role"), // role required to execute this step
+  assigneeId: integer("assignee_id").references(() => users.id),
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  dependencies: jsonb("dependencies"), // array of step IDs that must complete first
+  automationConfig: jsonb("automation_config"), // configuration for automated steps
+  approvalRequired: boolean("approval_required").default(false),
+  isOptional: boolean("is_optional").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const workflowInstances = pgTable("workflow_instances", {
+  id: serial("id").primaryKey(),
+  workflowId: integer("workflow_id").references(() => workflows.id).notNull(),
+  instanceName: text("instance_name"),
+  status: text("status").default("pending").notNull(), // "pending", "in_progress", "completed", "cancelled", "failed"
+  priority: text("priority").default("medium").notNull(),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  startedBy: integer("started_by").references(() => users.id).notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  dueDate: timestamp("due_date"),
+  progress: integer("progress").default(0), // percentage complete
+  contextData: jsonb("context_data"), // data specific to this instance
+  clientId: integer("client_id").references(() => clients.id),
+  quoteId: integer("quote_id").references(() => quotes.id),
+  productId: integer("product_id").references(() => products.id),
+  estimatedCompletionDate: timestamp("estimated_completion_date"),
+  actualDuration: integer("actual_duration"), // actual time taken in minutes
+  notes: text("notes"),
+  tags: text("tags").array(),
+});
+
+export const workflowStepInstances = pgTable("workflow_step_instances", {
+  id: serial("id").primaryKey(),
+  workflowInstanceId: integer("workflow_instance_id").references(() => workflowInstances.id).notNull(),
+  stepId: integer("step_id").references(() => workflowSteps.id).notNull(),
+  status: text("status").default("pending").notNull(), // "pending", "in_progress", "completed", "skipped", "failed"
+  assignedTo: integer("assigned_to").references(() => users.id),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  dueDate: timestamp("due_date"),
+  actualDuration: integer("actual_duration"), // in minutes
+  output: jsonb("output"), // results or data from this step
+  notes: text("notes"),
+  attachments: text("attachments").array(),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+});
+
+export const workflowTemplates = pgTable("workflow_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  industry: text("industry").default("stone_distribution"),
+  complexity: text("complexity").default("medium"), // "simple", "medium", "complex"
+  estimatedDuration: integer("estimated_duration"),
+  templateData: jsonb("template_data").notNull(), // complete workflow structure
+  usageCount: integer("usage_count").default(0),
+  rating: decimal("rating", { precision: 3, scale: 2 }),
+  tags: text("tags").array(),
+  isPublic: boolean("is_public").default(false),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const workflowComments = pgTable("workflow_comments", {
+  id: serial("id").primaryKey(),
+  workflowInstanceId: integer("workflow_instance_id").references(() => workflowInstances.id),
+  stepInstanceId: integer("step_instance_id").references(() => workflowStepInstances.id),
+  commentText: text("comment_text").notNull(),
+  commentType: text("comment_type").default("general"), // "general", "issue", "question", "resolution"
+  authorId: integer("author_id").references(() => users.id).notNull(),
+  isInternal: boolean("is_internal").default(true),
+  mentionedUsers: integer("mentioned_users").array(),
+  attachments: text("attachments").array(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Workflow relations
+export const workflowsRelations = relations(workflows, ({ many, one }) => ({
+  steps: many(workflowSteps),
+  instances: many(workflowInstances),
+  createdBy: one(users, {
+    fields: [workflows.createdBy],
+    references: [users.id],
+  }),
+  lastModifiedBy: one(users, {
+    fields: [workflows.lastModifiedBy],
+    references: [users.id],
+  }),
+}));
+
+export const workflowStepsRelations = relations(workflowSteps, ({ one, many }) => ({
+  workflow: one(workflows, {
+    fields: [workflowSteps.workflowId],
+    references: [workflows.id],
+  }),
+  assignee: one(users, {
+    fields: [workflowSteps.assigneeId],
+    references: [users.id],
+  }),
+  stepInstances: many(workflowStepInstances),
+}));
+
+export const workflowInstancesRelations = relations(workflowInstances, ({ one, many }) => ({
+  workflow: one(workflows, {
+    fields: [workflowInstances.workflowId],
+    references: [workflows.id],
+  }),
+  assignedTo: one(users, {
+    fields: [workflowInstances.assignedTo],
+    references: [users.id],
+  }),
+  startedBy: one(users, {
+    fields: [workflowInstances.startedBy],
+    references: [users.id],
+  }),
+  client: one(clients, {
+    fields: [workflowInstances.clientId],
+    references: [clients.id],
+  }),
+  quote: one(quotes, {
+    fields: [workflowInstances.quoteId],
+    references: [quotes.id],
+  }),
+  product: one(products, {
+    fields: [workflowInstances.productId],
+    references: [products.id],
+  }),
+  stepInstances: many(workflowStepInstances),
+  comments: many(workflowComments),
+}));
+
+export const workflowStepInstancesRelations = relations(workflowStepInstances, ({ one, many }) => ({
+  workflowInstance: one(workflowInstances, {
+    fields: [workflowStepInstances.workflowInstanceId],
+    references: [workflowInstances.id],
+  }),
+  step: one(workflowSteps, {
+    fields: [workflowStepInstances.stepId],
+    references: [workflowSteps.id],
+  }),
+  assignedTo: one(users, {
+    fields: [workflowStepInstances.assignedTo],
+    references: [users.id],
+  }),
+  approvedBy: one(users, {
+    fields: [workflowStepInstances.approvedBy],
+    references: [users.id],
+  }),
+  comments: many(workflowComments),
+}));
+
+export const workflowCommentsRelations = relations(workflowComments, ({ one }) => ({
+  workflowInstance: one(workflowInstances, {
+    fields: [workflowComments.workflowInstanceId],
+    references: [workflowInstances.id],
+  }),
+  stepInstance: one(workflowStepInstances, {
+    fields: [workflowComments.stepInstanceId],
+    references: [workflowStepInstances.id],
+  }),
+  author: one(users, {
+    fields: [workflowComments.authorId],
+    references: [users.id],
+  }),
+}));
+
+// Workflow schemas
+export const insertWorkflowSchema = createInsertSchema(workflows).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWorkflowStepSchema = createInsertSchema(workflowSteps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertWorkflowInstanceSchema = createInsertSchema(workflowInstances).omit({
+  id: true,
+  startedAt: true,
+});
+
+export const insertWorkflowStepInstanceSchema = createInsertSchema(workflowStepInstances).omit({
+  id: true,
+});
+
+export const insertWorkflowTemplateSchema = createInsertSchema(workflowTemplates).omit({
+  id: true,
+  createdAt: true,
+  usageCount: true,
+});
+
+export const insertWorkflowCommentSchema = createInsertSchema(workflowComments).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Workflow types
+export type Workflow = typeof workflows.$inferSelect;
+export type InsertWorkflow = z.infer<typeof insertWorkflowSchema>;
+
+export type WorkflowStep = typeof workflowSteps.$inferSelect;
+export type InsertWorkflowStep = z.infer<typeof insertWorkflowStepSchema>;
+
+export type WorkflowInstance = typeof workflowInstances.$inferSelect;
+export type InsertWorkflowInstance = z.infer<typeof insertWorkflowInstanceSchema>;
+
+export type WorkflowStepInstance = typeof workflowStepInstances.$inferSelect;
+export type InsertWorkflowStepInstance = z.infer<typeof insertWorkflowStepInstanceSchema>;
+
+export type WorkflowTemplate = typeof workflowTemplates.$inferSelect;
+export type InsertWorkflowTemplate = z.infer<typeof insertWorkflowTemplateSchema>;
+
+export type WorkflowComment = typeof workflowComments.$inferSelect;
+export type InsertWorkflowComment = z.infer<typeof insertWorkflowCommentSchema>;
+
+// Extended workflow types
+export type WorkflowWithSteps = Workflow & {
+  steps: WorkflowStep[];
+};
+
+export type WorkflowInstanceWithDetails = WorkflowInstance & {
+  workflow: WorkflowWithSteps;
+  stepInstances: (WorkflowStepInstance & {
+    step: WorkflowStep;
+    assignedTo?: User;
+  })[];
+  assignedTo?: User;
+  startedBy?: User;
+  client?: Client;
+  quote?: Quote;
+  product?: Product;
+};
