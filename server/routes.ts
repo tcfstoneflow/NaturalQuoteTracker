@@ -2071,6 +2071,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update quote with cart ID
       await storage.updateQuote(quote.id, { cartId: cart.id });
       
+      // Add to pipeline
+      await storage.createPipelineItem({
+        cartId: cart.id,
+        cartName: cartName,
+        clientId: quote.clientId,
+        stage: "quote",
+        priority: "medium",
+        assignedUserId: userId,
+        notes: `Pipeline entry for quote ${quote.quoteNumber}`
+      });
+      
       // Log client activity
       const activityType = sendEmail ? 'quote_sent' : 'quote_draft_created';
       const activityDescription = sendEmail 
@@ -5442,6 +5453,28 @@ Your body text starts here with proper spacing.`;
     } catch (error: any) {
       console.error('Create workflow error:', error);
       res.status(500).json({ error: 'Failed to create workflow' });
+    }
+  });
+
+  // Pipeline API routes
+  app.get("/api/pipeline", async (req, res) => {
+    try {
+      const pipelineItems = await storage.getPipelineItems();
+      res.json(pipelineItems);
+    } catch (error) {
+      console.error("Error fetching pipeline items:", error);
+      res.status(500).json({ error: "Failed to fetch pipeline items" });
+    }
+  });
+
+  app.put("/api/pipeline/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedItem = await storage.updatePipelineItem(parseInt(id), req.body);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating pipeline item:", error);
+      res.status(500).json({ error: "Failed to update pipeline item" });
     }
   });
 
