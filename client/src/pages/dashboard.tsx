@@ -1,4 +1,3 @@
-import TopBar from "@/components/layout/topbar";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RecentQuotes from "@/components/dashboard/recent-quotes";
 import TopProducts from "@/components/dashboard/top-products";
@@ -10,11 +9,6 @@ import { ExternalLink } from "lucide-react";
 export default function Dashboard() {
   return (
     <div className="flex flex-col h-full">
-      <TopBar 
-        title="Dashboard" 
-        subtitle="Welcome back, Sarah! Here's your business overview."
-      />
-      
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
         {/* Quick Access to Client Page */}
         <div className="mb-6">
