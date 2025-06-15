@@ -517,13 +517,12 @@ export const salesRepAppointments = pgTable("sales_rep_appointments", {
 // Cart management for quotes and orders
 export const carts = pgTable("carts", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  clientId: integer("client_id").references(() => clients.id),
+  clientId: integer("client_id").references(() => users.id).notNull(),
   name: text("name").notNull().default("Untitled Cart"),
   description: text("description"),
   type: text("type").notNull().default("quote"), // "quote", "order"
   status: text("status").notNull().default("active"), // "active", "converted", "abandoned"
-  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).default("0.00"),
+  totalAmount: text("total_amount").notNull().default("0.00"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
