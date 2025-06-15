@@ -28,6 +28,14 @@ interface PipelineItem {
   assignedUserName: string | null;
   createdAt: string;
   updatedAt: string;
+  type: string;
+  status: string;
+  totalAmount: string;
+  calculatedSubtotal: string;
+  itemCount: number;
+  quoteId: number | null;
+  quoteNumber: string | null;
+  quoteStatus: string | null;
 }
 
 const STAGES = [
@@ -156,10 +164,13 @@ export default function Pipeline() {
                   <th className="border border-gray-300 px-4 py-3 text-left font-medium">Cart ID</th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-medium">Cart Name</th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-medium">Client</th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Stage</th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Priority</th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Type</th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Quote Info</th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Items</th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Subtotal</th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Status</th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-medium">Assigned To</th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Est. Completion</th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-medium">Created</th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-medium">Actions</th>
                 </tr>
               </thead>
@@ -170,13 +181,36 @@ export default function Pipeline() {
                     <td className="border border-gray-300 px-4 py-3 font-medium">{item.cartName}</td>
                     <td className="border border-gray-300 px-4 py-3">{item.clientName}</td>
                     <td className="border border-gray-300 px-4 py-3">
-                      <Badge className={getStageColor(item.stage)}>
-                        {STAGES.find(s => s.value === item.stage)?.label || item.stage}
-                      </Badge>
+                      <Badge variant="outline">{item.type}</Badge>
                     </td>
                     <td className="border border-gray-300 px-4 py-3">
-                      <Badge className={getPriorityColor(item.priority)}>
-                        {PRIORITIES.find(p => p.value === item.priority)?.label || item.priority}
+                      {item.quoteNumber ? (
+                        <div className="space-y-1">
+                          <div className="font-medium">{item.quoteNumber}</div>
+                          <Badge className={item.quoteStatus === 'approved' ? 'bg-green-100 text-green-800' : 
+                                           item.quoteStatus === 'sent' ? 'bg-blue-100 text-blue-800' : 
+                                           'bg-gray-100 text-gray-800'}>
+                            {item.quoteStatus}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">No quote</span>
+                      )}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3 text-center">
+                      <div className="flex items-center gap-2 justify-center">
+                        <Package className="h-4 w-4" />
+                        {item.itemCount}
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3 font-semibold">
+                      ${parseFloat(item.calculatedSubtotal || '0').toFixed(2)}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <Badge className={item.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                       item.status === 'completed' ? 'bg-blue-100 text-blue-800' : 
+                                       'bg-gray-100 text-gray-800'}>
+                        {item.status}
                       </Badge>
                     </td>
                     <td className="border border-gray-300 px-4 py-3">
@@ -190,14 +224,10 @@ export default function Pipeline() {
                       )}
                     </td>
                     <td className="border border-gray-300 px-4 py-3">
-                      {item.estimatedCompletionDate ? (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          {format(new Date(item.estimatedCompletionDate), "MMM dd, yyyy")}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">Not set</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {format(new Date(item.createdAt), "MMM dd, yyyy")}
+                      </div>
                     </td>
                     <td className="border border-gray-300 px-4 py-3">
                       <Dialog>

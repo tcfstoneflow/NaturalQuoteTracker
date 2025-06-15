@@ -2,7 +2,7 @@ import {
   users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags, salesTargets,
   salesRepProfiles, salesRepFavoriteSlabs, salesRepPortfolioImages, salesRepAppointments,
   workflows, workflowSteps, workflowInstances, workflowStepInstances, workflowTemplates, workflowComments,
-  carts, cartItems,
+  carts, cartItems, pipeline,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -1232,29 +1232,84 @@ export class DatabaseStorage implements IStorage {
 
   async getPipelineItems(): Promise<any[]> {
     return withRetry(async () => {
-      const items = await db
+      // Get all carts with their totals and associated quotes
+      const allCarts = await db
         .select({
-          id: pipeline.id,
-          cartId: pipeline.cartId,
-          cartName: pipeline.cartName,
-          clientId: pipeline.clientId,
+          id: carts.id,
+          name: carts.name,
+          clientId: carts.clientId,
           clientName: clients.name,
-          stage: pipeline.stage,
-          priority: pipeline.priority,
-          estimatedCompletionDate: pipeline.estimatedCompletionDate,
-          actualCompletionDate: pipeline.actualCompletionDate,
-          notes: pipeline.notes,
-          assignedUserId: pipeline.assignedUserId,
-          assignedUserName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-          createdAt: pipeline.createdAt,
-          updatedAt: pipeline.updatedAt
+          userId: carts.userId,
+          userName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          type: carts.type,
+          status: carts.status,
+          totalAmount: carts.totalAmount,
+          notes: carts.notes,
+          createdAt: carts.createdAt,
+          updatedAt: carts.updatedAt,
+          quoteId: quotes.id,
+          quoteNumber: quotes.quoteNumber,
+          quoteStatus: quotes.status
         })
-        .from(pipeline)
-        .leftJoin(clients, eq(pipeline.clientId, clients.id))
-        .leftJoin(users, eq(pipeline.assignedUserId, users.id))
-        .orderBy(desc(pipeline.createdAt));
+        .from(carts)
+        .leftJoin(clients, eq(carts.clientId, clients.id))
+        .leftJoin(users, eq(carts.userId, users.id))
+        .leftJoin(quotes, eq(quotes.cartId, carts.id))
+        .orderBy(desc(carts.createdAt));
+
+      // Get cart items to calculate accurate subtotals
+      const cartItemsMap = new Map();
+      const allCartItems = await db
+        .select({
+          cartId: cartItems.cartId,
+          totalPrice: cartItems.totalPrice,
+          quantity: cartItems.quantity,
+          unitPrice: cartItems.unitPrice
+        })
+        .from(cartItems);
+
+      // Group cart items by cart ID and calculate subtotals
+      allCartItems.forEach(item => {
+        if (!cartItemsMap.has(item.cartId)) {
+          cartItemsMap.set(item.cartId, { items: [], subtotal: 0 });
+        }
+        const cartData = cartItemsMap.get(item.cartId);
+        cartData.items.push(item);
+        cartData.subtotal += parseFloat(item.totalPrice || '0');
+      });
+
+      // Transform to pipeline format with calculated subtotals
+      const pipelineItems = allCarts.map(cart => {
+        const cartItems = cartItemsMap.get(cart.id) || { items: [], subtotal: 0 };
+        
+        return {
+          id: cart.id,
+          cartId: cart.id,
+          cartName: cart.name,
+          clientId: cart.clientId,
+          clientName: cart.clientName,
+          stage: cart.quoteId ? 'quote' : 'cart',
+          priority: 'medium',
+          estimatedCompletionDate: null,
+          actualCompletionDate: null,
+          notes: cart.notes,
+          assignedUserId: cart.userId,
+          assignedUserName: cart.userName,
+          createdAt: cart.createdAt,
+          updatedAt: cart.updatedAt,
+          // Additional cart/quote details
+          type: cart.type,
+          status: cart.status,
+          totalAmount: cart.totalAmount,
+          calculatedSubtotal: cartItems.subtotal.toFixed(2),
+          itemCount: cartItems.items.length,
+          quoteId: cart.quoteId,
+          quoteNumber: cart.quoteNumber,
+          quoteStatus: cart.quoteStatus
+        };
+      });
       
-      return items;
+      return pipelineItems;
     });
   }
 
