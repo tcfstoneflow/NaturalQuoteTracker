@@ -5,9 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Search, MapPin, Filter, Edit2, Trash2, XCircle } from "lucide-react";
+import { Package, Search, MapPin, Filter, Edit2, Trash2, XCircle, Plus, Pencil, Settings } from "lucide-react";
+import { useLocation } from "wouter";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface Slab {
   id: number;
@@ -22,6 +27,27 @@ interface Slab {
   createdAt: string;
 }
 
+interface Product {
+  id: number;
+  name: string;
+  description: string | null;
+  supplier: string;
+  category: string;
+  grade: string;
+  thickness: string;
+  finish: string;
+  price: string;
+  unit: string;
+  stockQuantity: number;
+  slabLength: string | null;
+  slabWidth: string | null;
+  location: string | null;
+  imageUrl: string | null;
+  bundleId: string | null;
+  barcodes: string[] | null;
+  createdAt: string;
+}
+
 const statusColors = {
   available: "bg-green-100 text-green-800 border-green-200",
   sold: "bg-red-100 text-red-800 border-red-200",
@@ -30,17 +56,72 @@ const statusColors = {
   damaged: "bg-gray-100 text-gray-800 border-gray-200",
 };
 
+const CATEGORIES = [
+  "Granite",
+  "Marble", 
+  "Quartz",
+  "Quartzite",
+  "Travertine",
+  "Limestone",
+  "Sandstone",
+  "Slate",
+  "Onyx",
+  "Other"
+];
+
+const GRADES = ["Premium", "Standard", "Commercial", "Builder"];
+const FINISH_OPTIONS = ["Polished", "Honed", "Leathered", "Brushed", "Flamed"];
+const UNITS = ["sq ft", "lin ft", "slab", "piece"];
+
 export default function AllSlabs() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
+  
+  // Bundle management state
+  const [isOpen, setIsOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState({
+    bundleId: "",
+    name: "",
+    description: "",
+    supplier: "",
+    category: "",
+    grade: "",
+    thickness: "",
+    finish: "",
+    price: "",
+    unit: "sq ft",
+    stockQuantity: "",
+    slabLength: "",
+    slabWidth: "",
+    location: "",
+    imageUrl: "",
+    seoTitle: "",
+    seoDescription: "",
+    seoUrl: "",
+    metaKeywords: "",
+    socialTitle: "",
+    socialDescription: "",
+    socialImage: ""
+  });
 
   // Fetch all slabs across all products
   const { data: slabsData = [], isLoading, error } = useQuery({
     queryKey: ['/api/slabs/all'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/slabs/all');
+      return Array.isArray(response) ? response : [];
+    },
+  });
+
+  // Fetch products for bundles section
+  const { data: products, isLoading: productsLoading } = useQuery({
+    queryKey: ['/api/products'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/products');
       return Array.isArray(response) ? response : [];
     },
   });
@@ -61,6 +142,64 @@ export default function AllSlabs() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete slab",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Bundle mutations
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/products', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      toast({
+        title: "Success",
+        description: "Bundle created successfully",
+      });
+      handleCloseModal();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create bundle",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      apiRequest('PUT', `/api/products/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      toast({
+        title: "Success",
+        description: "Bundle updated successfully",
+      });
+      handleCloseModal();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update bundle",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/products/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      toast({
+        title: "Success",
+        description: "Bundle deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete bundle",
         variant: "destructive",
       });
     },
