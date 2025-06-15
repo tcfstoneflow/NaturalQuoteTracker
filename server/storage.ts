@@ -2432,6 +2432,172 @@ export class DatabaseStorage implements IStorage {
       stepInstances: []
     })) as WorkflowInstanceWithDetails[];
   }
+
+  // Sales leader permission methods
+  async updateQuoteApproval(quoteId: number, approvalData: {
+    approved: boolean;
+    approvedBy: number;
+    approvedAt: Date;
+    approvalNotes?: string;
+  }): Promise<Quote> {
+    const [quote] = await db
+      .update(quotes)
+      .set({
+        approved: approvalData.approved,
+        approvedBy: approvalData.approvedBy,
+        approvedAt: approvalData.approvedAt,
+        approvalNotes: approvalData.approvalNotes,
+        status: approvalData.approved ? 'approved' : 'rejected',
+        updatedAt: new Date()
+      })
+      .where(eq(quotes.id, quoteId))
+      .returning();
+    
+    return quote;
+  }
+
+  async getTeamPerformanceReport(params: {
+    startDate?: Date;
+    endDate?: Date;
+    teamMemberId?: number;
+  }): Promise<any> {
+    const whereConditions = [];
+    
+    if (params.startDate) {
+      whereConditions.push(gte(quotes.createdAt, params.startDate));
+    }
+    
+    if (params.endDate) {
+      whereConditions.push(lte(quotes.createdAt, params.endDate));
+    }
+    
+    if (params.teamMemberId) {
+      whereConditions.push(eq(quotes.salesRepId, params.teamMemberId));
+    }
+    
+    const teamQuotes = await db
+      .select({
+        salesRepId: quotes.salesRepId,
+        salesRep: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email
+        },
+        totalQuotes: count(quotes.id),
+        totalValue: sql<number>`COALESCE(SUM(${quotes.totalAmount}::numeric), 0)`,
+        approvedQuotes: sql<number>`COALESCE(SUM(CASE WHEN ${quotes.approved} = true THEN 1 ELSE 0 END), 0)`,
+        approvedValue: sql<number>`COALESCE(SUM(CASE WHEN ${quotes.approved} = true THEN ${quotes.totalAmount}::numeric ELSE 0 END), 0)`
+      })
+      .from(quotes)
+      .leftJoin(users, eq(quotes.salesRepId, users.id))
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .groupBy(quotes.salesRepId, users.firstName, users.lastName, users.email);
+    
+    return {
+      teamMembers: teamQuotes,
+      summary: {
+        totalQuotes: teamQuotes.reduce((sum, member) => sum + member.totalQuotes, 0),
+        totalValue: teamQuotes.reduce((sum, member) => sum + Number(member.totalValue), 0),
+        approvedQuotes: teamQuotes.reduce((sum, member) => sum + member.approvedQuotes, 0),
+        approvedValue: teamQuotes.reduce((sum, member) => sum + Number(member.approvedValue), 0)
+      }
+    };
+  }
+
+  async getSalesLeaderMetrics(salesLeaderId: number): Promise<any> {
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setHours(0, 0, 0, 0);
+    
+    const lastMonth = new Date(currentMonth);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+    // Get team members under sales leader supervision
+    const teamMembers = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role
+      })
+      .from(users)
+      .where(
+        and(
+          or(
+            eq(users.role, 'sales_manager'),
+            eq(users.role, 'sales_rep')
+          ),
+          eq(users.isActive, true)
+        )
+      );
+
+    // Get quotes pending approval
+    const pendingQuotes = await db
+      .select({
+        id: quotes.id,
+        quoteNumber: quotes.quoteNumber,
+        projectName: quotes.projectName,
+        totalAmount: quotes.totalAmount,
+        createdAt: quotes.createdAt,
+        salesRep: {
+          firstName: users.firstName,
+          lastName: users.lastName
+        },
+        client: {
+          name: clients.name,
+          company: clients.company
+        }
+      })
+      .from(quotes)
+      .leftJoin(users, eq(quotes.salesRepId, users.id))
+      .leftJoin(clients, eq(quotes.clientId, clients.id))
+      .where(
+        and(
+          eq(quotes.status, 'pending'),
+          sql`${quotes.approved} IS NULL`
+        )
+      )
+      .orderBy(asc(quotes.createdAt));
+
+    // Get monthly performance metrics
+    const monthlyMetrics = await db
+      .select({
+        totalQuotes: count(quotes.id),
+        totalValue: sql<number>`COALESCE(SUM(${quotes.totalAmount}::numeric), 0)`,
+        approvedQuotes: sql<number>`COALESCE(SUM(CASE WHEN ${quotes.approved} = true THEN 1 ELSE 0 END), 0)`,
+        rejectedQuotes: sql<number>`COALESCE(SUM(CASE WHEN ${quotes.approved} = false THEN 1 ELSE 0 END), 0)`
+      })
+      .from(quotes)
+      .where(
+        and(
+          gte(quotes.createdAt, currentMonth),
+          or(
+            eq(quotes.salesRepId, sql`ANY(${teamMembers.map(m => m.id)})`),
+            eq(quotes.createdBy, salesLeaderId)
+          )
+        )
+      );
+
+    return {
+      teamMembers,
+      pendingQuotes,
+      monthlyMetrics: monthlyMetrics[0] || {
+        totalQuotes: 0,
+        totalValue: 0,
+        approvedQuotes: 0,
+        rejectedQuotes: 0
+      },
+      dashboardStats: {
+        totalTeamMembers: teamMembers.length,
+        pendingApprovals: pendingQuotes.length,
+        monthlyQuoteValue: monthlyMetrics[0]?.totalValue || 0,
+        approvalRate: monthlyMetrics[0]?.totalQuotes > 0 
+          ? Math.round((monthlyMetrics[0].approvedQuotes / monthlyMetrics[0].totalQuotes) * 100) 
+          : 0
+      }
+    };
+  }
 }
 
 export const storage = new DatabaseStorage();

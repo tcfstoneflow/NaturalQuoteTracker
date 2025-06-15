@@ -251,6 +251,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sales leader quote approval
+  app.patch("/api/quotes/:id/approve", requireAuth, requireRole(['admin', 'sales_leader']), async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const { approved, notes } = req.body;
+      
+      const quote = await storage.updateQuoteApproval(quoteId, {
+        approved,
+        approvedBy: req.user.id,
+        approvalNotes: notes,
+        approvedAt: new Date()
+      });
+      
+      res.json(quote);
+    } catch (error: any) {
+      console.error('Quote approval error:', error);
+      res.status(500).json({ error: 'Failed to approve quote' });
+    }
+  });
+
+  // Sales leader team reports
+  app.get("/api/reports/team-performance", requireAuth, requireRole(['admin', 'sales_leader']), async (req, res) => {
+    try {
+      const { startDate, endDate, teamMemberId } = req.query;
+      
+      const report = await storage.getTeamPerformanceReport({
+        startDate: startDate ? new Date(startDate as string) : undefined,
+        endDate: endDate ? new Date(endDate as string) : undefined,
+        teamMemberId: teamMemberId ? parseInt(teamMemberId as string) : undefined
+      });
+      
+      res.json(report);
+    } catch (error: any) {
+      console.error('Team performance report error:', error);
+      res.status(500).json({ error: 'Failed to generate team performance report' });
+    }
+  });
+
+  // Sales leader dashboard metrics
+  app.get("/api/sales-leader/dashboard", requireAuth, requireRole(['sales_leader']), async (req, res) => {
+    try {
+      const metrics = await storage.getSalesLeaderMetrics(req.user.id);
+      res.json(metrics);
+    } catch (error: any) {
+      console.error('Sales leader metrics error:', error);
+      res.status(500).json({ error: 'Failed to fetch sales leader metrics' });
+    }
+  });
+
   app.patch("/api/users/:id/toggle", requireAuth, requireRole(['admin']), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);

@@ -167,6 +167,11 @@ export const quotes = pgTable("quotes", {
   sentAt: timestamp("sent_at"),
   salesRepId: integer("sales_rep_id").references(() => users.id),
   createdBy: integer("created_by").references(() => users.id),
+  // Sales leader approval fields
+  approved: boolean("approved"),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  approvalNotes: text("approval_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
