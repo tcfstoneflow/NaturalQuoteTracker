@@ -49,11 +49,10 @@ interface Product {
 }
 
 const statusColors = {
+  "en route": "bg-purple-100 text-purple-800 border-purple-200",
   available: "bg-green-100 text-green-800 border-green-200",
+  hold: "bg-yellow-100 text-yellow-800 border-yellow-200",
   sold: "bg-red-100 text-red-800 border-red-200",
-  reserved: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  delivered: "bg-blue-100 text-blue-800 border-blue-200",
-  damaged: "bg-gray-100 text-gray-800 border-gray-200",
 };
 
 const CATEGORIES = [
@@ -415,11 +414,10 @@ export default function AllSlabs() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="en route">En Route</SelectItem>
                 <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="hold">Hold</SelectItem>
                 <SelectItem value="sold">Sold</SelectItem>
-                <SelectItem value="reserved">Reserved</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="damaged">Damaged</SelectItem>
               </SelectContent>
             </Select>
             <Select value={locationFilter} onValueChange={setLocationFilter}>
