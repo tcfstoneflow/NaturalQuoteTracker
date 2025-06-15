@@ -383,7 +383,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
               className="bg-accent-orange hover:bg-accent-orange text-white"
             >
               <Plus className="mr-2 h-4 w-4" />
-              Create Quote
+              Quote Builder
             </Button>
           </CardHeader>
           <CardContent>

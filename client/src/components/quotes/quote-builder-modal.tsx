@@ -40,7 +40,6 @@ interface LineItem {
 export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteBuilderModalProps) {
   const [clientId, setClientId] = useState("");
   const [projectName, setProjectName] = useState("");
-  const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [additionalMessage, setAdditionalMessage] = useState("");
@@ -87,7 +86,6 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         // Populate form with existing quote data
         setClientId(editQuote.clientId?.toString() || "");
         setProjectName(editQuote.projectName || "");
-        setValidUntil(editQuote.validUntil ? editQuote.validUntil.split('T')[0] : "");
         setNotes(editQuote.notes || "");
         
         // Populate line items
@@ -119,10 +117,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         } else {
           setSalesRepId("");
         }
-        
-        const defaultDate = new Date();
-        defaultDate.setDate(defaultDate.getDate() + 30);
-        setValidUntil(defaultDate.toISOString().split('T')[0]);
+
       }
     }
   }, [isOpen, editQuote, user]);
@@ -278,7 +273,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   };
 
   const handleSaveQuote = async (sendEmail = false) => {
-    if (!clientId || !projectName || !validUntil || lineItems.length === 0) {
+    if (!clientId || !projectName || lineItems.length === 0) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields and add at least one line item",
