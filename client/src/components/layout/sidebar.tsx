@@ -16,7 +16,8 @@ import {
   Activity,
   ShoppingCart,
   Layers,
-  GitBranch
+  GitBranch,
+  ClipboardList
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
   { name: "Sales Leader", href: "/sales-leader", icon: Users, roles: ['sales_leader'] },
   { name: "Clients", href: "/clients", icon: Users },
+  { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },

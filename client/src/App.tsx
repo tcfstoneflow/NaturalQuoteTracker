@@ -30,6 +30,7 @@ import SalesRepManagement from "@/pages/sales-rep-management";
 import SalesRepProfile from "@/pages/sales-rep-profile";
 import SalesLeaderDashboard from "@/pages/SalesLeaderDashboard";
 import WorkflowsPage from "@/pages/WorkflowsPage";
+import PurchaseOrders from "@/pages/PurchaseOrders";
 
 import Sidebar from "@/components/layout/sidebar";
 
@@ -84,6 +85,7 @@ function Router() {
                   <Route path="/sales-dashboard" component={SalesDashboard} />
                   <Route path="/sales-leader" component={SalesLeaderDashboard} />
                   <Route path="/clients" component={Clients} />
+                  <Route path="/purchase-orders" component={PurchaseOrders} />
                   <Route path="/inventory" component={Inventory} />
                   <Route path="/counter-fixtures" component={CounterFixtures} />
                   <Route path="/quotes" component={Quotes} />
