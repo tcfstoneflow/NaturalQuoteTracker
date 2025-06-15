@@ -30,16 +30,16 @@ const navigation = [
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Pipeline", href: "/pipeline", icon: Workflow },
   { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
+  { name: "Quotes", href: "/quotes", icon: FileText },
+  { name: "Reports", href: "/reports", icon: TrendingUp },
+];
+
+const featureFolderNavigation = [
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
-  { name: "Quotes", href: "/quotes", icon: FileText },
   { name: "Showroom Visits", href: "/showroom-visits", icon: Calendar },
-  { name: "Reports", href: "/reports", icon: TrendingUp },
   { name: "SQL Query Tool", href: "/sql-query", icon: Database },
-];
-
-const adminOnlyNavigation = [
 ];
 
 const adminNavigation = [
@@ -70,19 +70,19 @@ export default function Sidebar() {
         item.href !== '/sales-dashboard' && item.href !== '/sales-leader'
       );
     } else if (isInventorySpecialist) {
-      // Inventory specialists can see dashboard, inventory, and reports
+      // Inventory specialists can see dashboard and reports (inventory moved to Feature Folder)
       return navigation.filter(item => 
-        ['/', '/inventory', '/reports', '/sql-query'].includes(item.href)
+        ['/', '/reports'].includes(item.href)
       );
     } else if (isSalesRep) {
-      // Sales reps can see sales dashboard, clients, quotes, and showroom visits (no main dashboard or reports)
+      // Sales reps can see sales dashboard, clients, and quotes (showroom visits moved to Feature Folder)
       return navigation.filter(item => 
-        ['/sales-dashboard', '/clients', '/quotes', '/showroom-visits'].includes(item.href)
+        ['/sales-dashboard', '/clients', '/quotes'].includes(item.href)
       );
     } else if (isSalesLeader) {
-      // Sales leaders can see sales leader dashboard, main dashboard, clients, quotes, reports, and team management
+      // Sales leaders can see sales leader dashboard, main dashboard, clients, quotes, and reports
       return navigation.filter(item => 
-        ['/', '/sales-leader', '/clients', '/quotes', '/reports', '/showroom-visits', '/user-management'].includes(item.href)
+        ['/', '/sales-leader', '/clients', '/quotes', '/reports'].includes(item.href)
       );
     }
     return navigation;
@@ -129,30 +129,38 @@ export default function Sidebar() {
             );
           })}
           
-          {/* Admin and Sales Leader navigation */}
-          {(isAdmin || isSalesLeader) && (
+          {/* Feature Folder Section */}
+          <li className="pt-4">
+            <div className="px-4 py-2">
+              <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">
+                Feature Folder
+              </p>
+            </div>
+          </li>
+          {featureFolderNavigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = location === item.href;
+            
+            return (
+              <li key={item.name}>
+                <Link
+                  href={item.href}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                    isActive
+                      ? "text-primary bg-blue-50"
+                      : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span>{item.name}</span>
+                </Link>
+              </li>
+            );
+          })}
+          
+          {/* Admin navigation */}
+          {isAdmin && (
             <>
-              {adminOnlyNavigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = location === item.href;
-                
-                return (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                        isActive
-                          ? "text-primary bg-blue-50"
-                          : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
-                      }`}
-                    >
-                      <Icon size={18} />
-                      <span>{item.name}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-              
               <li className="pt-4">
                 <div className="px-4 py-2">
                   <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">
