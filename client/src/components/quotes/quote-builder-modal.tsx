@@ -239,22 +239,39 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     };
   }, [isClientDropdownOpen]);
 
-  // Click outside handler for inventory dropdown
+  // Click outside handler for product dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (inventoryDropdownRef.current && !inventoryDropdownRef.current.contains(event.target as Node)) {
-        setIsInventoryDropdownOpen(false);
+      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
+        setIsProductDropdownOpen(false);
       }
     };
 
-    if (isInventoryDropdownOpen) {
+    if (isProductDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isInventoryDropdownOpen]);
+  }, [isProductDropdownOpen]);
+
+  // Click outside handler for slab dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (slabDropdownRef.current && !slabDropdownRef.current.contains(event.target as Node)) {
+        setIsSlabDropdownOpen(false);
+      }
+    };
+
+    if (isSlabDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSlabDropdownOpen]);
 
   const createQuoteMutation = useMutation({
     mutationFn: quotesApi.create,
@@ -399,8 +416,6 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     };
     
     setLineItems([...lineItems, newItem]);
-    setInventorySearchQuery("");
-    setIsInventoryDropdownOpen(false);
   };
 
   const removeLineItem = (index: number) => {
@@ -563,9 +578,13 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     setNotes("");
     setLineItems([]);
     setAdditionalMessage("");
-    setInventorySearchQuery("");
+    setProductSearchQuery("");
     setIsClientDropdownOpen(false);
-    setIsInventoryDropdownOpen(false);
+    setIsProductDropdownOpen(false);
+    setIsSlabDropdownOpen(false);
+    setSelectedProduct(null);
+    setSelectedSlabId(null);
+    setAvailableSlabs([]);
     onClose();
   };
 
@@ -679,85 +698,183 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
 
 
 
+          {/* Product Search and Slab Selection */}
+          <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="text-lg font-semibold text-primary-custom">Add Products to Quote</h3>
+            
+            {/* Product Search */}
+            <div className="relative" ref={productDropdownRef}>
+              <Label>Search Product by Name</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Search products..."
+                  value={productSearchQuery}
+                  onChange={(e) => {
+                    setProductSearchQuery(e.target.value);
+                    setIsProductDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsProductDropdownOpen(true)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  ▼
+                </button>
+                
+                {isProductDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {(() => {
+                      const filteredProducts = Array.isArray(products) ? products.filter((product: any) => {
+                        const searchTerm = productSearchQuery.toLowerCase();
+                        return (
+                          product.name?.toLowerCase().includes(searchTerm) ||
+                          product.bundleId?.toLowerCase().includes(searchTerm) ||
+                          product.description?.toLowerCase().includes(searchTerm)
+                        );
+                      }) : [];
+
+                      if (filteredProducts.length === 0) {
+                        return (
+                          <div className="px-4 py-3 text-gray-500">
+                            No products found
+                          </div>
+                        );
+                      }
+
+                      return filteredProducts.map((product: any) => (
+                        <div
+                          key={product.id}
+                          onClick={() => handleProductSelect(product)}
+                          className="px-4 py-3 cursor-pointer hover:bg-gray-50"
+                        >
+                          <div className="font-medium">
+                            {product.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Bundle: {product.bundleId} | ${product.price} | {product.description}
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Slab Selection */}
+            {selectedProduct && (
+              <div className="relative" ref={slabDropdownRef}>
+                <Label>Select Available Slab</Label>
+                <div className="relative">
+                  <Input
+                    placeholder="Select a slab..."
+                    value={selectedSlabId ? availableSlabs.find(s => s.id === selectedSlabId)?.slabNumber || "" : ""}
+                    readOnly
+                    onClick={() => setIsSlabDropdownOpen(!isSlabDropdownOpen)}
+                    className="cursor-pointer pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsSlabDropdownOpen(!isSlabDropdownOpen)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ▼
+                  </button>
+                  
+                  {isSlabDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                      {availableSlabs.length === 0 ? (
+                        <div className="px-4 py-3 text-gray-500">
+                          No available slabs for this product
+                        </div>
+                      ) : (
+                        availableSlabs.map((slab: any) => (
+                          <div
+                            key={slab.id}
+                            onClick={() => handleSlabSelect(slab)}
+                            className="px-4 py-3 cursor-pointer hover:bg-gray-50"
+                          >
+                            <div className="font-medium">
+                              Slab #{slab.slabNumber}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {slab.length}"L × {slab.width}"W | Location: {slab.location}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Add to Quote Button */}
+            {selectedProduct && selectedSlabId && (
+              <Button 
+                onClick={addSelectedItemToQuote}
+                className="bg-accent-orange hover:bg-accent-orange text-white w-full"
+              >
+                <Plus size={16} className="mr-2" />
+                Add Selected Item to Quote
+              </Button>
+            )}
+          </div>
+
           {/* Line Items */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-primary-custom">Quote Items</h3>
-              <Button onClick={addLineItem} className="bg-accent-orange hover:bg-accent-orange text-white">
-                <Plus size={16} className="mr-2" />
-                Add Item
-              </Button>
             </div>
 
             {lineItems.map((item, index) => (
               <Card key={index} className="mb-4">
                 <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                    <div className="md:col-span-2">
-                      <Label>Product *</Label>
-                      <Select
-                        value={item.productId.toString()}
-                        onValueChange={(value) => updateLineItem(index, 'productId', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products?.map((product: any) => (
-                            <SelectItem key={product.id} value={product.id.toString()}>
-                              {product.name} - {product.thickness}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {item.slab && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Slab: {item.slab.slabId || 'Auto-selected'}
+                  <div className="space-y-4">
+                    {/* Slab Information Display */}
+                    {item.slab && (
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                          <div>
+                            <span className="font-semibold">Product:</span> {item.product?.name}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Slab:</span> #{item.slab.slabNumber}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Price:</span> ${item.unitPrice}/sq ft
+                          </div>
+                          <div>
+                            <span className="font-semibold">Location:</span> {item.slab.location}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <Label>Quantity *</Label>
-                      <Input
-                        type="number"
-                        step="1"
-                        min="1"
-                        placeholder="1"
-                        value={item.quantity}
-                        onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label>Length (in)</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="0"
-                        value={item.length || ""}
-                        onChange={(e) => updateLineItem(index, 'length', e.target.value)}
-                        className="text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label>Width (in)</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="0"
-                        value={item.width || ""}
-                        onChange={(e) => updateLineItem(index, 'width', e.target.value)}
-                        className="text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label>Area: {item.area || "0"} sq ft</Label>
-                      <Label>Unit Price: ${item.unitPrice}</Label>
-                      <Label className="font-semibold">Total: ${item.totalPrice}</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mt-2">
+                          <div>
+                            <span className="font-semibold">Length:</span> {item.length || 0}"
+                          </div>
+                          <div>
+                            <span className="font-semibold">Width:</span> {item.width || 0}"
+                          </div>
+                          <div>
+                            <span className="font-semibold">Area:</span> {item.area || 0} sq ft
+                          </div>
+                          <div>
+                            <span className="font-semibold text-green-600">Subtotal:</span> ${item.subtotal || item.totalPrice}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Remove Item Button */}
+                    <div className="flex justify-end">
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         onClick={() => removeLineItem(index)}
-                        className="text-error-red hover:bg-red-50 mt-1"
+                        className="text-error-red hover:bg-red-50"
                       >
                         <Trash2 size={14} />
                       </Button>
