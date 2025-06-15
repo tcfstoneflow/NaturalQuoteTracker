@@ -197,6 +197,7 @@ export default function SystemHealth() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="metrics">Metrics</TabsTrigger>
+          <TabsTrigger value="specs">System Specs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -448,6 +449,12 @@ export default function SystemHealth() {
               </Card>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="specs">
+          <div className="space-y-4">
+            {/* System Specs content will be added here */}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
