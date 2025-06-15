@@ -44,7 +44,14 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Contacts", href: "/contacts", icon: Users },
+  { 
+    name: "Contacts", 
+    href: "/contacts", 
+    icon: Users,
+    subItems: [
+      { name: "Clients", href: "/clients", icon: Users }
+    ]
+  },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
@@ -372,13 +379,15 @@ export default function Sidebar() {
           {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
+            const hasSubItems = item.subItems && item.subItems.length > 0;
+            const isSubItemActive = hasSubItems && item.subItems.some(subItem => location === subItem.href);
             
             return (
               <li key={item.name}>
                 <Link
                   href={item.href}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    isActive
+                    isActive || isSubItemActive
                       ? "text-primary bg-blue-50"
                       : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
                   }`}
@@ -386,6 +395,32 @@ export default function Sidebar() {
                   <Icon size={18} />
                   <span>{item.name}</span>
                 </Link>
+                
+                {/* Sub-items */}
+                {hasSubItems && (
+                  <ul className="ml-6 mt-2 space-y-1">
+                    {item.subItems.map((subItem) => {
+                      const SubIcon = subItem.icon;
+                      const isSubActive = location === subItem.href;
+                      
+                      return (
+                        <li key={subItem.name}>
+                          <Link
+                            href={subItem.href}
+                            className={`flex items-center space-x-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              isSubActive
+                                ? "text-primary bg-blue-50"
+                                : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
+                            }`}
+                          >
+                            <SubIcon size={16} />
+                            <span>{subItem.name}</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </li>
             );
           })}
