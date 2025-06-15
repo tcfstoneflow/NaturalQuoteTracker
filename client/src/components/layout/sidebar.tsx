@@ -16,7 +16,8 @@ import {
   Activity,
   ShoppingCart,
   Layers,
-  GitBranch
+  GitBranch,
+  Truck
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -39,11 +40,18 @@ const adminOnlyNavigation = [
 
 const adminNavigation = [
   { name: "User Management", href: "/user-management", icon: UserCog },
+  { name: "Vendor Management", href: "/vendor-management", icon: Truck },
   { name: "System Health", href: "/system-health", icon: Activity },
 ];
 
 const salesRepNavigation = [
   { name: "My Profile", href: "/sales-rep-profile", icon: User },
+];
+
+const vendorNavigation = [
+  { name: "My Company Profile", href: "/vendor-profile", icon: User },
+  { name: "My Products", href: "/vendor-products", icon: Package },
+  { name: "Purchase Orders", href: "/vendor-orders", icon: FileText },
 ];
 
 export default function Sidebar() {
@@ -53,6 +61,7 @@ export default function Sidebar() {
   const isAdmin = user?.role === 'admin';
   const isInventorySpecialist = user?.role === 'inventory_specialist';
   const isSalesRep = user?.role === 'sales_rep';
+  const isVendor = user?.role === 'vendor';
   
   // Filter navigation based on user role
   const getVisibleNavigation = () => {
@@ -68,6 +77,11 @@ export default function Sidebar() {
       // Sales reps can see sales dashboard, clients, quotes, and showroom visits (no main dashboard or reports)
       return navigation.filter(item => 
         ['/sales-dashboard', '/clients', '/quotes', '/showroom-visits'].includes(item.href)
+      );
+    } else if (isVendor) {
+      // Vendors can only see limited inventory view
+      return navigation.filter(item => 
+        ['/inventory'].includes(item.href)
       );
     }
     return navigation;
@@ -179,6 +193,39 @@ export default function Sidebar() {
                 </div>
               </li>
               {salesRepNavigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = location === item.href;
+                
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                        isActive
+                          ? "text-primary bg-blue-50"
+                          : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span>{item.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </>
+          )}
+          
+          {/* Vendor navigation */}
+          {isVendor && (
+            <>
+              <li className="pt-4">
+                <div className="px-4 py-2">
+                  <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">
+                    Vendor Portal
+                  </p>
+                </div>
+              </li>
+              {vendorNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location === item.href;
                 
