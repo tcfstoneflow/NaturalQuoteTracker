@@ -149,6 +149,7 @@ export interface IStorage {
   // Slabs
   getSlabs(bundleId?: string): Promise<Slab[]>;
   getAllSlabs(): Promise<Slab[]>;
+  getAllSlabsIncludingBundles(): Promise<any[]>;
   getSlab(id: number): Promise<Slab | undefined>;
   createSlab(slab: InsertSlab): Promise<Slab>;
   updateSlab(id: number, slab: Partial<InsertSlab>): Promise<Slab>;
@@ -1416,6 +1417,49 @@ export class DatabaseStorage implements IStorage {
 
   async getAllSlabs(): Promise<Slab[]> {
     return await db.select().from(slabs).orderBy(asc(slabs.createdAt));
+  }
+
+  async getAllSlabsIncludingBundles(): Promise<any[]> {
+    // Get individual slabs
+    const individualSlabs = await db.select().from(slabs).orderBy(asc(slabs.createdAt));
+    
+    // Get bundled slabs (represented as stock quantities in products)
+    const bundledProducts = await db.select().from(products).where(sql`${products.stockQuantity} > 0`);
+    
+    // Convert bundled products to slab-like objects for display
+    const bundledSlabs = bundledProducts.flatMap(product => {
+      const slabs = [];
+      for (let i = 1; i <= product.stockQuantity; i++) {
+        slabs.push({
+          id: `bundle-${product.id}-${i}`,
+          bundleId: product.bundleId,
+          slabNumber: `${i}`,
+          productName: product.name,
+          category: product.category,
+          supplier: product.supplier,
+          grade: product.grade,
+          thickness: product.thickness,
+          finish: product.finish,
+          price: product.price,
+          unit: product.unit,
+          length: product.slabLength,
+          width: product.slabWidth,
+          location: product.location,
+          status: 'available',
+          isBundled: true,
+          productId: product.id,
+          createdAt: product.createdAt
+        });
+      }
+      return slabs;
+    });
+    
+    // Combine both types and sort by creation date
+    const allSlabs = [...individualSlabs, ...bundledSlabs].sort((a, b) => 
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+    
+    return allSlabs;
   }
 
   async getSlab(id: number): Promise<Slab | undefined> {

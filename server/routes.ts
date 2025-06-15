@@ -2405,7 +2405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all slabs across all products
   app.get("/api/slabs/all", requireAuth, requireInventoryAccess(), async (req, res) => {
     try {
-      const slabs = await storage.getAllSlabs();
+      const slabs = await storage.getAllSlabsIncludingBundles();
       res.json(slabs);
     } catch (error: any) {
       res.status(500).json({ error: "Failed to fetch slabs", details: error.message });
