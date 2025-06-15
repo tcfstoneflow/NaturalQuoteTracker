@@ -31,7 +31,7 @@ import SalesRepProfile from "@/pages/sales-rep-profile";
 import SalesLeaderDashboard from "@/pages/SalesLeaderDashboard";
 import WorkflowsPage from "@/pages/WorkflowsPage";
 import PurchaseOrders from "@/pages/PurchaseOrders";
-import Pipeline from "@/pages/Pipeline";
+import Pipeline from "@/pages/pipeline";
 import FeatureFolder from "@/pages/FeatureFolder";
 import Cart from "@/pages/cart";
 

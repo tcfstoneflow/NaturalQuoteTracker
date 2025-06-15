@@ -131,6 +131,11 @@ export interface IStorage {
   deleteQuoteLineItem(id: number): Promise<boolean>;
   getQuoteCountByUserAndDate(userId: number, startDate: Date, endDate: Date): Promise<number>;
 
+  // Pipeline
+  getPipelineItems(): Promise<any[]>;
+  createPipelineItem(item: any): Promise<any>;
+  updatePipelineItem(id: number, item: any): Promise<any>;
+
   // Activities
   getRecentActivities(limit?: number): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
@@ -1222,6 +1227,52 @@ export class DatabaseStorage implements IStorage {
           )
         );
       return result.count + 1; // Return next number for the new quote
+    });
+  }
+
+  async getPipelineItems(): Promise<any[]> {
+    return withRetry(async () => {
+      const items = await db
+        .select({
+          id: pipeline.id,
+          cartId: pipeline.cartId,
+          cartName: pipeline.cartName,
+          clientId: pipeline.clientId,
+          clientName: clients.name,
+          stage: pipeline.stage,
+          priority: pipeline.priority,
+          estimatedCompletionDate: pipeline.estimatedCompletionDate,
+          actualCompletionDate: pipeline.actualCompletionDate,
+          notes: pipeline.notes,
+          assignedUserId: pipeline.assignedUserId,
+          assignedUserName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          createdAt: pipeline.createdAt,
+          updatedAt: pipeline.updatedAt
+        })
+        .from(pipeline)
+        .leftJoin(clients, eq(pipeline.clientId, clients.id))
+        .leftJoin(users, eq(pipeline.assignedUserId, users.id))
+        .orderBy(desc(pipeline.createdAt));
+      
+      return items;
+    });
+  }
+
+  async createPipelineItem(item: any): Promise<any> {
+    return withRetry(async () => {
+      const [newItem] = await db.insert(pipeline).values(item).returning();
+      return newItem;
+    });
+  }
+
+  async updatePipelineItem(id: number, item: any): Promise<any> {
+    return withRetry(async () => {
+      const [updatedItem] = await db
+        .update(pipeline)
+        .set({ ...item, updatedAt: new Date() })
+        .where(eq(pipeline.id, id))
+        .returning();
+      return updatedItem;
     });
   }
 
