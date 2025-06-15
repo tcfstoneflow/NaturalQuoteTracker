@@ -79,7 +79,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Set default valid until date (30 days from now) or populate with edit data
+  // Set form data or populate with edit data
   useEffect(() => {
     if (isOpen) {
       if (editQuote) {
@@ -287,7 +287,6 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     const quoteData = {
       clientId: parseInt(clientId),
       projectName,
-      validUntil: validUntil,
       notes,
       subtotal: totals.subtotal,
       taxRate: totals.taxRate,
@@ -338,7 +337,6 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const handleClose = () => {
     setClientId("");
     setProjectName("");
-    setValidUntil("");
     setNotes("");
     setLineItems([]);
     setAdditionalMessage("");
@@ -360,7 +358,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
 
         <div className="space-y-6">
           {/* Client Selection and Project Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <div>
               <Label htmlFor="client">Select Client *</Label>
               <Select value={clientId} onValueChange={(value) => {
@@ -384,15 +382,6 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label htmlFor="validUntil">Quote Valid Until *</Label>
-              <Input
-                id="validUntil"
-                type="date"
-                value={validUntil}
-                onChange={(e) => setValidUntil(e.target.value)}
-              />
             </div>
           </div>
 
