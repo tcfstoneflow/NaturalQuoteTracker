@@ -31,7 +31,6 @@ const navigation = [
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
   { name: "Quotes", href: "/quotes", icon: FileText },
   { name: "Showroom Visits", href: "/showroom-visits", icon: Calendar },
-  { name: "AR", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
   { name: "Reports", href: "/reports", icon: TrendingUp },
   { name: "Pipeline", href: "/pipeline", icon: Workflow },
   { name: "SQL Query Tool", href: "/sql-query", icon: Database },
@@ -41,6 +40,11 @@ const featureFolderNavigation = [
   { name: "Cart", href: "/cart", icon: ShoppingCart },
   { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
   { name: "Sales Leader", href: "/sales-leader", icon: Users, roles: ['sales_leader'] },
+  { name: "Marketing KPI Tracking", href: "/marketing-kpi", icon: TrendingUp },
+  { name: "Sales KPI Tracking", href: "/sales-kpi", icon: BarChart3 },
+  { name: "Supply KPI Tracking", href: "/supply-kpi", icon: Truck },
+  { name: "Inventory Tracking", href: "/inventory-tracking", icon: Package },
+  { name: "Company KPI Tracking", href: "/company-kpi", icon: Building2 },
 ];
 
 const adminNavigation = [
