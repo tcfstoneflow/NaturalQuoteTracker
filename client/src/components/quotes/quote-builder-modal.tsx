@@ -354,6 +354,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       taxAmount: totals.taxAmount,
       totalAmount: totals.total,
       salesRepId: salesRepId === "none" || !salesRepId ? null : parseInt(salesRepId),
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
     };
 
     const quoteLineItems = lineItems.map(item => ({
@@ -690,18 +691,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
             />
           </div>
 
-          {/* WIP Status */}
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <div className="text-sm text-gray-700 space-y-1">
-              <div className="font-medium">WIP</div>
-              <div>- SEARCH TO ADDED TO QUOTE WORKFLOW</div>
-              <div>- STANDARDIZING QUOTE NUMBERS - QINIDATEINI</div>
-              <div>- SAVE AS CART TO PM</div>
-              <div>- ADD COLLABORATOR TO PM</div>
-              <div>- ADD 2ND AE</div>
-              <div className="mt-2 font-medium">QUOTE INVENTORY WORKFLOW WIP</div>
-            </div>
-          </div>
+
 
           {/* Action Buttons */}
           <div className="flex space-x-4 pt-4">
