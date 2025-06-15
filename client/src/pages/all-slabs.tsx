@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Search, MapPin, Filter, Edit2, Trash2, XCircle, Plus, Pencil, Settings } from "lucide-react";
+import { Package, Search, MapPin, Filter, Edit2, Trash2, XCircle, Plus, Pencil, Settings, ExternalLink } from "lucide-react";
 import { useLocation } from "wouter";
 import { ImageUpload } from "@/components/ui/image-upload";
 
@@ -304,12 +304,13 @@ export default function AllSlabs() {
   };
 
   // Filter slabs based on search and filters
-  const filteredSlabs = slabs.filter((slab: Slab) => {
+  const filteredSlabs = slabs.filter((slab: any) => {
     const matchesSearch = !searchTerm || 
       slab.slabNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      slab.bundleId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (slab.bundleId && slab.bundleId.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (slab.barcode && slab.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (slab.location && slab.location.toLowerCase().includes(searchTerm.toLowerCase()));
+      (slab.location && slab.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (slab.productName && slab.productName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === "all" || slab.status?.toLowerCase() === statusFilter;
     const matchesLocation = locationFilter === "all" || slab.location === locationFilter;
@@ -318,11 +319,13 @@ export default function AllSlabs() {
   });
 
   // Get unique locations for filter
-  const uniqueLocations = Array.from(new Set(slabs.map((slab: Slab) => slab.location).filter(Boolean))) as string[];
+  const uniqueLocations = Array.from(new Set(slabs.map((slab: any) => slab.location).filter(Boolean))) as string[];
 
-  // Calculate total available slabs from bundles
-  const bundleStockTotal = Array.isArray(products) ? products.reduce((sum: number, product: Product) => sum + product.stockQuantity, 0) : 0;
-  const totalAvailableSlabs = slabs.filter((s: Slab) => s.status?.toLowerCase() === 'available').length + bundleStockTotal;
+  // Calculate stats from combined slab data
+  const totalAvailableSlabs = slabs.filter((s: any) => s.status?.toLowerCase() === 'available').length;
+  const totalSoldSlabs = slabs.filter((s: any) => s.status?.toLowerCase() === 'sold').length;
+  const totalHoldSlabs = slabs.filter((s: any) => s.status?.toLowerCase() === 'hold').length;
+  const totalEnRouteSlabs = slabs.filter((s: any) => s.status?.toLowerCase() === 'en route').length;
 
   if (isLoading) {
     return (
@@ -369,7 +372,7 @@ export default function AllSlabs() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-red-600">
-              {slabs.filter((s: Slab) => s.status?.toLowerCase() === 'sold').length}
+              {totalSoldSlabs}
             </div>
             <p className="text-sm text-muted-foreground">Sold</p>
           </CardContent>
@@ -377,9 +380,9 @@ export default function AllSlabs() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-yellow-600">
-              {slabs.filter((s: Slab) => s.status?.toLowerCase() === 'reserved').length}
+              {totalHoldSlabs}
             </div>
-            <p className="text-sm text-muted-foreground">Reserved</p>
+            <p className="text-sm text-muted-foreground">Hold</p>
           </CardContent>
         </Card>
         <Card>
@@ -463,21 +466,63 @@ export default function AllSlabs() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredSlabs.map((slab: Slab) => {
+          {filteredSlabs.map((slab: any) => {
             const statusColor = statusColors[slab.status?.toLowerCase() as keyof typeof statusColors] || statusColors.available;
+            const isBundled = slab.isBundled;
             
             return (
               <Card key={slab.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">#{slab.slabNumber}</CardTitle>
+                    <CardTitle className="text-lg">
+                      #{slab.slabNumber}
+                      {isBundled && (
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          Bundled
+                        </Badge>
+                      )}
+                    </CardTitle>
                     <Badge className={statusColor}>
                       {slab.status || 'Available'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">Bundle: {slab.bundleId}</p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Bundle: {slab.bundleId}</p>
+                    {isBundled && slab.productName && (
+                      <p className="text-sm font-medium text-primary">{slab.productName}</p>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {isBundled && (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {slab.category && (
+                        <div>
+                          <p className="font-medium">Category</p>
+                          <Badge variant="outline" className="text-xs">{slab.category}</Badge>
+                        </div>
+                      )}
+                      {slab.grade && (
+                        <div>
+                          <p className="font-medium">Grade</p>
+                          <p className="text-muted-foreground">{slab.grade}</p>
+                        </div>
+                      )}
+                      {slab.thickness && (
+                        <div>
+                          <p className="font-medium">Thickness</p>
+                          <p className="text-muted-foreground">{slab.thickness}</p>
+                        </div>
+                      )}
+                      {slab.finish && (
+                        <div>
+                          <p className="font-medium">Finish</p>
+                          <p className="text-muted-foreground">{slab.finish}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {slab.length && slab.width && (
                     <div className="text-sm">
                       <p className="font-medium">Dimensions</p>
@@ -513,16 +558,36 @@ export default function AllSlabs() {
                       <p className="text-muted-foreground">{slab.notes}</p>
                     </div>
                   )}
+
+                  {isBundled && slab.price && (
+                    <div className="text-sm">
+                      <p className="font-medium">Price</p>
+                      <p className="text-muted-foreground">${slab.price} per {slab.unit}</p>
+                    </div>
+                  )}
                   
                   <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteSlab(slab.id, slab.slabNumber)}
-                      className="flex-1 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {!isBundled && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteSlab(slab.id, slab.slabNumber)}
+                        className="flex-1 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {isBundled && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => window.open(`/inventory`, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View Bundle
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
