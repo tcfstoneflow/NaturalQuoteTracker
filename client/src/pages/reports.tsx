@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { dashboardApi, quotesApi, clientsApi, productsApi } from "@/lib/api";
-import { TrendingUp, DollarSign, Users, Package, FileText, Calendar, Download, Filter } from "lucide-react";
+import { TrendingUp, DollarSign, Users, Package, FileText, Calendar, Download, Filter, ShoppingCart, Receipt, CreditCard, Eye, Edit, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import TopSellingProductsReport from "@/components/reports/top-selling-products-report";
 import SalesManagerPerformanceReport from "@/components/reports/sales-manager-performance-report";
@@ -21,6 +23,7 @@ import PaymentStatusReport from "@/components/reports/payment-status-report";
 import CostAnalysisReport from "@/components/reports/cost-analysis-report";
 import SeasonalTrendsReport from "@/components/reports/seasonal-trends-report";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 export default function Reports() {
   const [showSeasonalTrends, setShowSeasonalTrends] = useState(false);
@@ -46,6 +49,12 @@ export default function Reports() {
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ['/api/clients'],
     queryFn: () => clientsApi.getAll(),
+    select: (data) => Array.isArray(data) ? data : [],
+  });
+
+  const { data: carts, isLoading: cartsLoading } = useQuery({
+    queryKey: ['/api/carts'],
+    queryFn: () => fetch('/api/carts').then(res => res.json()),
     select: (data) => Array.isArray(data) ? data : [],
   });
 
@@ -251,6 +260,153 @@ export default function Reports() {
       />
       
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
+        {/* Three Column Layout for Quotes, Carts, and AR */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Quotes Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-600" />
+                Quotes ({(quotes || []).length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-96 overflow-y-auto">
+                {quotesLoading ? (
+                  <div className="p-4">
+                    <Skeleton className="h-20 w-full mb-2" />
+                    <Skeleton className="h-20 w-full mb-2" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                ) : (quotes || []).length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    No quotes found
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Quote #</TableHead>
+                        <TableHead className="text-xs">Client</TableHead>
+                        <TableHead className="text-xs">Amount</TableHead>
+                        <TableHead className="text-xs">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(quotes || []).slice(0, 10).map((quote: any) => (
+                        <TableRow key={quote.id} className="hover:bg-gray-50">
+                          <TableCell className="font-mono text-xs">{quote.quoteNumber}</TableCell>
+                          <TableCell className="text-xs">{clients?.find((c: any) => c.id === quote.clientId)?.name || 'Unknown'}</TableCell>
+                          <TableCell className="text-xs font-semibold">${parseFloat(quote.totalAmount || '0').toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Badge variant={quote.status === 'approved' ? 'default' : 'secondary'} className="text-xs">
+                              {quote.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Carts Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-green-600" />
+                Carts ({(carts || []).length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-96 overflow-y-auto">
+                {cartsLoading ? (
+                  <div className="p-4">
+                    <Skeleton className="h-20 w-full mb-2" />
+                    <Skeleton className="h-20 w-full mb-2" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                ) : (carts || []).length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    No carts found
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Cart ID</TableHead>
+                        <TableHead className="text-xs">Client</TableHead>
+                        <TableHead className="text-xs">Amount</TableHead>
+                        <TableHead className="text-xs">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(carts || []).slice(0, 10).map((cart: any) => (
+                        <TableRow key={cart.id} className="hover:bg-gray-50">
+                          <TableCell className="font-mono text-xs">{cart.name}</TableCell>
+                          <TableCell className="text-xs">{clients?.find((c: any) => c.id === cart.clientId)?.name || 'Unknown'}</TableCell>
+                          <TableCell className="text-xs font-semibold">${parseFloat(cart.totalAmount || '0').toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Badge variant={cart.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                              {cart.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Accounts Receivable Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-orange-600" />
+                Accounts Receivable
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-96 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Invoice #</TableHead>
+                      <TableHead className="text-xs">Client</TableHead>
+                      <TableHead className="text-xs">Amount</TableHead>
+                      <TableHead className="text-xs">Days</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(quotes || [])
+                      .filter((quote: any) => quote.status === 'approved')
+                      .slice(0, 10)
+                      .map((quote: any) => {
+                        const daysSince = Math.floor((new Date().getTime() - new Date(quote.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+                        return (
+                          <TableRow key={quote.id} className="hover:bg-gray-50">
+                            <TableCell className="font-mono text-xs">INV-{quote.quoteNumber?.replace('QT-', '')}</TableCell>
+                            <TableCell className="text-xs">{clients?.find((c: any) => c.id === quote.clientId)?.name || 'Unknown'}</TableCell>
+                            <TableCell className="text-xs font-semibold">${parseFloat(quote.totalAmount || '0').toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Badge variant={daysSince > 30 ? 'destructive' : daysSince > 15 ? 'secondary' : 'default'} className="text-xs">
+                                {daysSince}d
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Report Generation Section */}
         <Card className="mb-8">
           <CardHeader>

@@ -1240,7 +1240,7 @@ export class DatabaseStorage implements IStorage {
           clientId: carts.clientId,
           clientName: clients.name,
           userId: carts.userId,
-          userName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          userName: sql<string>`COALESCE(CONCAT(${users.firstName}, ' ', ${users.lastName}), 'Unknown User')`,
           type: carts.type,
           status: carts.status,
           totalAmount: carts.totalAmount,
