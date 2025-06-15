@@ -340,6 +340,11 @@ export default function Inventory() {
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
           Showing {filteredProducts.length} of {(products as Product[])?.length || 0} bundles
+          {filteredProducts.length > 0 && (
+            <span className="ml-4 font-medium text-primary-custom">
+              Total Stock: {filteredProducts.reduce((sum, product) => sum + product.stockQuantity, 0)} units
+            </span>
+          )}
         </div>
         <div className="flex space-x-2">
           <Button asChild variant="outline">

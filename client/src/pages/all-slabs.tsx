@@ -211,6 +211,99 @@ export default function AllSlabs() {
     }
   };
 
+  // Bundle handlers
+  const handleCloseModal = () => {
+    setIsOpen(false);
+    setEditingProduct(null);
+    setFormData({
+      bundleId: "",
+      name: "",
+      description: "",
+      supplier: "",
+      category: "",
+      grade: "",
+      thickness: "",
+      finish: "",
+      price: "",
+      unit: "sq ft",
+      stockQuantity: "",
+      slabLength: "",
+      slabWidth: "",
+      location: "",
+      imageUrl: "",
+      seoTitle: "",
+      seoDescription: "",
+      seoUrl: "",
+      metaKeywords: "",
+      socialTitle: "",
+      socialDescription: "",
+      socialImage: ""
+    });
+  };
+
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      bundleId: product.bundleId || "",
+      name: product.name,
+      description: product.description || "",
+      supplier: product.supplier,
+      category: product.category,
+      grade: product.grade,
+      thickness: product.thickness,
+      finish: product.finish,
+      price: product.price,
+      unit: product.unit,
+      stockQuantity: product.stockQuantity.toString(),
+      slabLength: product.slabLength || "",
+      slabWidth: product.slabWidth || "",
+      location: product.location || "",
+      imageUrl: product.imageUrl || "",
+      seoTitle: "",
+      seoDescription: "",
+      seoUrl: "",
+      metaKeywords: "",
+      socialTitle: "",
+      socialDescription: "",
+      socialImage: ""
+    });
+    setIsOpen(true);
+  };
+
+  const handleDelete = (id: number, name: string) => {
+    if (confirm(`Are you sure you want to delete "${name}"?`)) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const data = {
+      bundleId: formData.bundleId,
+      name: formData.name,
+      description: formData.description || null,
+      supplier: formData.supplier,
+      category: formData.category,
+      grade: formData.grade,
+      thickness: formData.thickness,
+      finish: formData.finish,
+      price: formData.price,
+      unit: formData.unit,
+      stockQuantity: parseInt(formData.stockQuantity) || 0,
+      slabLength: formData.slabLength || null,
+      slabWidth: formData.slabWidth || null,
+      location: formData.location || null,
+      imageUrl: formData.imageUrl || null,
+    };
+
+    if (editingProduct) {
+      updateMutation.mutate({ id: editingProduct.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
   // Filter slabs based on search and filters
   const filteredSlabs = slabs.filter((slab: Slab) => {
     const matchesSearch = !searchTerm || 
@@ -227,6 +320,10 @@ export default function AllSlabs() {
 
   // Get unique locations for filter
   const uniqueLocations = Array.from(new Set(slabs.map((slab: Slab) => slab.location).filter(Boolean))) as string[];
+
+  // Calculate total available slabs from bundles
+  const bundleStockTotal = Array.isArray(products) ? products.reduce((sum: number, product: Product) => sum + product.stockQuantity, 0) : 0;
+  const totalAvailableSlabs = slabs.filter((s: Slab) => s.status?.toLowerCase() === 'available').length + bundleStockTotal;
 
   if (isLoading) {
     return (
@@ -265,9 +362,9 @@ export default function AllSlabs() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {slabs.filter((s: Slab) => s.status?.toLowerCase() === 'available').length}
+              {totalAvailableSlabs}
             </div>
-            <p className="text-sm text-muted-foreground">Available</p>
+            <p className="text-sm text-muted-foreground">Total Available</p>
           </CardContent>
         </Card>
         <Card>
@@ -435,6 +532,331 @@ export default function AllSlabs() {
           })}
         </div>
       )}
+
+      {/* Stone Slab Bundles Section */}
+      <div className="mt-12">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Stone Slab Bundles</CardTitle>
+            <div className="flex gap-2">
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Bundle
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingProduct ? "Edit Bundle" : "Add New Bundle"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingProduct 
+                        ? "Update the bundle information below" 
+                        : "Enter the details for the new stone slab bundle"}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="bundleId">Bundle ID *</Label>
+                        <Input
+                          id="bundleId"
+                          value={formData.bundleId}
+                          onChange={(e) => setFormData({ ...formData, bundleId: e.target.value })}
+                          placeholder="e.g., BDL-001"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="e.g., Carrara White Marble"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="supplier">Supplier *</Label>
+                        <Input
+                          id="supplier"
+                          value={formData.supplier}
+                          onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                          placeholder="e.g., Stone World Inc."
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="category">Category *</Label>
+                        <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="grade">Grade *</Label>
+                        <Select value={formData.grade} onValueChange={(value) => setFormData({ ...formData, grade: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select grade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {GRADES.map((grade) => (
+                              <SelectItem key={grade} value={grade}>
+                                {grade}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="thickness">Thickness *</Label>
+                        <Input
+                          id="thickness"
+                          value={formData.thickness}
+                          onChange={(e) => setFormData({ ...formData, thickness: e.target.value })}
+                          placeholder="e.g., 3cm, 2cm, 1.25in"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="finish">Finish *</Label>
+                        <Select value={formData.finish} onValueChange={(value) => setFormData({ ...formData, finish: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select finish" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FINISH_OPTIONS.map((finish) => (
+                              <SelectItem key={finish} value={finish}>
+                                {finish}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="price">Price *</Label>
+                        <Input
+                          id="price"
+                          value={formData.price}
+                          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                          placeholder="e.g., 45.00"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="unit">Unit *</Label>
+                        <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UNITS.map((unit) => (
+                              <SelectItem key={unit} value={unit}>
+                                {unit}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="stockQuantity">Stock Quantity *</Label>
+                        <Input
+                          id="stockQuantity"
+                          type="number"
+                          value={formData.stockQuantity}
+                          onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
+                          placeholder="0"
+                          min="0"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          value={formData.location}
+                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                          placeholder="e.g., Warehouse A, Section 3"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="slabLength">Slab Length (inches)</Label>
+                        <Input
+                          id="slabLength"
+                          value={formData.slabLength}
+                          onChange={(e) => setFormData({ ...formData, slabLength: e.target.value })}
+                          placeholder="e.g., 120"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="slabWidth">Slab Width (inches)</Label>
+                        <Input
+                          id="slabWidth"
+                          value={formData.slabWidth}
+                          onChange={(e) => setFormData({ ...formData, slabWidth: e.target.value })}
+                          placeholder="e.g., 72"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Optional description or notes"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="imageUrl">Image URL</Label>
+                      <Input
+                        id="imageUrl"
+                        value={formData.imageUrl}
+                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button type="button" variant="outline" onClick={handleCloseModal}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                        {createMutation.isPending || updateMutation.isPending 
+                          ? "Saving..." 
+                          : editingProduct ? "Update Bundle" : "Create Bundle"
+                        }
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {productsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Package className="h-8 w-8 text-muted-foreground animate-pulse mr-2" />
+                <span>Loading bundles...</span>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  Total Bundles: {Array.isArray(products) ? products.length : 0}
+                  {Array.isArray(products) && products.length > 0 && (
+                    <span className="ml-4 font-medium text-primary">
+                      Total Stock: {products.reduce((sum: number, product: Product) => sum + product.stockQuantity, 0)} slabs
+                    </span>
+                  )}
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Bundle ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Grade</TableHead>
+                        <TableHead>Thickness</TableHead>
+                        <TableHead>Finish</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Stock</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.isArray(products) && products.length > 0 ? (
+                        products.map((product: Product) => (
+                          <TableRow key={product.id}>
+                            <TableCell className="font-medium">
+                              {product.bundleId || 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{product.name}</div>
+                                {product.description && (
+                                  <div className="text-sm text-muted-foreground">
+                                    {product.description}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{product.category}</Badge>
+                            </TableCell>
+                            <TableCell>{product.grade}</TableCell>
+                            <TableCell>{product.thickness}</TableCell>
+                            <TableCell>{product.finish}</TableCell>
+                            <TableCell>${product.price}/{product.unit}</TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={product.stockQuantity > 0 ? "default" : "destructive"}
+                                className={product.stockQuantity > 0 ? "bg-green-100 text-green-800" : ""}
+                              >
+                                {product.stockQuantity}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {product.location && (
+                                <div className="flex items-center text-sm">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  {product.location}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEdit(product)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDelete(product.id, product.name)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={10} className="text-center py-8">
+                            <Package className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-muted-foreground">No bundles found</p>
+                            <p className="text-sm text-muted-foreground">Create your first bundle to get started</p>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
