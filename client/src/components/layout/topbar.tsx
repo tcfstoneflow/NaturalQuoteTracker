@@ -49,353 +49,83 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
     },
   });
 
-  const markAsReadMutation = useMutation({
-    mutationFn: async ({ type, referenceId }: { type: string; referenceId?: number }) => {
-      return await apiRequest("POST", "/api/notifications/mark-read", { type, referenceId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits/pending"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products/low-stock"] });
-      toast({
-        title: "Marked as read",
-        description: "Notification has been marked as read",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to mark notification as read",
-      });
-    },
-  });
-
-  const markAllAsReadMutation = useMutation({
-    mutationFn: async (type: string) => {
-      return await apiRequest("POST", "/api/notifications/mark-all-read", { type });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits/pending"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products/low-stock"] });
-      toast({
-        title: "All notifications marked as read",
-        description: "All notifications of this type have been cleared",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to mark all notifications as read",
-      });
-    },
-  });
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    onSearch?.(value);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch(searchQuery);
+    }
   };
 
   return (
     <>
-      <header className="bg-white border-b border-neutral-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-primary-custom">{title}</h2>
-            {subtitle && (
-              <p className="text-secondary-custom">{subtitle}</p>
-            )}
-          </div>
-          <div className="flex items-center space-x-4">
-            {/* Search Bar */}
-            {onSearch && (
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="Search clients, products..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-80"
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-custom" size={16} />
-              </div>
-            )}
-            
-            {/* Quick Actions */}
-            {!hideNewQuoteButton && (
-              <Button 
-                onClick={() => setIsQuoteBuilderOpen(true)}
-                className="bg-accent-orange hover:bg-accent-orange text-white"
-              >
-                <Plus size={16} className="mr-2" />
-                New Quote
+      <header className="bg-white border-b border-neutral-200 px-6 py-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-primary-custom">{title}</h1>
+          {subtitle && <p className="text-sm text-secondary-custom mt-1">{subtitle}</p>}
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Search */}
+          {onSearch && (
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 w-64"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-custom" size={16} />
+            </form>
+          )}
+          
+          {/* Quick Actions */}
+          {!hideNewQuoteButton && (
+            <Button 
+              onClick={() => setIsQuoteBuilderOpen(true)}
+              className="bg-accent-orange hover:bg-accent-orange text-white"
+            >
+              <Plus size={16} className="mr-2" />
+              New Quote
+            </Button>
+          )}
+          
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <User size={18} />
               </Button>
-            )}
-            
-            {/* Notifications */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell size={18} />
-                  {notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-error-red text-white text-xs rounded-full flex items-center justify-center">
-                      {notificationCount}
-                    </span>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <div className="p-3 border-b flex justify-between items-center">
-                  <h4 className="font-semibold text-sm">Notifications</h4>
-                  {notificationCount > 0 && (
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                      {notificationCount} new
-                    </span>
-                  )}
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {pendingVisits && pendingVisits.length > 0 && (
-                    <>
-                      <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
-                        <span className="text-xs font-medium text-gray-700">Showroom Visit Requests</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs"
-                          onClick={() => markAllAsReadMutation.mutate('showroom_visit')}
-                          disabled={markAllAsReadMutation.isPending}
-                        >
-                          <Check size={12} className="mr-1" />
-                          Mark All Read
-                        </Button>
-                      </div>
-                      {pendingVisits.map((visit: any) => (
-                        <div key={visit.id} className="p-3 border-b hover:bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="font-medium text-sm">New Showroom Visit Request</div>
-                              <div className="text-xs text-gray-600">
-                                {visit.name} ({visit.email}) wants to visit on {new Date(visit.requestedDate).toLocaleDateString()}
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 ml-2"
-                              onClick={() => markAsReadMutation.mutate({ type: 'showroom_visit', referenceId: visit.id })}
-                              disabled={markAsReadMutation.isPending}
-                            >
-                              <X size={12} />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {lowStockProducts && lowStockProducts.length > 0 && (
-                    <>
-                      <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
-                        <span className="text-xs font-medium text-gray-700">Low Stock Alerts</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs"
-                          onClick={() => markAllAsReadMutation.mutate('low_stock')}
-                          disabled={markAllAsReadMutation.isPending}
-                        >
-                          <Check size={12} className="mr-1" />
-                          Mark All Read
-                        </Button>
-                      </div>
-                      {lowStockProducts.map((product: any) => (
-                        <div key={product.id} className="p-3 border-b hover:bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="font-medium text-sm">Low Stock Alert</div>
-                              <div className="text-xs text-gray-600">
-                                {product.name} - Only {product.stockQuantity} slabs remaining
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 ml-2"
-                              onClick={() => markAsReadMutation.mutate({ type: 'low_stock', referenceId: product.id })}
-                              disabled={markAsReadMutation.isPending}
-                            >
-                              <X size={12} />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {slabNotifications && slabNotifications.length > 0 && (
-                    <>
-                      <div className="p-2 border-b bg-blue-50 flex justify-between items-center">
-                        <span className="text-xs font-medium text-blue-700 flex items-center">
-                          <Package size={12} className="mr-1" />
-                          Slab Updates
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs"
-                          onClick={() => {
-                            slabNotifications.forEach(notification => {
-                              removeNotification(notification.id);
-                            });
-                          }}
-                        >
-                          <Check size={12} className="mr-1" />
-                          Clear All
-                        </Button>
-                      </div>
-                      {slabNotifications.map((notification) => (
-                        <div key={notification.id} className="p-3 border-b hover:bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="font-medium text-sm flex items-center">
-                                <Package size={12} className="mr-1 text-blue-600" />
-                                {notification.title}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                {notification.message}
-                              </div>
-                              {notification.data?.bundleId && (
-                                <div className="text-xs text-blue-600 mt-1">
-                                  Bundle: {notification.data.bundleId}
-                                </div>
-                              )}
-                              <div className="text-xs text-gray-400 mt-1">
-                                {new Date(notification.timestamp).toLocaleString()}
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 ml-2"
-                              onClick={() => removeNotification(notification.id)}
-                            >
-                              <X size={12} />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {userNotifications && userNotifications.length > 0 && (
-                    <>
-                      <div className="p-2 border-b bg-green-50 flex justify-between items-center">
-                        <span className="text-xs font-medium text-green-700 flex items-center">
-                          <UserPlus size={12} className="mr-1" />
-                          New Team Members
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs"
-                          onClick={() => {
-                            userNotifications.forEach(notification => {
-                              removeNotification(notification.id);
-                            });
-                          }}
-                        >
-                          <Check size={12} className="mr-1" />
-                          Clear All
-                        </Button>
-                      </div>
-                      {userNotifications.map((notification) => (
-                        <div key={notification.id} className="p-3 border-b hover:bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="font-medium text-sm flex items-center">
-                                <UserPlus size={12} className="mr-1 text-green-600" />
-                                {notification.title}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                {notification.message}
-                              </div>
-                              {notification.data?.userRole && (
-                                <div className="text-xs text-green-600 mt-1">
-                                  Role: {notification.data.userRole}
-                                </div>
-                              )}
-                              <div className="text-xs text-gray-400 mt-1">
-                                {new Date(notification.timestamp).toLocaleString()}
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 ml-2"
-                              onClick={() => removeNotification(notification.id)}
-                            >
-                              <X size={12} />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                  {notificationCount === 0 && (
-                    <div className="p-4 text-center text-gray-500 text-sm flex items-center justify-center">
-                      <div className="flex items-center">
-                        {isConnected ? (
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        ) : (
-                          <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                        )}
-                        {isConnected ? 'Connected - No new notifications' : 'Disconnected - Reconnecting...'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* User Profile & Logout */}
-            <div className="flex items-center space-x-3 border-l border-neutral-200 pl-4">
-              <div className="flex items-center space-x-2">
-                <User size={16} className="text-secondary-custom" />
-                <span className="text-sm font-medium text-primary-custom">
-                  {user?.user?.firstName} {user?.user?.lastName}
-                </span>
-                <span className="text-xs bg-accent-blue text-white px-2 py-1 rounded-full">
-                  {user?.user?.role === 'admin' ? 'Admin' : 'Sales Rep'}
-                </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <div className="px-3 py-2 border-b">
+                <p className="text-sm font-medium">{user?.username}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
-              <div className="flex items-center space-x-2">
-                <Link href="/settings">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-secondary-custom hover:text-primary"
-                  >
-                    <Settings size={16} className="mr-1" />
-                    Settings
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => logoutMutation.mutate()}
-                  disabled={logoutMutation.isPending}
-                  className="text-secondary-custom hover:text-error-red"
-                  title="Logout"
-                >
-                  <LogOut size={16} className="mr-1" />
-                  Logout
-                </Button>
-              </div>
-            </div>
-          </div>
+              <Link href="/settings">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings size={16} className="mr-2" />
+                  Settings
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="cursor-pointer text-red-600"
+              >
+                <LogOut size={16} className="mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
+      {/* Quote Builder Modal */}
       <QuoteBuilderModal 
-        isOpen={isQuoteBuilderOpen}
-        onClose={() => setIsQuoteBuilderOpen(false)}
+        isOpen={isQuoteBuilderOpen} 
+        onClose={() => setIsQuoteBuilderOpen(false)} 
       />
     </>
   );
