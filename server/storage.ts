@@ -1,6 +1,6 @@
 import { 
   users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags, salesTargets,
-  salesRepProfiles, salesRepFavoriteSlabs, salesRepPortfolioImages, salesRepAppointments, mfaCodes,
+  salesRepProfiles, salesRepFavoriteSlabs, salesRepPortfolioImages, salesRepAppointments,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -19,7 +19,6 @@ import {
   type SalesRepFavoriteSlab, type InsertSalesRepFavoriteSlab,
   type SalesRepPortfolioImage, type InsertSalesRepPortfolioImage,
   type SalesRepAppointment, type InsertSalesRepAppointment,
-  type MfaCode, type InsertMfaCode,
   type DashboardStats
 } from "@shared/schema";
 import { db } from "./db";
@@ -422,10 +421,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Clients
-  async getClients(): Promise<Client[]> {
-    return await withRetry(async () => {
-      return await db.select().from(clients).orderBy(desc(clients.createdAt));
-    });
+  async getClients(): Promise<(Client & { salesManager?: { firstName: string; lastName: string } })[]> {
+    return await db
+      .select({
+        id: clients.id,
+        name: clients.name,
+        email: clients.email,
+        phone: clients.phone,
+        company: clients.company,
+        address: clients.address,
+        city: clients.city,
+        state: clients.state,
+        zipCode: clients.zipCode,
+        notes: clients.notes,
+        salesManagerId: clients.salesManagerId,
+        createdBy: clients.createdBy,
+        createdAt: clients.createdAt,
+        salesManager: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(clients)
+      .leftJoin(users, eq(clients.salesManagerId, users.id))
+      .orderBy(desc(clients.createdAt));
   }
 
   async getClient(id: number): Promise<Client | undefined> {

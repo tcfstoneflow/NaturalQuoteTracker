@@ -24,7 +24,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Early API route registration before Vite middleware
 app.post('/api/contact/showroom-visit', async (req, res) => {
   try {
-    const { storage } = await import('./storage-simple');
+    const { storage } = await import('./storage');
     const { name, email, phone, preferredDate, message } = req.body;
     
     if (!name || !email || !phone || !preferredDate) {
@@ -56,7 +56,7 @@ app.post('/api/contact/showroom-visit', async (req, res) => {
 // Early registration for showroom visits management routes
 app.get('/api/showroom-visits', async (req, res) => {
   try {
-    const { storage } = await import('./storage-simple');
+    const { storage } = await import('./storage');
     const visits = await storage.getShowroomVisits();
     res.json(visits);
   } catch (error: any) {
@@ -66,7 +66,7 @@ app.get('/api/showroom-visits', async (req, res) => {
 
 app.patch('/api/showroom-visits/:id', express.json(), async (req, res) => {
   try {
-    const { storage } = await import('./storage-simple');
+    const { storage } = await import('./storage');
     const id = parseInt(req.params.id);
     const updates = req.body;
     
