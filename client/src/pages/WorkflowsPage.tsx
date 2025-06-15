@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Play, Clock, CheckCircle, XCircle, Users, FileText, Settings } from "lucide-react";
 import { format } from "date-fns";
-import type { WorkflowWithSteps, WorkflowInstanceWithDetails, WorkflowTemplate } from "@shared/schema";
 
 export default function WorkflowsPage() {
   const [selectedTab, setSelectedTab] = useState("instances");
