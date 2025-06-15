@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -45,6 +45,11 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   const [additionalMessage, setAdditionalMessage] = useState("");
   const [ccProcessingFee, setCcProcessingFee] = useState(false);
   const [salesRepId, setSalesRepId] = useState("");
+  const [clientSearchQuery, setClientSearchQuery] = useState("");
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  
+  // Ref for click outside detection
+  const clientDropdownRef = useRef<HTMLDivElement>(null);
   
   // New client creation state
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
@@ -88,6 +93,11 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         setProjectName(editQuote.projectName || "");
         setNotes(editQuote.notes || "");
         
+        // Set client search query to show selected client
+        if (editQuote.client) {
+          setClientSearchQuery(editQuote.client.company ? `${editQuote.client.company} - ${editQuote.client.name}` : editQuote.client.name);
+        }
+        
         // Populate line items
         const existingLineItems = editQuote.lineItems?.map((item: any) => ({
           productId: item.productId,
@@ -106,6 +116,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       } else {
         // Reset form for new quote
         setClientId("");
+        setClientSearchQuery("");
         setProjectName("");
         setNotes("");
         setLineItems([]);
@@ -121,6 +132,23 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       }
     }
   }, [isOpen, editQuote, user]);
+
+  // Click outside handler for client dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target as Node)) {
+        setIsClientDropdownOpen(false);
+      }
+    };
+
+    if (isClientDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isClientDropdownOpen]);
 
   const createQuoteMutation = useMutation({
     mutationFn: quotesApi.create,
@@ -336,11 +364,13 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
 
   const handleClose = () => {
     setClientId("");
+    setClientSearchQuery("");
     setProjectName("");
     setNotes("");
     setLineItems([]);
     setAdditionalMessage("");
     setCcProcessingFee(false);
+    setIsClientDropdownOpen(false);
     onClose();
   };
 
@@ -359,29 +389,86 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         <div className="space-y-6">
           {/* Client Selection and Project Details */}
           <div className="grid grid-cols-1 gap-6">
-            <div>
+            <div className="relative">
               <Label htmlFor="client">Select Client *</Label>
-              <Select value={clientId} onValueChange={(value) => {
-                if (value === "create_new") {
-                  setIsNewClientModalOpen(true);
-                } else {
-                  setClientId(value);
-                }
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a client..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="create_new" className="text-blue-600 font-medium border-b">
-                    + Create New Client
-                  </SelectItem>
-                  {clients.map((client: any) => (
-                    <SelectItem key={client.id} value={client.id.toString()}>
-                      {client.company ? `${client.company} - ${client.name}` : client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Input
+                  placeholder="Search for a client..."
+                  value={clientSearchQuery}
+                  onChange={(e) => {
+                    setClientSearchQuery(e.target.value);
+                    setIsClientDropdownOpen(true);
+                  }}
+                  onFocus={() => setIsClientDropdownOpen(true)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  ▼
+                </button>
+                
+                {isClientDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {(() => {
+                      const filteredClients = clients?.filter((client: any) => {
+                        const searchTerm = clientSearchQuery.toLowerCase();
+                        return (
+                          client.name?.toLowerCase().includes(searchTerm) ||
+                          client.company?.toLowerCase().includes(searchTerm) ||
+                          client.email?.toLowerCase().includes(searchTerm)
+                        );
+                      }) || [];
+
+                      if (filteredClients.length === 0) {
+                        return (
+                          <div
+                            onClick={() => {
+                              setIsNewClientModalOpen(true);
+                              setIsClientDropdownOpen(false);
+                            }}
+                            className="px-4 py-3 text-blue-600 font-medium cursor-pointer hover:bg-blue-50 border-b"
+                          >
+                            + Create New Client
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <>
+                          <div
+                            onClick={() => {
+                              setIsNewClientModalOpen(true);
+                              setIsClientDropdownOpen(false);
+                            }}
+                            className="px-4 py-3 text-blue-600 font-medium cursor-pointer hover:bg-blue-50 border-b"
+                          >
+                            + Create New Client
+                          </div>
+                          {filteredClients.map((client: any) => (
+                            <div
+                              key={client.id}
+                              onClick={() => {
+                                setClientId(client.id.toString());
+                                setClientSearchQuery(client.company ? `${client.company} - ${client.name}` : client.name);
+                                setIsClientDropdownOpen(false);
+                              }}
+                              className="px-4 py-3 cursor-pointer hover:bg-gray-50"
+                            >
+                              <div className="font-medium">
+                                {client.company ? `${client.company} - ${client.name}` : client.name}
+                              </div>
+                              <div className="text-sm text-gray-500">{client.email}</div>
+                            </div>
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
