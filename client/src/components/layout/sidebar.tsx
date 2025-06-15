@@ -27,6 +27,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Quotes", href: "/quotes", icon: FileText },
+  { name: "Cart", href: "/cart", icon: ShoppingCart },
   { name: "AR", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
   { name: "Reports", href: "/reports", icon: TrendingUp },
   { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
