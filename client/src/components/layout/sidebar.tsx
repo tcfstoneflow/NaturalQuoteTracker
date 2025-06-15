@@ -52,7 +52,7 @@ const featureFolderNavigation = [
 const adminNavigation = [
   { name: "System Access", href: "/user-management", icon: UserCog },
   { name: "System Health", href: "/system-health", icon: Activity },
-  { name: "Feature Folder", href: "/feature-folder", icon: Folder },
+  { name: "Tracking", href: "/feature-folder", icon: Folder },
 ];
 
 const salesRepNavigation = [
