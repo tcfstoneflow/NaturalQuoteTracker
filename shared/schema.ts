@@ -156,7 +156,7 @@ export const quotes = pgTable("quotes", {
   quoteNumber: text("quote_number").notNull().unique(),
   clientId: integer("client_id").notNull(),
   projectName: text("project_name").notNull(),
-  status: text("status").notNull().default("pending"), // "pending", "approved", "rejected", "expired"
+  status: text("status").notNull().default("pending"), // "pending", "approved", "rejected", "expired", "draft", "sent"
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull().default("0"),
   taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).notNull().default("0.085"),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull().default("0"),
@@ -167,6 +167,7 @@ export const quotes = pgTable("quotes", {
   sentAt: timestamp("sent_at"),
   salesRepId: integer("sales_rep_id").references(() => users.id),
   createdBy: integer("created_by").references(() => users.id),
+  cartId: integer("cart_id").references(() => carts.id),
   // Sales leader approval fields
   approved: boolean("approved"),
   approvedBy: integer("approved_by").references(() => users.id),
@@ -183,6 +184,10 @@ export const quoteLineItems = pgTable("quote_line_items", {
   quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  slabId: integer("slab_id").references(() => slabs.id),
+  length: decimal("length", { precision: 8, scale: 2 }),
+  width: decimal("width", { precision: 8, scale: 2 }),
+  area: decimal("area", { precision: 10, scale: 2 }),
   notes: text("notes"),
 });
 
@@ -205,10 +210,11 @@ export const slabs = pgTable("slabs", {
 
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
-  type: text("type").notNull(), // "quote_created", "quote_sent", "quote_approved", "quote_rejected", "client_added", "product_updated", "showroom_visit_request"
+  type: text("type").notNull(), // "quote_created", "quote_sent", "quote_approved", "quote_rejected", "client_added", "product_updated", "showroom_visit_request", "quote_draft_created"
   description: text("description").notNull(),
   entityType: text("entity_type"), // "quote", "client", "product", "contact_request"
   entityId: integer("entity_id"),
+  clientId: integer("client_id"), // For client-specific activities
   metadata: jsonb("metadata"), // For showroom requests: {name, email, phone, preferredDate, message, status}
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
