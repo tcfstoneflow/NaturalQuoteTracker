@@ -10,6 +10,7 @@ import { NotificationProvider } from "@/hooks/useNotifications";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
+import Contacts from "@/pages/contacts";
 import Inventory from "@/pages/inventory";
 import Quotes from "@/pages/quotes";
 import Reports from "@/pages/reports";
@@ -87,6 +88,7 @@ function Router() {
                   <Route path="/dashboard" component={Dashboard} />
                   <Route path="/sales-dashboard" component={SalesDashboard} />
                   <Route path="/sales-leader" component={SalesLeaderDashboard} />
+                  <Route path="/contacts" component={Contacts} />
                   <Route path="/clients" component={Clients} />
                   <Route path="/pipeline" component={Pipeline} />
                   <Route path="/purchase-orders" component={PurchaseOrders} />
