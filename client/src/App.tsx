@@ -28,6 +28,7 @@ import Settings from "@/pages/settings";
 import SystemHealth from "@/pages/system-health";
 import SalesRepManagement from "@/pages/sales-rep-management";
 import SalesRepProfile from "@/pages/sales-rep-profile";
+import SalesLeaderDashboard from "@/pages/SalesLeaderDashboard";
 import WorkflowsPage from "@/pages/WorkflowsPage";
 
 import Sidebar from "@/components/layout/sidebar";
@@ -37,10 +38,12 @@ function DefaultRoute() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   
-  // Redirect sales reps to sales dashboard, others to main dashboard
+  // Redirect based on user role
   React.useEffect(() => {
     if (user?.role === 'sales_rep') {
       setLocation('/sales-dashboard');
+    } else if (user?.role === 'sales_leader') {
+      setLocation('/sales-leader');
     } else {
       setLocation('/dashboard');
     }
@@ -79,6 +82,7 @@ function Router() {
                   <Route path="/" component={DefaultRoute} />
                   <Route path="/dashboard" component={Dashboard} />
                   <Route path="/sales-dashboard" component={SalesDashboard} />
+                  <Route path="/sales-leader" component={SalesLeaderDashboard} />
                   <Route path="/clients" component={Clients} />
                   <Route path="/inventory" component={Inventory} />
                   <Route path="/counter-fixtures" component={CounterFixtures} />
