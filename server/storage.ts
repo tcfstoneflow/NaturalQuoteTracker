@@ -1201,6 +1201,13 @@ export class DatabaseStorage implements IStorage {
     return newActivity;
   }
 
+  async addActivity(data: InsertActivity): Promise<Activity> {
+    return withRetry(async () => {
+      const [newActivity] = await db.insert(activities).values(data).returning();
+      return newActivity;
+    });
+  }
+
   // Dashboard
   async getDashboardStats(): Promise<DashboardStats> {
     const [totalRevenueResult] = await db

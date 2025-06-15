@@ -2048,9 +2048,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           unitPrice: lineItem.unitPrice,
           totalPrice: lineItem.totalPrice,
           slabId: lineItem.slabId,
-          length: lineItem.length ? parseFloat(lineItem.length) : null,
-          width: lineItem.width ? parseFloat(lineItem.width) : null,
-          area: lineItem.area ? parseFloat(lineItem.area) : null,
           notes: lineItem.notes
         });
       }
@@ -2064,12 +2061,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? `Quote ${quote.quoteNumber} sent via email`
         : `Quote ${quote.quoteNumber} saved as draft`;
         
-      await storage.createActivity({
+      await storage.addActivity({
         type: activityType,
         description: activityDescription,
         entityType: "quote",
-        entityId: quote.id,
-        clientId: quote.clientId
+        entityId: quote.id
       });
       
       // Send email if requested
