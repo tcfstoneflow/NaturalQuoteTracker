@@ -396,6 +396,8 @@ export default function Clients() {
     return subtotal + processingFee;
   };
 
+
+
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
     setViewingClient(null);
@@ -553,31 +555,35 @@ export default function Clients() {
 
     setIsLoggingVisit(true);
     try {
-      const response = await apiRequest("POST", "/api/clients/log-visit", {
-        clientId: viewingClient.id,
-        timestamp: new Date().toISOString()
+      const response = await fetch(`/api/clients/${viewingClient.id}/visit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
-      if (response.ok) {
-        toast({
-          title: "Visit Logged",
-          description: `Store visit recorded for ${viewingClient.name}`,
-        });
-        
-        // Refresh client quotes to update activity history
-        queryClient.invalidateQueries({
-          queryKey: ['/api/quotes', { clientId: viewingClient.id }]
-        });
-        
-        setIsVisitorVisitModalOpen(false);
-      } else {
+      if (!response.ok) {
         throw new Error('Failed to log visit');
       }
-    } catch (error: any) {
-      console.error("Error logging visit:", error);
+      
+      const result = await response.json();
+      
+      toast({
+        title: "Visit Logged Successfully",
+        description: result.message,
+      });
+      
+      // Close the modal
+      setIsVisitorVisitModalOpen(false);
+      
+      // Refetch client activities to update activity history
+      queryClient.invalidateQueries({ queryKey: ['/api/clients', viewingClient.id, 'activities'] });
+      
+    } catch (error) {
+      console.error('Error logging visit:', error);
       toast({
         title: "Error",
-        description: "Failed to log store visit. Please try again.",
+        description: "Failed to log visitor visit. Please try again.",
         variant: "destructive",
       });
     } finally {

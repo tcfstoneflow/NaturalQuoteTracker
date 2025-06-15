@@ -668,6 +668,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get client activities (quotes and store visits)
+  app.get("/api/clients/:id/activities", requireAuth, async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      
+      if (isNaN(clientId)) {
+        return res.status(400).json({ error: "Invalid client ID" });
+      }
+      
+      // Get client details to verify existence
+      const client = await storage.getClient(clientId);
+      if (!client) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+      
+      // Get client quotes
+      const quotes = await storage.getClientQuotes(clientId);
+      
+      // Get client activities (store visits)
+      const activities = await storage.getActivitiesByEntityId('client', clientId);
+      
+      // Combine and sort activities
+      const allActivities = [
+        // Quote activities
+        ...quotes.map((quote: any) => ({
+          id: `quote-${quote.id}`,
+          type: 'quote',
+          description: `Quote ${quote.status === 'approved' ? 'Approved' : quote.status === 'rejected' ? 'Rejected' : 'Created'}: ${quote.quoteNumber}`,
+          details: `${quote.status === 'approved' ? `Quote approved for ${quote.projectName} - $${parseFloat(quote.totalAmount || quote.subtotal || 0).toLocaleString()}` :
+                   quote.status === 'rejected' ? `Quote rejected for ${quote.projectName}` :
+                   `New quote created for ${quote.projectName} - $${parseFloat(quote.totalAmount || quote.subtotal || 0).toLocaleString()}`}`,
+          createdAt: quote.createdAt,
+          status: quote.status
+        })),
+        // Store visit activities
+        ...activities.filter((activity: any) => activity.type === 'store_visit').map((activity: any) => ({
+          id: `activity-${activity.id}`,
+          type: 'store_visit',
+          description: 'Store Visit',
+          details: `Client visited the store`,
+          createdAt: activity.createdAt,
+          status: 'completed'
+        })),
+        // Client creation activity
+        {
+          id: `client-created-${client.id}`,
+          type: 'client_created',
+          description: 'Client Added',
+          details: `Client ${client.name} was added to the system`,
+          createdAt: client.createdAt,
+          status: 'completed'
+        }
+      ];
+      
+      // Sort by date (newest first)
+      allActivities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      res.json(allActivities);
+    } catch (error: any) {
+      console.error('Error fetching client activities:', error);
+      res.status(500).json({ error: 'Failed to fetch client activities' });
+    }
+  });
+
+  // Log visitor visit for a client
+  app.post("/api/clients/:id/visit", requireAuth, async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      
+      if (isNaN(clientId)) {
+        return res.status(400).json({ error: "Invalid client ID" });
+      }
+      
+      // Get client details to verify existence
+      const client = await storage.getClient(clientId);
+      if (!client) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+      
+      // Create a new activity entry for the store visit
+      await storage.createActivity({
+        type: 'store_visit',
+        description: `Store visit logged for ${client.name}`,
+        entityType: 'client',
+        entityId: clientId,
+        metadata: {
+          clientId,
+          clientName: client.name,
+          visitDate: new Date().toISOString()
+        }
+      });
+      
+      res.json({ 
+        success: true, 
+        message: `Store visit logged for ${client.name}`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('Error logging visitor visit:', error);
+      res.status(500).json({ error: 'Failed to log visitor visit' });
+    }
+  });
+
   // Client AI Summary
   app.post("/api/clients/ai-summary", requireAuth, async (req, res) => {
     try {
