@@ -1035,6 +1035,65 @@ export default function Clients() {
                     </div>
                   )}
 
+                  {/* Activity History */}
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <h3 className="text-lg font-semibold text-primary-custom mb-4">Activity History</h3>
+                    {clientQuotes && clientQuotes.length > 0 ? (
+                      <div className="space-y-3">
+                        {clientQuotes.map((quote: any) => (
+                          <div key={`activity-${quote.id}`} className="flex items-start gap-3 p-3 bg-white rounded border">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="font-medium text-sm">Quote {quote.status === 'approved' ? 'Approved' : quote.status === 'rejected' ? 'Rejected' : 'Created'}: {quote.quoteNumber}</p>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(quote.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600">
+                                {quote.status === 'approved' ? `Quote approved for ${quote.projectName} - $${parseFloat(quote.totalAmount || quote.subtotal || 0).toLocaleString()}` :
+                                 quote.status === 'rejected' ? `Quote rejected for ${quote.projectName}` :
+                                 `New quote created for ${quote.projectName} - $${parseFloat(quote.totalAmount || quote.subtotal || 0).toLocaleString()}`}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                        {/* Client creation activity */}
+                        <div className="flex items-start gap-3 p-3 bg-white rounded border">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="font-medium text-sm">Client Added</p>
+                              <span className="text-xs text-gray-500">
+                                {new Date(viewingClient.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              Client {viewingClient.name} was added to the system
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <div className="flex items-start gap-3 p-3 bg-white rounded border">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="font-medium text-sm">Client Added</p>
+                              <span className="text-xs text-gray-500">
+                                {new Date(viewingClient.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              Client {viewingClient.name} was added to the system
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Purchase History */}
                   <div>
                     <div className="flex justify-between items-center mb-4">
