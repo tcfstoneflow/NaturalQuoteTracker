@@ -69,6 +69,15 @@ export default function SystemHealth() {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Fetch workflows data
+  const { data: workflows, isLoading: workflowsLoading, refetch: refetchWorkflows } = useQuery({
+    queryKey: ["/api/workflows"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/workflows");
+      return await res.json();
+    },
+  });
+
   const validateMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/admin/validate-database");
@@ -455,9 +464,91 @@ export default function SystemHealth() {
           )}
         </TabsContent>
 
-        <TabsContent value="specs">
+        <TabsContent value="workflows">
           <div className="space-y-4">
-            {/* System Specs content will be added here */}
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Workflow Management</h3>
+              <Button onClick={() => refetchWorkflows()} variant="outline" size="sm">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh Workflows
+              </Button>
+            </div>
+
+            {workflowsLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <RefreshCw className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Loading workflows...</span>
+              </div>
+            ) : workflows && workflows.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workflows.map((workflow: any) => (
+                  <Card key={workflow.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{workflow.name}</CardTitle>
+                        <Badge variant={workflow.status === 'active' ? 'default' : 'secondary'}>
+                          {workflow.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{workflow.description}</p>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm">
+                          <GitBranch className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <span>Category: {workflow.category}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Activity className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <span>Priority: {workflow.priority}</span>
+                        </div>
+                        {workflow.estimatedDuration && (
+                          <div className="flex items-center text-sm">
+                            <span className="w-4 h-4 mr-2 text-muted-foreground">⏱️</span>
+                            <span>Est. Duration: {workflow.estimatedDuration}h</span>
+                          </div>
+                        )}
+                        {workflow.steps && (
+                          <div className="flex items-center text-sm">
+                            <span className="w-4 h-4 mr-2 text-muted-foreground">📋</span>
+                            <span>Steps: {workflow.steps.length}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between pt-2">
+                          <span className="text-xs text-muted-foreground">
+                            Created: {new Date(workflow.createdAt).toLocaleDateString()}
+                          </span>
+                          <div className="flex space-x-1">
+                            {workflow.status === 'active' ? (
+                              <Button size="sm" variant="outline">
+                                <Pause className="w-3 h-3" />
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline">
+                                <Play className="w-3 h-3" />
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline">
+                              <Square className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <GitBranch className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Workflows Found</h3>
+                  <p className="text-muted-foreground">
+                    No workflows are currently configured in the system.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
       </Tabs>
