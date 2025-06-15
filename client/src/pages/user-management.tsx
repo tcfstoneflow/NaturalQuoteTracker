@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertUserSchema } from "@shared/schema";
-import TopBar from "@/components/layout/topbar";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -315,11 +315,6 @@ export default function UserManagement() {
 
   return (
     <div className="flex flex-col h-full">
-      <TopBar 
-        title="User Management" 
-        subtitle="Manage sales team access and permissions"
-      />
-      
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header with Add User Button */}

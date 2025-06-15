@@ -43,7 +43,7 @@ const featureFolderNavigation = [
 ];
 
 const adminNavigation = [
-  { name: "User Management", href: "/user-management", icon: UserCog },
+  { name: "System Access", href: "/user-management", icon: UserCog },
   { name: "System Health", href: "/system-health", icon: Activity },
   { name: "Feature Folder", href: "/feature-folder", icon: Folder },
   { name: "Workflows", href: "/workflows", icon: GitBranch },
