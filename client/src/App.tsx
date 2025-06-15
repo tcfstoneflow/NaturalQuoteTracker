@@ -32,6 +32,7 @@ import SalesLeaderDashboard from "@/pages/SalesLeaderDashboard";
 import WorkflowsPage from "@/pages/WorkflowsPage";
 import PurchaseOrders from "@/pages/PurchaseOrders";
 import Pipeline from "@/pages/Pipeline";
+import FeatureFolder from "@/pages/FeatureFolder";
 
 import Sidebar from "@/components/layout/sidebar";
 
@@ -88,6 +89,7 @@ function Router() {
                   <Route path="/clients" component={Clients} />
                   <Route path="/pipeline" component={Pipeline} />
                   <Route path="/purchase-orders" component={PurchaseOrders} />
+                  <Route path="/feature-folder" component={FeatureFolder} />
                   <Route path="/inventory" component={Inventory} />
                   <Route path="/counter-fixtures" component={CounterFixtures} />
                   <Route path="/quotes" component={Quotes} />

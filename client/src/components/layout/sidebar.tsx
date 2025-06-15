@@ -18,7 +18,8 @@ import {
   Layers,
   GitBranch,
   ClipboardList,
-  Workflow
+  Workflow,
+  Folder
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Pipeline", href: "/pipeline", icon: Workflow },
   { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
+  { name: "Feature Folder", href: "/feature-folder", icon: Folder },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
