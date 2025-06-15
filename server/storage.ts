@@ -1232,30 +1232,34 @@ export class DatabaseStorage implements IStorage {
 
   async getPipelineItems(): Promise<any[]> {
     return withRetry(async () => {
-      // Get all carts with their totals and associated quotes
+      // Get all carts with basic information
       const allCarts = await db
         .select({
           id: carts.id,
           name: carts.name,
           clientId: carts.clientId,
-          clientName: clients.name,
           userId: carts.userId,
-          userName: sql<string>`COALESCE(CONCAT(${users.firstName}, ' ', ${users.lastName}), 'Unknown User')`,
           type: carts.type,
           status: carts.status,
           totalAmount: carts.totalAmount,
           notes: carts.notes,
           createdAt: carts.createdAt,
-          updatedAt: carts.updatedAt,
-          quoteId: quotes.id,
-          quoteNumber: quotes.quoteNumber,
-          quoteStatus: quotes.status
+          updatedAt: carts.updatedAt
         })
         .from(carts)
-        .leftJoin(clients, eq(carts.clientId, clients.id))
-        .leftJoin(users, eq(carts.userId, users.id))
-        .leftJoin(quotes, eq(quotes.cartId, carts.id))
         .orderBy(desc(carts.createdAt));
+
+      // Get client information separately
+      const clientsData = await db.select().from(clients);
+      const clientsMap = new Map(clientsData.map(c => [c.id, c]));
+
+      // Get user information separately  
+      const usersData = await db.select().from(users);
+      const usersMap = new Map(usersData.map(u => [u.id, u]));
+
+      // Get quotes information separately
+      const quotesData = await db.select().from(quotes);
+      const quotesMap = new Map(quotesData.map(q => [q.cartId, q]));
 
       // Get cart items to calculate accurate subtotals
       const cartItemsMap = new Map();
@@ -1281,20 +1285,23 @@ export class DatabaseStorage implements IStorage {
       // Transform to pipeline format with calculated subtotals
       const pipelineItems = allCarts.map(cart => {
         const cartItems = cartItemsMap.get(cart.id) || { items: [], subtotal: 0 };
+        const client = clientsMap.get(cart.clientId);
+        const user = usersMap.get(cart.userId);
+        const quote = quotesMap.get(cart.id);
         
         return {
           id: cart.id,
           cartId: cart.id,
           cartName: cart.name,
           clientId: cart.clientId,
-          clientName: cart.clientName,
-          stage: cart.quoteId ? 'quote' : 'cart',
+          clientName: client?.name || 'Unknown Client',
+          stage: quote ? 'quote' : 'cart',
           priority: 'medium',
           estimatedCompletionDate: null,
           actualCompletionDate: null,
           notes: cart.notes,
           assignedUserId: cart.userId,
-          assignedUserName: cart.userName,
+          assignedUserName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User' : 'Unknown User',
           createdAt: cart.createdAt,
           updatedAt: cart.updatedAt,
           // Additional cart/quote details
@@ -1303,9 +1310,9 @@ export class DatabaseStorage implements IStorage {
           totalAmount: cart.totalAmount,
           calculatedSubtotal: cartItems.subtotal.toFixed(2),
           itemCount: cartItems.items.length,
-          quoteId: cart.quoteId,
-          quoteNumber: cart.quoteNumber,
-          quoteStatus: cart.quoteStatus
+          quoteId: quote?.id || null,
+          quoteNumber: quote?.quoteNumber || null,
+          quoteStatus: quote?.status || null
         };
       });
       

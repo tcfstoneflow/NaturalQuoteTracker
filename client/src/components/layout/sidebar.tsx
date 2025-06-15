@@ -25,22 +25,22 @@ import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Clients", href: "/clients", icon: Users },
-  { name: "Quotes", href: "/quotes", icon: FileText },
-  { name: "Cart", href: "/cart", icon: ShoppingCart },
-  { name: "AR", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
-  { name: "Reports", href: "/reports", icon: TrendingUp },
-  { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
-  { name: "Sales Leader", href: "/sales-leader", icon: Users, roles: ['sales_leader'] },
-  { name: "Pipeline", href: "/pipeline", icon: Workflow },
-];
-
-const featureFolderNavigation = [
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
+  { name: "Quotes", href: "/quotes", icon: FileText },
   { name: "Showroom Visits", href: "/showroom-visits", icon: Calendar },
+  { name: "AR", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
+  { name: "Reports", href: "/reports", icon: TrendingUp },
+  { name: "Pipeline", href: "/pipeline", icon: Workflow },
   { name: "SQL Query Tool", href: "/sql-query", icon: Database },
+];
+
+const featureFolderNavigation = [
+  { name: "Clients", href: "/clients", icon: Users },
+  { name: "Cart", href: "/cart", icon: ShoppingCart },
+  { name: "Sales Dashboard", href: "/sales-dashboard", icon: Target },
+  { name: "Sales Leader", href: "/sales-leader", icon: Users, roles: ['sales_leader'] },
 ];
 
 const adminNavigation = [
@@ -66,24 +66,22 @@ export default function Sidebar() {
   // Filter navigation based on user role
   const getVisibleNavigation = () => {
     if (isAdmin) {
-      // Admins see everything except sales dashboard and sales leader dashboard
-      return navigation.filter(item => 
-        item.href !== '/sales-dashboard' && item.href !== '/sales-leader'
-      );
+      // Admins see everything in the main navigation
+      return navigation;
     } else if (isInventorySpecialist) {
-      // Inventory specialists can see dashboard and reports (inventory moved to Feature Folder)
+      // Inventory specialists can see dashboard, inventory, all slabs, and reports
       return navigation.filter(item => 
-        ['/', '/reports'].includes(item.href)
+        ['/', '/inventory', '/all-slabs', '/reports'].includes(item.href)
       );
     } else if (isSalesRep) {
-      // Sales reps can see sales dashboard, clients, and quotes (showroom visits moved to Feature Folder)
+      // Sales reps can see dashboard, quotes, showroom visits, and reports
       return navigation.filter(item => 
-        ['/sales-dashboard', '/clients', '/quotes'].includes(item.href)
+        ['/', '/quotes', '/showroom-visits', '/reports'].includes(item.href)
       );
     } else if (isSalesLeader) {
-      // Sales leaders can see sales leader dashboard, main dashboard, clients, quotes, and reports
+      // Sales leaders can see dashboard, quotes, showroom visits, AR, reports, and pipeline
       return navigation.filter(item => 
-        ['/', '/sales-leader', '/clients', '/quotes', '/reports'].includes(item.href)
+        ['/', '/quotes', '/showroom-visits', '/purchase-orders', '/reports', '/pipeline'].includes(item.href)
       );
     }
     return navigation;
