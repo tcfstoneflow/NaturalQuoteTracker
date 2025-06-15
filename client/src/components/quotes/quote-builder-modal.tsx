@@ -128,8 +128,8 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         setInventorySearchQuery("");
         setIsInventoryDropdownOpen(false);
         
-        // Pre-populate sales rep field if current user is a sales rep
-        if (user?.role === 'sales_rep') {
+        // Pre-populate sales rep field with current user
+        if (user?.id) {
           setSalesRepId(user.id.toString());
         } else {
           setSalesRepId("");
