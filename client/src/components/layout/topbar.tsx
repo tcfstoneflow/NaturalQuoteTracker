@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Search, Bell, Plus, LogOut, User, Settings, Check, X, Package, UserPlus } from "lucide-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Search, Plus, LogOut, User, Settings } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useNotifications } from "@/hooks/useNotifications";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { 
@@ -29,35 +28,6 @@ export default function TopBar({ title, subtitle, onSearch, hideNewQuoteButton }
   const [isQuoteBuilderOpen, setIsQuoteBuilderOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { notifications, isConnected, removeNotification, clearNotifications } = useNotifications();
-
-  // Get notifications - pending showroom visits and other alerts
-  const { data: pendingVisits } = useQuery({
-    queryKey: ["/api/showroom-visits/pending"],
-    enabled: !!user?.user?.role && (user.user.role === 'admin' || user.user.role === 'sales_rep'),
-  });
-
-  const { data: lowStockProducts } = useQuery({
-    queryKey: ["/api/products/low-stock"],
-    enabled: !!user?.user?.role,
-  });
-
-  // Filter real-time notifications for slab-related updates
-  const slabNotifications = notifications.filter(n => 
-    n.type === 'new_slab_added' || n.type === 'bulk_slabs_added'
-  );
-
-  // Filter real-time notifications for user creation
-  const userNotifications = notifications.filter(n => 
-    n.type === 'new_user_created'
-  );
-
-  // Debug notification state
-  console.log('All notifications:', notifications);
-  console.log('Slab notifications:', slabNotifications);
-  console.log('User notifications:', userNotifications);
-
-  const notificationCount = (pendingVisits?.length || 0) + (lowStockProducts?.length || 0) + slabNotifications.length + userNotifications.length;
 
   const logoutMutation = useMutation({
     mutationFn: async () => {

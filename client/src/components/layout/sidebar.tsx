@@ -22,9 +22,24 @@ import {
   Folder,
   Truck,
   Building2,
-  Shield
+  Shield,
+  Bell,
+  Check,
+  X,
+  UserPlus
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
@@ -65,6 +80,58 @@ const salesRepNavigation = [
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { notifications, isConnected, removeNotification, clearNotifications } = useNotifications();
+
+  // Get notifications - pending showroom visits and other alerts
+  const { data: pendingVisits } = useQuery({
+    queryKey: ["/api/showroom-visits/pending"],
+    enabled: !!user?.role && (user.role === 'admin' || user.role === 'sales_rep'),
+  });
+
+  const { data: lowStockProducts } = useQuery({
+    queryKey: ["/api/products/low-stock"],
+    enabled: !!user?.role,
+  });
+
+  // Filter real-time notifications
+  const slabNotifications = notifications.filter(n => 
+    n.type === 'new_slab_added' || n.type === 'bulk_slabs_added'
+  );
+
+  const userNotifications = notifications.filter(n => 
+    n.type === 'new_user_created'
+  );
+
+  // Calculate total notification count
+  const notificationCount = (pendingVisits?.length || 0) + 
+                          (lowStockProducts?.length || 0) + 
+                          slabNotifications.length + 
+                          userNotifications.length;
+
+  // Mark showroom visit as read
+  const markAsReadMutation = useMutation({
+    mutationFn: (visitId: number) => apiRequest('PATCH', `/api/showroom-visits/${visitId}`, { status: 'contacted' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits/pending"] });
+    },
+  });
+
+  // Mark all showroom visits as read
+  const markAllAsReadMutation = useMutation({
+    mutationFn: (type: string) => {
+      if (type === 'showroom_visit') {
+        return Promise.all(
+          (pendingVisits || []).map(visit => 
+            apiRequest('PATCH', `/api/showroom-visits/${visit.id}`, { status: 'contacted' })
+          )
+        );
+      }
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/showroom-visits/pending"] });
+    },
+  });
   
   const isAdmin = user?.role === 'admin';
   const isInventorySpecialist = user?.role === 'inventory_specialist';
@@ -101,14 +168,188 @@ export default function Sidebar() {
     <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col h-screen">
       {/* Logo and Company Name */}
       <div className="p-6 border-b border-neutral-200 flex-shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-8 bg-black rounded flex items-center justify-center px-2">
-            <span className="text-white font-bold text-sm">TCF</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-8 bg-black rounded flex items-center justify-center px-2">
+              <span className="text-white font-bold text-sm">TCF</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-primary-custom">Texas Counter Fitters</h1>
+              <p className="text-sm text-secondary-custom">CRM System</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-primary-custom">Texas Counter Fitters</h1>
-            <p className="text-sm text-secondary-custom">CRM System</p>
-          </div>
+          
+          {/* Notifications Bell */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell size={18} />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-error-red text-white text-xs rounded-full flex items-center justify-center">
+                    {notificationCount}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="p-3 border-b flex justify-between items-center">
+                <h4 className="font-semibold text-sm">Notifications</h4>
+                {notificationCount > 0 && (
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                    {notificationCount} new
+                  </span>
+                )}
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {pendingVisits && pendingVisits.length > 0 && (
+                  <>
+                    <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
+                      <span className="text-xs font-medium text-gray-700">Showroom Visit Requests</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => markAllAsReadMutation.mutate('showroom_visit')}
+                      >
+                        Mark All Read
+                      </Button>
+                    </div>
+                    {pendingVisits.map((visit: any) => (
+                      <div key={visit.id} className="p-3 border-b hover:bg-gray-50">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{visit.clientName}</p>
+                            <p className="text-xs text-gray-600">{visit.email} • {visit.phoneNumber}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Preferred: {new Date(visit.preferredDate).toLocaleDateString()} at {visit.preferredTime}
+                            </p>
+                            {visit.notes && (
+                              <p className="text-xs text-gray-600 mt-1 italic">"{visit.notes}"</p>
+                            )}
+                          </div>
+                          <div className="flex space-x-1 ml-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => markAsReadMutation.mutate(visit.id)}
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                              onClick={() => removeNotification(visit.id.toString())}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {lowStockProducts && lowStockProducts.length > 0 && (
+                  <>
+                    <div className="p-2 border-b bg-gray-50">
+                      <span className="text-xs font-medium text-gray-700 flex items-center">
+                        <Package className="h-3 w-3 mr-1" />
+                        Low Stock Alerts
+                      </span>
+                    </div>
+                    {lowStockProducts.slice(0, 3).map((product: any) => (
+                      <div key={product.id} className="p-3 border-b hover:bg-gray-50">
+                        <p className="text-sm font-medium">{product.name}</p>
+                        <p className="text-xs text-red-600">Stock: {product.quantity}</p>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {slabNotifications.length > 0 && (
+                  <>
+                    <div className="p-2 border-b bg-gray-50">
+                      <span className="text-xs font-medium text-gray-700">New Slab Updates</span>
+                    </div>
+                    {slabNotifications.map((notification, index) => (
+                      <div key={index} className="p-3 border-b hover:bg-gray-50">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            <p className="text-xs text-gray-600">{notification.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(notification.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                            onClick={() => removeNotification(notification.id)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {userNotifications.length > 0 && (
+                  <>
+                    <div className="p-2 border-b bg-gray-50">
+                      <span className="text-xs font-medium text-gray-700 flex items-center">
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        New User Notifications
+                      </span>
+                    </div>
+                    {userNotifications.map((notification, index) => (
+                      <div key={index} className="p-3 border-b hover:bg-gray-50">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            <p className="text-xs text-gray-600">{notification.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(notification.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                            onClick={() => removeNotification(notification.id)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {notificationCount === 0 && (
+                  <div className="p-6 text-center text-gray-500">
+                    <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No new notifications</p>
+                  </div>
+                )}
+              </div>
+              {notificationCount > 0 && (
+                <div className="p-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => clearNotifications()}
+                  >
+                    Clear All Notifications
+                  </Button>
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
