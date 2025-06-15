@@ -125,7 +125,8 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         setProjectName("");
         setNotes("");
         setLineItems([]);
-        setCcProcessingFee(false);
+        setInventorySearchQuery("");
+        setIsInventoryDropdownOpen(false);
         
         // Pre-populate sales rep field if current user is a sales rep
         if (user?.role === 'sales_rep') {
@@ -320,14 +321,12 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
 
   const calculateTotals = () => {
     const subtotal = lineItems.reduce((sum, item) => sum + parseFloat(item.totalPrice || "0"), 0);
-    const processingFee = ccProcessingFee ? subtotal * 0.035 : 0;
     const taxRate = 0.085; // 8.5%
     const taxAmount = subtotal * taxRate;
-    const total = subtotal + processingFee + taxAmount;
+    const total = subtotal + taxAmount;
 
     return {
       subtotal: subtotal.toFixed(2),
-      processingFee: processingFee.toFixed(2),
       taxRate: taxRate.toFixed(4),
       taxAmount: taxAmount.toFixed(2),
       total: total.toFixed(2),
@@ -353,7 +352,6 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       subtotal: totals.subtotal,
       taxRate: totals.taxRate,
       taxAmount: totals.taxAmount,
-      processingFee: totals.processingFee,
       totalAmount: totals.total,
       salesRepId: salesRepId === "none" || !salesRepId ? null : parseInt(salesRepId),
     };
@@ -403,8 +401,9 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     setNotes("");
     setLineItems([]);
     setAdditionalMessage("");
-    setCcProcessingFee(false);
+    setInventorySearchQuery("");
     setIsClientDropdownOpen(false);
+    setIsInventoryDropdownOpen(false);
     onClose();
   };
 
@@ -594,25 +593,66 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
             ))}
           </div>
 
-          {/* Credit Card Processing Fee Toggle */}
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="ccProcessingFee"
-                checked={ccProcessingFee}
-                onChange={(e) => setCcProcessingFee(e.target.checked)}
-                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+          {/* Add to Quote - Searchable Inventory */}
+          <div className="relative" ref={inventoryDropdownRef}>
+            <Label>Add to Quote</Label>
+            <div className="relative">
+              <Input
+                placeholder="Search inventory to add items..."
+                value={inventorySearchQuery}
+                onChange={(e) => {
+                  setInventorySearchQuery(e.target.value);
+                  setIsInventoryDropdownOpen(true);
+                }}
+                onFocus={() => setIsInventoryDropdownOpen(true)}
+                className="pr-10"
               />
-              <Label htmlFor="ccProcessingFee" className="text-sm font-medium cursor-pointer">
-                Credit Card Processing Fee (3.5%)
-              </Label>
+              <button
+                type="button"
+                onClick={() => setIsInventoryDropdownOpen(!isInventoryDropdownOpen)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ▼
+              </button>
+              
+              {isInventoryDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {(() => {
+                    const filteredProducts = products?.filter((product: any) => {
+                      const searchTerm = inventorySearchQuery.toLowerCase();
+                      return (
+                        product.name?.toLowerCase().includes(searchTerm) ||
+                        product.bundleId?.toLowerCase().includes(searchTerm) ||
+                        product.description?.toLowerCase().includes(searchTerm)
+                      );
+                    }) || [];
+
+                    if (filteredProducts.length === 0) {
+                      return (
+                        <div className="px-4 py-3 text-gray-500">
+                          No inventory items found
+                        </div>
+                      );
+                    }
+
+                    return filteredProducts.map((product: any) => (
+                      <div
+                        key={product.id}
+                        onClick={() => addProductToQuote(product)}
+                        className="px-4 py-3 cursor-pointer hover:bg-gray-50"
+                      >
+                        <div className="font-medium">
+                          {product.name} - {product.bundleId}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ${product.price} | {product.description}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
             </div>
-            {ccProcessingFee && (
-              <span className="text-sm text-gray-600">
-                +${totals.processingFee}
-              </span>
-            )}
           </div>
 
           {/* Quote Summary */}
@@ -623,12 +663,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
                   <span>Subtotal:</span>
                   <span>${totals.subtotal}</span>
                 </div>
-                {ccProcessingFee && (
-                  <div className="flex justify-between text-secondary-custom">
-                    <span>Processing Fee (3.5%):</span>
-                    <span>${totals.processingFee}</span>
-                  </div>
-                )}
+
                 <div className="flex justify-between text-secondary-custom">
                   <span>Tax (8.5%):</span>
                   <span>${totals.taxAmount}</span>
