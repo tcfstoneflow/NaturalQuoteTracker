@@ -40,6 +40,7 @@ interface LineItem {
   length?: string;
   width?: string;
   area?: string;
+  subtotal?: string;
 }
 
 export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteBuilderModalProps) {
@@ -56,10 +57,17 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   // Ref for click outside detection
   const clientDropdownRef = useRef<HTMLDivElement>(null);
   
-  // Add to Quote inventory search state
-  const [inventorySearchQuery, setInventorySearchQuery] = useState("");
-  const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
-  const inventoryDropdownRef = useRef<HTMLDivElement>(null);
+  // Product search states
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const productDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Slab selection states
+  const [availableSlabs, setAvailableSlabs] = useState<any[]>([]);
+  const [selectedSlabId, setSelectedSlabId] = useState<number | null>(null);
+  const [isSlabDropdownOpen, setIsSlabDropdownOpen] = useState(false);
+  const slabDropdownRef = useRef<HTMLDivElement>(null);
   
   // New client creation state
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
@@ -100,6 +108,67 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
+  // Function to handle product selection
+  const handleProductSelect = (product: any) => {
+    setSelectedProduct(product);
+    setProductSearchQuery(product.name);
+    setIsProductDropdownOpen(false);
+    
+    // Filter available slabs based on product's bundleId
+    if (slabs && product.bundleId) {
+      const matchingSlabs = slabs.filter((slab: any) => 
+        slab.bundleId === product.bundleId && slab.status === 'available'
+      );
+      setAvailableSlabs(matchingSlabs);
+    }
+    
+    // Reset slab selection
+    setSelectedSlabId(null);
+  };
+
+  // Function to handle slab selection
+  const handleSlabSelect = (slab: any) => {
+    setSelectedSlabId(slab.id);
+    setIsSlabDropdownOpen(false);
+  };
+
+  // Function to add selected product and slab to quote
+  const addSelectedItemToQuote = () => {
+    if (!selectedProduct || !selectedSlabId) return;
+    
+    const selectedSlab = availableSlabs.find(slab => slab.id === selectedSlabId);
+    if (!selectedSlab) return;
+    
+    const length = parseFloat(selectedSlab.length || 0);
+    const width = parseFloat(selectedSlab.width || 0);
+    const price = parseFloat(selectedProduct.price || 0);
+    
+    // Calculate subtotal using formula: ((length × width) / 12) × price
+    const subtotal = ((length * width) / 12) * price;
+    
+    const newLineItem: LineItem = {
+      productId: selectedProduct.id,
+      quantity: "1",
+      unitPrice: price.toString(),
+      totalPrice: subtotal.toString(),
+      product: selectedProduct,
+      slabId: selectedSlab.id,
+      slab: selectedSlab,
+      length: length.toString(),
+      width: width.toString(),
+      area: ((length * width) / 144).toString(), // Convert to sq ft
+      subtotal: subtotal.toString()
+    };
+    
+    setLineItems([...lineItems, newLineItem]);
+    
+    // Reset selections
+    setSelectedProduct(null);
+    setProductSearchQuery("");
+    setSelectedSlabId(null);
+    setAvailableSlabs([]);
+  };
+
   // Set form data or populate with edit data
   useEffect(() => {
     if (isOpen) {
@@ -136,8 +205,11 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         setProjectName("");
         setNotes("");
         setLineItems([]);
-        setInventorySearchQuery("");
-        setIsInventoryDropdownOpen(false);
+        setProductSearchQuery("");
+        setIsProductDropdownOpen(false);
+        setSelectedProduct(null);
+        setSelectedSlabId(null);
+        setAvailableSlabs([]);
         
         // Pre-populate sales rep field with current user
         if (user?.id) {
@@ -605,12 +677,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
             />
           </div>
 
-          <div>
-            <Label>Assigned Sales Rep</Label>
-            <div className="px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600">
-              NATIVE SUGGESTION WIP
-            </div>
-          </div>
+
 
           {/* Line Items */}
           <div>
@@ -701,67 +768,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
             ))}
           </div>
 
-          {/* Quote Search Inventory */}
-          <div className="relative" ref={inventoryDropdownRef}>
-            <Label>Quote Search Inventory</Label>
-            <div className="relative">
-              <Input
-                placeholder="Search inventory to add items..."
-                value={inventorySearchQuery}
-                onChange={(e) => {
-                  setInventorySearchQuery(e.target.value);
-                  setIsInventoryDropdownOpen(true);
-                }}
-                onFocus={() => setIsInventoryDropdownOpen(true)}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setIsInventoryDropdownOpen(!isInventoryDropdownOpen)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                ▼
-              </button>
-              
-              {isInventoryDropdownOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
-                  {(() => {
-                    const filteredProducts = products?.filter((product: any) => {
-                      const searchTerm = inventorySearchQuery.toLowerCase();
-                      return (
-                        product.name?.toLowerCase().includes(searchTerm) ||
-                        product.bundleId?.toLowerCase().includes(searchTerm) ||
-                        product.description?.toLowerCase().includes(searchTerm)
-                      );
-                    }) || [];
 
-                    if (filteredProducts.length === 0) {
-                      return (
-                        <div className="px-4 py-3 text-gray-500">
-                          No inventory items found
-                        </div>
-                      );
-                    }
-
-                    return filteredProducts.map((product: any) => (
-                      <div
-                        key={product.id}
-                        onClick={() => addProductToQuote(product)}
-                        className="px-4 py-3 cursor-pointer hover:bg-gray-50"
-                      >
-                        <div className="font-medium">
-                          {product.name} - {product.bundleId}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          ${product.price} | {product.description}
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Quote Summary */}
           <Card className="bg-neutral-50-custom">
