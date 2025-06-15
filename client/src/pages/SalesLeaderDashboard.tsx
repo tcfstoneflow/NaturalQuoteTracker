@@ -62,44 +62,54 @@ interface RecentActivity {
 
 export default function SalesLeaderDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [approvalNotes, setApprovalNotes] = useState<Record<number, string>>({});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: salesTeam, isLoading: teamLoading } = useQuery<SalesTeamMember[]>({
-    queryKey: ["/api/users"],
-    select: (users: any[]) => users.filter(user => 
-      user.role === 'sales_rep' || user.role === 'sales_manager'
-    ).map(user => ({
-      ...user,
-      clientsAssigned: Math.floor(Math.random() * 25) + 5,
-      quotesGenerated: Math.floor(Math.random() * 15) + 3,
-      totalSales: (Math.random() * 50000 + 10000).toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }),
-      conversionRate: Math.floor(Math.random() * 40) + 15
-    }))
+  // Fetch sales leader metrics from the backend
+  const { data: salesLeaderData, isLoading: metricsLoading } = useQuery({
+    queryKey: ["/api/sales-leader/dashboard"]
   });
 
-  const { data: salesMetrics } = useQuery<SalesMetrics>({
-    queryKey: ["/api/dashboard/stats"],
-    select: (stats: any) => ({
-      totalRevenue: stats.totalRevenue || "$0",
-      monthlyGrowth: Math.floor(Math.random() * 20) + 5,
-      activeClients: parseInt(stats.activeClients) || 0,
-      pendingQuotes: Math.floor(Math.random() * 25) + 8,
-      teamPerformance: Math.floor(Math.random() * 30) + 70,
-      topPerformer: salesTeam?.[0]?.firstName + " " + salesTeam?.[0]?.lastName || "N/A"
-    })
+  // Fetch team performance report
+  const { data: teamReport, isLoading: teamLoading } = useQuery({
+    queryKey: ["/api/reports/team-performance"]
   });
 
-  const { data: recentActivities } = useQuery<RecentActivity[]>({
-    queryKey: ["/api/dashboard/recent-activities"],
-    select: (activities: any[]) => activities.slice(0, 10).map(activity => ({
-      ...activity,
-      userName: activity.metadata?.userName || "System"
-    }))
+  // Quote approval mutation
+  const approveQuoteMutation = useMutation({
+    mutationFn: async ({ quoteId, approved, notes }: { 
+      quoteId: number; 
+      approved: boolean; 
+      notes?: string; 
+    }) => {
+      return apiRequest(`/api/quotes/${quoteId}/approve`, {
+        method: "PATCH",
+        body: { approved, notes }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales-leader/dashboard"] });
+      toast({
+        title: "Quote Updated",
+        description: "Quote approval status has been updated successfully."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update quote approval",
+        variant: "destructive"
+      });
+    }
   });
 
-  if (teamLoading) {
+  const handleQuoteApproval = (quoteId: number, approved: boolean) => {
+    const notes = approvalNotes[quoteId] || "";
+    approveQuoteMutation.mutate({ quoteId, approved, notes });
+  };
+
+  if (metricsLoading || teamLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center h-64">
@@ -109,6 +119,11 @@ export default function SalesLeaderDashboard() {
       </div>
     );
   }
+
+  const metrics = salesLeaderData?.dashboardStats || {};
+  const pendingQuotes = salesLeaderData?.pendingQuotes || [];
+  const teamMembers = salesLeaderData?.teamMembers || [];
+  const monthlyMetrics = salesLeaderData?.monthlyMetrics || {};
 
   return (
     <div className="container mx-auto p-6">
@@ -132,9 +147,9 @@ export default function SalesLeaderDashboard() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="approvals">Quote Approvals</TabsTrigger>
           <TabsTrigger value="team">Team Management</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="activities">Recent Activities</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -145,43 +160,45 @@ export default function SalesLeaderDashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{salesMetrics?.totalRevenue}</div>
+                <div className="text-2xl font-bold">
+                  ${Number(metrics.monthlyQuoteValue || 0).toLocaleString()}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">+{salesMetrics?.monthlyGrowth}%</span> from last month
+                  <span className="text-green-600">Monthly Quote Value</span>
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
+                <CardTitle className="text-sm font-medium">Team Members</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{salesMetrics?.activeClients}</div>
-                <p className="text-xs text-muted-foreground">Across all team members</p>
+                <div className="text-2xl font-bold">{metrics.totalTeamMembers || 0}</div>
+                <p className="text-xs text-muted-foreground">Active sales team</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Quotes</CardTitle>
-                <Target className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{salesMetrics?.pendingQuotes}</div>
-                <p className="text-xs text-muted-foreground">Awaiting client response</p>
+                <div className="text-2xl font-bold">{metrics.pendingApprovals || 0}</div>
+                <p className="text-xs text-muted-foreground">Quotes awaiting approval</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Team Performance</CardTitle>
+                <CardTitle className="text-sm font-medium">Approval Rate</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{salesMetrics?.teamPerformance}%</div>
-                <Progress value={salesMetrics?.teamPerformance || 0} className="mt-2" />
+                <div className="text-2xl font-bold">{metrics.approvalRate || 0}%</div>
+                <Progress value={metrics.approvalRate || 0} className="mt-2" />
               </CardContent>
             </Card>
           </div>
@@ -191,22 +208,24 @@ export default function SalesLeaderDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Award className="h-5 w-5" />
-                  Top Performer
+                  Team Summary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-semibold mb-2">{salesMetrics?.topPerformer}</div>
-                <p className="text-sm text-muted-foreground">Leading the team this month</p>
-                <div className="mt-4 space-y-2">
+                <div className="space-y-4">
                   <div className="flex justify-between text-sm">
-                    <span>Conversion Rate</span>
-                    <span className="font-medium">
-                      {salesTeam?.[0]?.conversionRate || 0}%
-                    </span>
+                    <span>Total Team Quotes</span>
+                    <span className="font-medium">{monthlyMetrics.totalQuotes || 0}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Total Sales</span>
-                    <span className="font-medium">{salesTeam?.[0]?.totalSales}</span>
+                    <span>Approved This Month</span>
+                    <span className="font-medium">{monthlyMetrics.approvedQuotes || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Monthly Quote Value</span>
+                    <span className="font-medium">
+                      ${Number(monthlyMetrics.totalValue || 0).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -214,24 +233,27 @@ export default function SalesLeaderDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activities</CardTitle>
+                <CardTitle>Pending Approvals</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentActivities?.slice(0, 4).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                  {pendingQuotes.slice(0, 3).map((quote: any) => (
+                    <div key={quote.id} className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm">{activity.description}</p>
+                        <p className="text-sm font-medium">Quote #{quote.quoteNumber}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(activity.timestamp).toLocaleDateString()} • {activity.userName}
+                          ${Number(quote.totalAmount).toLocaleString()} • {quote.client?.name}
                         </p>
                       </div>
                     </div>
                   ))}
+                  {pendingQuotes.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No pending approvals</p>
+                  )}
                 </div>
-                <Button variant="ghost" size="sm" className="w-full mt-4">
-                  View All Activities
+                <Button variant="ghost" size="sm" className="w-full mt-4" onClick={() => setActiveTab("approvals")}>
+                  View All Approvals
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>
@@ -239,15 +261,118 @@ export default function SalesLeaderDashboard() {
           </div>
         </TabsContent>
 
+        <TabsContent value="approvals">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Quote Approvals</h3>
+              <Badge variant="secondary">{pendingQuotes.length} Pending</Badge>
+            </div>
+
+            {pendingQuotes.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">All caught up!</h3>
+                  <p className="text-muted-foreground">No quotes pending approval at this time.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {pendingQuotes.map((quote: any) => (
+                  <Card key={quote.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                              <Clock className="w-5 h-5 text-orange-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">
+                                Quote #{quote.quoteNumber}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                {quote.projectName}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div>
+                              <p className="text-sm font-medium">Client</p>
+                              <p className="text-sm text-muted-foreground">
+                                {quote.client?.name}
+                                {quote.client?.company && ` (${quote.client.company})`}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Sales Rep</p>
+                              <p className="text-sm text-muted-foreground">
+                                {quote.salesRep?.firstName} {quote.salesRep?.lastName}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Quote Value</p>
+                              <p className="text-lg font-semibold text-green-600">
+                                ${Number(quote.totalAmount).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-4">
+                            <p className="text-sm font-medium mb-2">Approval Notes</p>
+                            <Textarea
+                              placeholder="Add notes for this approval decision..."
+                              value={approvalNotes[quote.id] || ""}
+                              onChange={(e) => setApprovalNotes(prev => ({
+                                ...prev,
+                                [quote.id]: e.target.value
+                              }))}
+                              className="mb-3"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuoteApproval(quote.id, false)}
+                          disabled={approveQuoteMutation.isPending}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleQuoteApproval(quote.id, true)}
+                          disabled={approveQuoteMutation.isPending}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
         <TabsContent value="team">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Sales Team Members</h3>
-              <Badge variant="secondary">{salesTeam?.length || 0} Active Members</Badge>
+              <Badge variant="secondary">{teamMembers.length} Active Members</Badge>
             </div>
 
             <div className="grid gap-4">
-              {salesTeam?.map((member) => (
+              {teamMembers.map((member: any) => (
                 <Card key={member.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
