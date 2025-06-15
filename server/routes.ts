@@ -2048,6 +2048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           unitPrice: lineItem.unitPrice,
           totalPrice: lineItem.totalPrice,
           slabId: lineItem.slabId,
+          itemType: "product",
           notes: lineItem.notes
         });
       }
