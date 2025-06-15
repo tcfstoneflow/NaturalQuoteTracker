@@ -29,6 +29,7 @@ import SystemHealth from "@/pages/system-health";
 import SalesRepManagement from "@/pages/sales-rep-management";
 import SalesRepProfile from "@/pages/sales-rep-profile";
 import WorkflowsPage from "@/pages/WorkflowsPage";
+import VendorManagementPage from "@/pages/VendorManagementPage";
 
 import Sidebar from "@/components/layout/sidebar";
 
@@ -99,6 +100,7 @@ function Router() {
                   <Route path="/slab-management/:productId" component={SlabManagement} />
                   <Route path="/all-slabs" component={AllSlabs} />
                   <Route path="/workflows" component={WorkflowsPage} />
+                  <Route path="/vendor-management" component={VendorManagementPage} />
                   <Route path="/sales-rep-profile" component={SalesRepManagement} />
                   <Route path="/settings" component={Settings} />
                   <Route path="/system-health" component={SystemHealth} />
