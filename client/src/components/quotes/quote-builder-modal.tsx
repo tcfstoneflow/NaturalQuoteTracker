@@ -142,9 +142,10 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     const length = parseFloat(selectedSlab.length || 0);
     const width = parseFloat(selectedSlab.width || 0);
     const price = parseFloat(selectedProduct.price || 0);
+    const area = (length * width) / 144; // Convert to square feet
     
-    // Calculate subtotal using formula: ((length × width) / 12) × price
-    const subtotal = ((length * width) / 12) * price;
+    // Calculate subtotal using formula: area × price
+    const subtotal = area * price;
     
     const newLineItem: LineItem = {
       productId: selectedProduct.id,
@@ -156,7 +157,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       slab: selectedSlab,
       length: length.toString(),
       width: width.toString(),
-      area: ((length * width) / 144).toString(), // Convert to sq ft
+      area: area.toString(), // Area in square feet
       subtotal: subtotal.toString()
     };
     
@@ -531,6 +532,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       totalAmount: totals.total,
       salesRepId: salesRepId === "none" || !salesRepId ? null : parseInt(salesRepId),
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+      status: sendEmail ? 'sent' : 'draft',
     };
 
     const quoteLineItems = lineItems.map(item => ({
@@ -538,6 +540,10 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       totalPrice: item.totalPrice,
+      slabId: item.slabId,
+      length: item.length,
+      width: item.width,
+      area: item.area,
     }));
 
     try {
@@ -549,23 +555,29 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
           id: editQuote.id,
           data: {
             quote: quoteData,
-            lineItems: quoteLineItems
+            lineItems: quoteLineItems,
+            sendEmail,
+            additionalMessage
           }
         });
       } else {
-        // Create new quote
+        // Create new quote with cart assignment and activity logging
         quote = await createQuoteMutation.mutateAsync({ 
           quote: quoteData, 
-          lineItems: quoteLineItems 
+          lineItems: quoteLineItems,
+          sendEmail,
+          additionalMessage
         });
       }
 
-      if (sendEmail && quote) {
-        await sendQuoteMutation.mutateAsync({ 
-          quoteId: quote.id, 
-          message: additionalMessage 
-        });
-      }
+      toast({
+        title: sendEmail ? "Quote Sent Successfully" : "Quote Saved as Draft",
+        description: sendEmail 
+          ? "Quote has been sent to the client via email and logged as an activity"
+          : "Quote has been saved as draft with cart assignment and logged as an activity",
+      });
+
+      handleClose();
     } catch (error) {
       // Error handling is done in mutation callbacks
     }

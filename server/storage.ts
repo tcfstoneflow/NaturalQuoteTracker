@@ -2700,6 +2700,13 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  async addToCart(data: InsertCartItem): Promise<CartItem> {
+    return withRetry(async () => {
+      const [item] = await db.insert(cartItems).values(data).returning();
+      return item;
+    });
+  }
+
   async addCartItem(data: InsertCartItem): Promise<CartItem> {
     return withRetry(async () => {
       const [item] = await db.insert(cartItems).values(data).returning();

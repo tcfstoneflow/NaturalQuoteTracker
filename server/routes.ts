@@ -1999,7 +1999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quotes", requireAuth, async (req: any, res) => {
     try {
-      const { quote: quoteData, lineItems } = req.body;
+      const { quote: quoteData, lineItems, sendEmail, additionalMessage } = req.body;
       const userId = req.user.id;
       
       console.log("Quote data:", JSON.stringify(quoteData, null, 2));
@@ -2010,19 +2010,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedQuote = insertQuoteSchema.parse(quoteDataWithCreator);
       console.log("Validated quote:", JSON.stringify(validatedQuote, null, 2));
       
-      // Don't validate line items with schema since quoteId is added later
+      // Enhanced line items validation with slab information
       const validatedLineItems = lineItems.map((item: any) => ({
         productId: parseInt(item.productId),
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         totalPrice: item.totalPrice,
+        slabId: item.slabId ? parseInt(item.slabId) : null,
+        length: item.length || null,
+        width: item.width || null,
+        area: item.area || null,
         notes: item.notes || null
       }));
       
       console.log("Validated line items:", JSON.stringify(validatedLineItems, null, 2));
       
+      // Create the quote
       const quote = await storage.createQuote(validatedQuote, validatedLineItems);
-      res.status(201).json(quote);
+      
+      // Create cart for the quote (assign cart ID)
+      const cartData = {
+        clientId: quote.clientId,
+        userId: userId,
+        status: 'active',
+        notes: `Cart created for quote ${quote.quoteNumber}`,
+        totalAmount: quote.totalAmount
+      };
+      
+      const cart = await storage.createCart(cartData);
+      
+      // Add quote items to cart
+      for (const lineItem of validatedLineItems) {
+        await storage.addToCart({
+          cartId: cart.id,
+          productId: lineItem.productId,
+          quantity: parseInt(lineItem.quantity),
+          unitPrice: parseFloat(lineItem.unitPrice),
+          totalPrice: parseFloat(lineItem.totalPrice),
+          slabId: lineItem.slabId,
+          length: lineItem.length ? parseFloat(lineItem.length) : null,
+          width: lineItem.width ? parseFloat(lineItem.width) : null,
+          area: lineItem.area ? parseFloat(lineItem.area) : null,
+          notes: lineItem.notes
+        });
+      }
+      
+      // Update quote with cart ID
+      await storage.updateQuote(quote.id, { cartId: cart.id });
+      
+      // Log client activity
+      const activityType = sendEmail ? 'quote_sent' : 'quote_draft_created';
+      const activityDescription = sendEmail 
+        ? `Quote ${quote.quoteNumber} sent via email`
+        : `Quote ${quote.quoteNumber} saved as draft`;
+        
+      await storage.createActivity({
+        type: activityType,
+        description: activityDescription,
+        entityType: "quote",
+        entityId: quote.id,
+        clientId: quote.clientId
+      });
+      
+      // Send email if requested
+      if (sendEmail) {
+        try {
+          const pdfBuffer = await generateQuotePDF(quote);
+          await sendQuoteEmail({ quote, pdfBuffer, additionalMessage });
+          
+          // Update quote status as sent
+          await storage.updateQuote(quote.id, { 
+            status: 'sent',
+            sentAt: new Date() 
+          });
+          
+          console.log(`Quote ${quote.quoteNumber} sent via email to client`);
+        } catch (emailError) {
+          console.error('Email sending failed:', emailError);
+          // Quote still created successfully, just email failed
+        }
+      }
+      
+      // Return updated quote with cart ID
+      const updatedQuote = await storage.getQuote(quote.id);
+      res.status(201).json(updatedQuote);
     } catch (error) {
       console.error("Quote creation error:", error);
       res.status(400).json({ error: error.message });
