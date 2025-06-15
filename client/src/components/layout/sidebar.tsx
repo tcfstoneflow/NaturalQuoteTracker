@@ -30,7 +30,6 @@ const navigation = [
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Pipeline", href: "/pipeline", icon: Workflow },
   { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList, roles: ['admin', 'sales_leader', 'sales_manager', 'sales_rep'] },
-  { name: "Feature Folder", href: "/feature-folder", icon: Folder },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
@@ -41,12 +40,13 @@ const navigation = [
 ];
 
 const adminOnlyNavigation = [
-  { name: "Workflows", href: "/workflows", icon: GitBranch },
 ];
 
 const adminNavigation = [
   { name: "User Management", href: "/user-management", icon: UserCog },
   { name: "System Health", href: "/system-health", icon: Activity },
+  { name: "Feature Folder", href: "/feature-folder", icon: Folder },
+  { name: "Workflows", href: "/workflows", icon: GitBranch },
 ];
 
 const salesRepNavigation = [
