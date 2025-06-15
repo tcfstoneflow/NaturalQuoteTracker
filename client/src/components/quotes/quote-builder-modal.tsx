@@ -593,9 +593,9 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
             ))}
           </div>
 
-          {/* Add to Quote - Searchable Inventory */}
+          {/* Quote Search Inventory */}
           <div className="relative" ref={inventoryDropdownRef}>
-            <Label>Add to Quote</Label>
+            <Label>Quote Search Inventory</Label>
             <div className="relative">
               <Input
                 placeholder="Search inventory to add items..."
@@ -688,6 +688,19 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
               onChange={(e) => setAdditionalMessage(e.target.value)}
               rows={3}
             />
+          </div>
+
+          {/* WIP Status */}
+          <div className="bg-gray-50 p-4 rounded-lg border">
+            <div className="text-sm text-gray-700 space-y-1">
+              <div className="font-medium">WIP</div>
+              <div>- SEARCH TO ADDED TO QUOTE WORKFLOW</div>
+              <div>- STANDARDIZING QUOTE NUMBERS - QINIDATEINI</div>
+              <div>- SAVE AS CART TO PM</div>
+              <div>- ADD COLLABORATOR TO PM</div>
+              <div>- ADD 2ND AE</div>
+              <div className="mt-2 font-medium">QUOTE INVENTORY WORKFLOW WIP</div>
+            </div>
           </div>
 
           {/* Action Buttons */}
