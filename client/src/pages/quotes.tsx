@@ -146,6 +146,12 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     queryFn: quotesApi.getAll,
   });
 
+  // Get all clients to calculate last touch for each quote's client
+  const { data: clients } = useQuery({
+    queryKey: ['/api/clients'],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   // Filter quotes based on user role
   const filteredQuotesByRole = quotes?.filter((quote: any) => {
     // Admins and managers can see all quotes
@@ -337,6 +343,66 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     return new Date(validUntil) < new Date();
   };
 
+  // Calculate days since last client activity
+  const getLastTouchDays = async (clientId: number) => {
+    try {
+      const response = await fetch(`/api/clients/${clientId}/activities`);
+      const activities = await response.json();
+      
+      if (!activities || activities.length === 0) {
+        return "No activity";
+      }
+
+      // Get the most recent activity
+      const mostRecentActivity = activities[0];
+      const lastActivityDate = new Date(mostRecentActivity.createdAt);
+      const today = new Date();
+      const diffTime = Math.abs(today.getTime() - lastActivityDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays;
+    } catch (error) {
+      return "Unknown";
+    }
+  };
+
+  // Store last touch data for each client
+  const [lastTouchData, setLastTouchData] = useState<Record<number, string | number>>({});
+
+  // Load last touch data for all clients when quotes load
+  useEffect(() => {
+    if (quotes && quotes.length > 0) {
+      const clientIds = quotes.map((quote: any) => quote.clientId).filter(Boolean);
+      const uniqueClientIds: number[] = [];
+      
+      clientIds.forEach((id: number) => {
+        if (!uniqueClientIds.includes(id)) {
+          uniqueClientIds.push(id);
+        }
+      });
+      
+      uniqueClientIds.forEach(async (clientId: number) => {
+        if (!lastTouchData[clientId]) {
+          const days = await getLastTouchDays(clientId);
+          setLastTouchData(prev => ({ ...prev, [clientId]: days }));
+        }
+      });
+    }
+  }, [quotes]);
+
+  const formatLastTouch = (clientId: number) => {
+    const days = lastTouchData[clientId];
+    if (days === "No activity" || days === "Unknown") {
+      return days;
+    }
+    if (typeof days === 'number') {
+      if (days === 0) return "Today";
+      if (days === 1) return "1 day ago";
+      return `${days} days ago`;
+    }
+    return "Loading...";
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
@@ -402,7 +468,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                     <TableHead>Project</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Valid Until</TableHead>
+                    <TableHead>Last Touch</TableHead>
                     {user?.user?.role === 'admin' && <TableHead>Created By</TableHead>}
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -450,8 +516,8 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className={`text-sm ${expired ? 'text-error-red font-medium' : 'text-secondary-custom'}`}>
-                            {new Date(quote.validUntil).toLocaleDateString()}
+                          <div className="text-sm text-secondary-custom">
+                            {formatLastTouch(quote.clientId)}
                           </div>
                         </TableCell>
                         {user?.user?.role === 'admin' && (
