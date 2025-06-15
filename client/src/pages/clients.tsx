@@ -99,6 +99,14 @@ export default function Clients() {
     enabled: !!viewingClient,
   });
 
+  // Fetch client activities (quotes and store visits) when viewing a client
+  const { data: clientActivities } = useQuery({
+    queryKey: ['/api/clients', viewingClient?.id, 'activities'],
+    queryFn: () => 
+      viewingClient ? fetch(`/api/clients/${viewingClient.id}/activities`).then(res => res.json()) : [],
+    enabled: !!viewingClient,
+  });
+
   // Fetch products for the quote creation modal
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
@@ -396,7 +404,46 @@ export default function Clients() {
     return subtotal + processingFee;
   };
 
-
+  const logVisitorVisit = async () => {
+    if (!viewingClient) return;
+    
+    setIsLoggingVisit(true);
+    try {
+      const response = await fetch(`/api/clients/${viewingClient.id}/visit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to log visit');
+      }
+      
+      const result = await response.json();
+      
+      toast({
+        title: "Visit Logged Successfully",
+        description: result.message,
+      });
+      
+      // Close the modal
+      setIsVisitorVisitModalOpen(false);
+      
+      // Refetch client activities to update activity history
+      queryClient.invalidateQueries({ queryKey: ['/api/clients', viewingClient.id, 'activities'] });
+      
+    } catch (error) {
+      console.error('Error logging visit:', error);
+      toast({
+        title: "Error",
+        description: "Failed to log visitor visit. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingVisit(false);
+    }
+  };
 
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
@@ -550,46 +597,7 @@ export default function Clients() {
     }
   };
 
-  const logVisitorVisit = async () => {
-    if (!viewingClient || isLoggingVisit) return;
 
-    setIsLoggingVisit(true);
-    try {
-      const response = await fetch(`/api/clients/${viewingClient.id}/visit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to log visit');
-      }
-      
-      const result = await response.json();
-      
-      toast({
-        title: "Visit Logged Successfully",
-        description: result.message,
-      });
-      
-      // Close the modal
-      setIsVisitorVisitModalOpen(false);
-      
-      // Refetch client activities to update activity history
-      queryClient.invalidateQueries({ queryKey: ['/api/clients', viewingClient.id, 'activities'] });
-      
-    } catch (error) {
-      console.error('Error logging visit:', error);
-      toast({
-        title: "Error",
-        description: "Failed to log visitor visit. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoggingVisit(false);
-    }
-  };
 
   // Bulk import helper functions
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1092,58 +1100,38 @@ export default function Clients() {
                   {/* Activity History */}
                   <div className="border rounded-lg p-4 bg-gray-50">
                     <h3 className="text-lg font-semibold text-primary-custom mb-4">Activity History</h3>
-                    {clientQuotes && clientQuotes.length > 0 ? (
+                    {clientActivities && clientActivities.length > 0 ? (
                       <div className="space-y-3">
-                        {clientQuotes.map((quote: any) => (
-                          <div key={`activity-${quote.id}`} className="flex items-start gap-3 p-3 bg-white rounded border">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        {clientActivities.map((activity: any) => (
+                          <div key={activity.id} className="flex items-start gap-3 p-3 bg-white rounded border">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              activity.type === 'quote' 
+                                ? activity.status === 'approved' 
+                                  ? 'bg-green-500' 
+                                  : activity.status === 'rejected' 
+                                    ? 'bg-red-500' 
+                                    : 'bg-blue-500'
+                                : activity.type === 'store_visit' 
+                                  ? 'bg-purple-500' 
+                                  : 'bg-gray-500'
+                            }`}></div>
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
-                                <p className="font-medium text-sm">Quote {quote.status === 'approved' ? 'Approved' : quote.status === 'rejected' ? 'Rejected' : 'Created'}: {quote.quoteNumber}</p>
+                                <p className="font-medium text-sm">{activity.description}</p>
                                 <span className="text-xs text-gray-500">
-                                  {new Date(quote.createdAt).toLocaleDateString()}
+                                  {new Date(activity.createdAt).toLocaleDateString()}
                                 </span>
                               </div>
                               <p className="text-sm text-gray-600">
-                                {quote.status === 'approved' ? `Quote approved for ${quote.projectName} - $${parseFloat(quote.totalAmount || quote.subtotal || 0).toLocaleString()}` :
-                                 quote.status === 'rejected' ? `Quote rejected for ${quote.projectName}` :
-                                 `New quote created for ${quote.projectName} - $${parseFloat(quote.totalAmount || quote.subtotal || 0).toLocaleString()}`}
+                                {activity.details}
                               </p>
                             </div>
                           </div>
                         ))}
-                        {/* Client creation activity */}
-                        <div className="flex items-start gap-3 p-3 bg-white rounded border">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="font-medium text-sm">Client Added</p>
-                              <span className="text-xs text-gray-500">
-                                {new Date(viewingClient.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                              Client {viewingClient.name} was added to the system
-                            </p>
-                          </div>
-                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-6">
-                        <div className="flex items-start gap-3 p-3 bg-white rounded border">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="font-medium text-sm">Client Added</p>
-                              <span className="text-xs text-gray-500">
-                                {new Date(viewingClient.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                              Client {viewingClient.name} was added to the system
-                            </p>
-                          </div>
-                        </div>
+                        <p className="text-sm text-gray-500">No activity history available</p>
                       </div>
                     )}
                   </div>
