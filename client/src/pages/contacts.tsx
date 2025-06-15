@@ -68,6 +68,21 @@ type Contact = {
   mailingLists: string[];
 };
 
+type Client = {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export default function Contacts() {
   const [activeTab, setActiveTab] = useState("mailing-lists");
   const [selectedList, setSelectedList] = useState<MailingList | null>(null);
@@ -198,19 +213,12 @@ export default function Contacts() {
                 Manage your contact database and email marketing campaigns
               </p>
             </div>
-            <div className="flex space-x-3">
-              <Link href="/clients">
-                <Button variant="outline" className="flex items-center space-x-2">
-                  <Building2 size={16} />
-                  <span>View Clients</span>
-                </Button>
-              </Link>
-            </div>
+
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="mailing-lists" className="flex items-center space-x-2">
               <Mail size={16} />
               <span>Mailing Lists</span>
@@ -222,6 +230,10 @@ export default function Contacts() {
             <TabsTrigger value="campaigns" className="flex items-center space-x-2">
               <Send size={16} />
               <span>Campaigns</span>
+            </TabsTrigger>
+            <TabsTrigger value="clients" className="flex items-center space-x-2">
+              <Building2 size={16} />
+              <span>Clients</span>
             </TabsTrigger>
           </TabsList>
 
@@ -544,8 +556,118 @@ export default function Contacts() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Clients Tab */}
+          <TabsContent value="clients" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Clients</h2>
+              <Button className="flex items-center space-x-2">
+                <Plus size={16} />
+                <span>Add Client</span>
+              </Button>
+            </div>
+
+            <ClientsManagement />
+          </TabsContent>
         </Tabs>
       </div>
+    </div>
+  );
+}
+
+// Clients Management Component
+function ClientsManagement() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch clients data
+  const { data: clients, isLoading } = useQuery({
+    queryKey: ["/api/clients"],
+  });
+
+  const filteredClients = clients?.filter((client: Client) =>
+    client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  if (isLoading) {
+    return <div>Loading clients...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Search */}
+      <div className="flex items-center space-x-4">
+        <Input
+          placeholder="Search clients..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
+      {/* Clients Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredClients.map((client: Client) => (
+          <Card key={client.id} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg">{client.name}</CardTitle>
+                  <CardDescription className="flex items-center mt-1">
+                    <Mail size={14} className="mr-1" />
+                    {client.email}
+                  </CardDescription>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <Eye size={16} />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2 text-sm">
+                {client.phone && (
+                  <div className="flex items-center text-gray-600">
+                    <Phone size={14} className="mr-2" />
+                    {client.phone}
+                  </div>
+                )}
+                {client.address && (
+                  <div className="flex items-center text-gray-600">
+                    <MapPin size={14} className="mr-2" />
+                    <span className="truncate">
+                      {client.address}
+                      {client.city && `, ${client.city}`}
+                      {client.state && `, ${client.state}`}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center text-gray-500 text-xs mt-3">
+                  <Calendar size={12} className="mr-1" />
+                  Added {new Date(client.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {filteredClients.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Building2 size={48} className="mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchQuery ? "No clients match your search criteria" : "Start by adding your first client"}
+            </p>
+            <Button>
+              <Plus size={16} className="mr-2" />
+              Add Client
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
