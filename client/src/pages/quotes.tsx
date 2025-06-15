@@ -407,6 +407,28 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
+        {/* RFP Module */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <FileText className="h-5 w-5" />
+              <span>Request for Proposal (RFP)</span>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Create and manage Request for Proposals to solicit vendor bids for your projects
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => setIsRfpModalOpen(true)}
+              className="bg-accent-orange hover:bg-accent-orange text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create New RFP
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -439,23 +461,13 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                 </Select>
               </div>
             </div>
-            <div className="flex space-x-2">
-              <Button 
-                onClick={() => setIsRfpModalOpen(true)}
-                variant="outline"
-                className="border-accent-orange text-accent-orange hover:bg-accent-orange hover:text-white"
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                RFP
-              </Button>
-              <Button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-accent-orange hover:bg-accent-orange text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Quote Builder
-              </Button>
-            </div>
+            <Button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-accent-orange hover:bg-accent-orange text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Quote Builder
+            </Button>
           </CardHeader>
           <CardContent>
             {isLoading ? (
