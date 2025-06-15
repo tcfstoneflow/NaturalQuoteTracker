@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import TopBar from "@/components/layout/topbar";
+
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -339,12 +339,6 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <TopBar 
-        title="Quotes" 
-        subtitle="Manage and track your client quotes"
-        onSearch={setSearchQuery}
-      />
-
       <div className="flex-1 overflow-y-auto p-6 bg-neutral-50-custom">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
