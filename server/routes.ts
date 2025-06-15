@@ -2032,6 +2032,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cartData = {
         clientId: quote.clientId,
         userId: userId,
+        name: `Quote Cart - ${quote.quoteNumber}`,
+        type: 'quote',
         status: 'active',
         notes: `Cart created for quote ${quote.quoteNumber}`,
         totalAmount: quote.totalAmount
