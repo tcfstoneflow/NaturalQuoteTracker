@@ -51,6 +51,11 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   // Ref for click outside detection
   const clientDropdownRef = useRef<HTMLDivElement>(null);
   
+  // Add to Quote inventory search state
+  const [inventorySearchQuery, setInventorySearchQuery] = useState("");
+  const [isInventoryDropdownOpen, setIsInventoryDropdownOpen] = useState(false);
+  const inventoryDropdownRef = useRef<HTMLDivElement>(null);
+  
   // New client creation state
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [newClientData, setNewClientData] = useState({
@@ -150,6 +155,23 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     };
   }, [isClientDropdownOpen]);
 
+  // Click outside handler for inventory dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (inventoryDropdownRef.current && !inventoryDropdownRef.current.contains(event.target as Node)) {
+        setIsInventoryDropdownOpen(false);
+      }
+    };
+
+    if (isInventoryDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isInventoryDropdownOpen]);
+
   const createQuoteMutation = useMutation({
     mutationFn: quotesApi.create,
     onSuccess: () => {
@@ -246,6 +268,18 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       unitPrice: "",
       totalPrice: "0",
     }]);
+  };
+
+  const addProductToQuote = (product: any) => {
+    const newItem = {
+      productId: product.id,
+      quantity: "1",
+      unitPrice: product.price?.toString() || "0",
+      totalPrice: product.price?.toString() || "0",
+    };
+    setLineItems([...lineItems, newItem]);
+    setInventorySearchQuery("");
+    setIsInventoryDropdownOpen(false);
   };
 
   const removeLineItem = (index: number) => {
@@ -483,20 +517,10 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
           </div>
 
           <div>
-            <Label htmlFor="salesRep">Assigned Sales Rep</Label>
-            <Select value={salesRepId} onValueChange={setSalesRepId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select sales representative..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No assignment</SelectItem>
-                {users?.filter((u: any) => u.role === 'sales_rep' || u.role === 'admin').map((user: any) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.username} ({user.role})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Assigned Sales Rep</Label>
+            <div className="px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600">
+              NATIVE SUGGESTION WIP
+            </div>
           </div>
 
           {/* Line Items */}
