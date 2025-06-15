@@ -2596,13 +2596,28 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getActivitiesByEntityId(entityId: number, entityType: string): Promise<Activity[]> {
+    return withRetry(async () => {
+      return await db
+        .select()
+        .from(activities)
+        .where(
+          and(
+            eq(activities.entityId, entityId),
+            eq(activities.entityType, entityType)
+          )
+        )
+        .orderBy(desc(activities.createdAt));
+    });
+  }
+
   // Cart Management Methods
   async getUserCarts(userId: number): Promise<Cart[]> {
     return withRetry(async () => {
       return await db
         .select()
         .from(carts)
-        .where(eq(carts.userId, userId))
+        .where(eq(carts.clientId, userId))
         .orderBy(desc(carts.updatedAt));
     });
   }
