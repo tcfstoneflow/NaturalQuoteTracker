@@ -862,7 +862,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
                             <span className="font-semibold">Area:</span> {item.area || 0} sq ft
                           </div>
                           <div>
-                            <span className="font-semibold text-green-600">Subtotal:</span> ${item.subtotal || item.totalPrice}
+                            <span className="font-semibold text-green-600">Subtotal (1 slab):</span> ${item.subtotal || item.totalPrice}
                           </div>
                         </div>
                       </div>
