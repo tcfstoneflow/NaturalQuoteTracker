@@ -2,6 +2,7 @@ import {
   users, clients, products, quotes, quoteLineItems, activities, slabs, showroomVisits, productGalleryImages, clientFavorites, consultations, tags, productTags, salesTargets,
   salesRepProfiles, salesRepFavoriteSlabs, salesRepPortfolioImages, salesRepAppointments,
   workflows, workflowSteps, workflowInstances, workflowStepInstances, workflowTemplates, workflowComments,
+  carts, cartItems,
   type User, type InsertUser,
   type Client, type InsertClient,
   type Product, type InsertProduct,
@@ -26,7 +27,9 @@ import {
   type WorkflowInstance, type InsertWorkflowInstance, type WorkflowInstanceWithDetails,
   type WorkflowStepInstance, type InsertWorkflowStepInstance,
   type WorkflowTemplate, type InsertWorkflowTemplate,
-  type WorkflowComment, type InsertWorkflowComment
+  type WorkflowComment, type InsertWorkflowComment,
+  type Cart, type InsertCart,
+  type CartItem, type InsertCartItem
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, sql, and, or, gte, lte, count } from "drizzle-orm";
@@ -2591,6 +2594,176 @@ export class DatabaseStorage implements IStorage {
           : 0
       }
     };
+  }
+
+  // Cart Management Methods
+  async getUserCarts(userId: number): Promise<Cart[]> {
+    return withRetry(async () => {
+      return await db
+        .select()
+        .from(carts)
+        .where(eq(carts.userId, userId))
+        .orderBy(desc(carts.updatedAt));
+    });
+  }
+
+  async createCart(data: InsertCart): Promise<Cart> {
+    return withRetry(async () => {
+      const [cart] = await db.insert(carts).values(data).returning();
+      return cart;
+    });
+  }
+
+  async getCart(cartId: number): Promise<Cart | null> {
+    return withRetry(async () => {
+      const [cart] = await db
+        .select()
+        .from(carts)
+        .where(eq(carts.id, cartId));
+      return cart || null;
+    });
+  }
+
+  async getCartWithItems(cartId: number): Promise<any> {
+    return withRetry(async () => {
+      const cart = await this.getCart(cartId);
+      if (!cart) return null;
+
+      const items = await db
+        .select({
+          id: cartItems.id,
+          itemType: cartItems.itemType,
+          quantity: cartItems.quantity,
+          unitPrice: cartItems.unitPrice,
+          totalPrice: cartItems.totalPrice,
+          notes: cartItems.notes,
+          customSpecs: cartItems.customSpecs,
+          product: {
+            id: products.id,
+            name: products.name,
+            category: products.category,
+            bundleId: products.bundleId,
+            imageUrl: products.imageUrl,
+          },
+          slab: {
+            id: slabs.id,
+            slabNumber: slabs.slabNumber,
+            bundleId: slabs.bundleId,
+            length: slabs.length,
+            width: slabs.width,
+          }
+        })
+        .from(cartItems)
+        .leftJoin(products, eq(cartItems.productId, products.id))
+        .leftJoin(slabs, eq(cartItems.slabId, slabs.id))
+        .where(eq(cartItems.cartId, cartId));
+
+      return {
+        ...cart,
+        items
+      };
+    });
+  }
+
+  async updateCart(cartId: number, data: Partial<InsertCart>): Promise<Cart> {
+    return withRetry(async () => {
+      const [cart] = await db
+        .update(carts)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(carts.id, cartId))
+        .returning();
+      return cart;
+    });
+  }
+
+  async deleteCart(cartId: number): Promise<void> {
+    return withRetry(async () => {
+      // First delete all cart items
+      await db.delete(cartItems).where(eq(cartItems.cartId, cartId));
+      // Then delete the cart
+      await db.delete(carts).where(eq(carts.id, cartId));
+    });
+  }
+
+  async addCartItem(data: InsertCartItem): Promise<CartItem> {
+    return withRetry(async () => {
+      const [item] = await db.insert(cartItems).values(data).returning();
+      return item;
+    });
+  }
+
+  async updateCartItem(itemId: number, data: Partial<InsertCartItem>): Promise<CartItem> {
+    return withRetry(async () => {
+      const [item] = await db
+        .update(cartItems)
+        .set(data)
+        .where(eq(cartItems.id, itemId))
+        .returning();
+      return item;
+    });
+  }
+
+  async removeCartItem(itemId: number): Promise<void> {
+    return withRetry(async () => {
+      await db.delete(cartItems).where(eq(cartItems.id, itemId));
+    });
+  }
+
+  async updateCartTotal(cartId: number): Promise<void> {
+    return withRetry(async () => {
+      const [result] = await db
+        .select({
+          total: sql<number>`COALESCE(SUM(${cartItems.totalPrice}::numeric), 0)`
+        })
+        .from(cartItems)
+        .where(eq(cartItems.cartId, cartId));
+
+      await db
+        .update(carts)
+        .set({ 
+          totalAmount: result.total.toString(),
+          updatedAt: new Date()
+        })
+        .where(eq(carts.id, cartId));
+    });
+  }
+
+  async convertCartToQuote(cartId: number, quoteData: any): Promise<Quote> {
+    return withRetry(async () => {
+      const cart = await this.getCartWithItems(cartId);
+      if (!cart) throw new Error('Cart not found');
+
+      // Generate quote number
+      const timestamp = Date.now().toString();
+      const quoteNumber = `QT-${timestamp.slice(-8)}`;
+
+      // Create quote
+      const [quote] = await db.insert(quotes).values({
+        quoteNumber,
+        clientId: quoteData.clientId,
+        salesRepId: quoteData.salesRepId,
+        projectName: cart.name,
+        totalAmount: cart.totalAmount,
+        status: 'draft',
+        validUntil: quoteData.validUntil,
+        notes: quoteData.notes
+      }).returning();
+
+      // Create quote line items from cart items
+      for (const item of cart.items) {
+        await db.insert(quoteLineItems).values({
+          quoteId: quote.id,
+          productId: item.product?.id || null,
+          description: item.product?.name || item.slab?.slabNumber || 'Custom Item',
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          notes: item.notes
+        });
+      }
+
+      return quote;
+    });
   }
 }
 

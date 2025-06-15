@@ -2698,6 +2698,217 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Cart Management API Routes
+  // Get user's carts
+  app.get("/api/carts", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const carts = await storage.getUserCarts(userId);
+      res.json(carts);
+    } catch (error: any) {
+      console.error('Get carts error:', error);
+      res.status(500).json({ error: 'Failed to fetch carts' });
+    }
+  });
+
+  // Create new cart
+  app.post("/api/carts", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const cartData = insertCartSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const cart = await storage.createCart(cartData);
+      res.status(201).json(cart);
+    } catch (error: any) {
+      console.error('Create cart error:', error);
+      res.status(500).json({ error: 'Failed to create cart' });
+    }
+  });
+
+  // Get specific cart with items
+  app.get("/api/carts/:id", requireAuth, async (req, res) => {
+    try {
+      const cartId = parseInt(req.params.id);
+      const cart = await storage.getCartWithItems(cartId);
+      
+      if (!cart) {
+        return res.status(404).json({ error: 'Cart not found' });
+      }
+
+      // Check if user owns this cart
+      if (cart.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      res.json(cart);
+    } catch (error: any) {
+      console.error('Get cart error:', error);
+      res.status(500).json({ error: 'Failed to fetch cart' });
+    }
+  });
+
+  // Update cart
+  app.put("/api/carts/:id", requireAuth, async (req, res) => {
+    try {
+      const cartId = parseInt(req.params.id);
+      const cart = await storage.getCart(cartId);
+      
+      if (!cart) {
+        return res.status(404).json({ error: 'Cart not found' });
+      }
+
+      // Check if user owns this cart
+      if (cart.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const updateData = insertCartSchema.partial().parse(req.body);
+      const updatedCart = await storage.updateCart(cartId, updateData);
+      res.json(updatedCart);
+    } catch (error: any) {
+      console.error('Update cart error:', error);
+      res.status(500).json({ error: 'Failed to update cart' });
+    }
+  });
+
+  // Delete cart
+  app.delete("/api/carts/:id", requireAuth, async (req, res) => {
+    try {
+      const cartId = parseInt(req.params.id);
+      const cart = await storage.getCart(cartId);
+      
+      if (!cart) {
+        return res.status(404).json({ error: 'Cart not found' });
+      }
+
+      // Check if user owns this cart
+      if (cart.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      await storage.deleteCart(cartId);
+      res.json({ message: 'Cart deleted successfully' });
+    } catch (error: any) {
+      console.error('Delete cart error:', error);
+      res.status(500).json({ error: 'Failed to delete cart' });
+    }
+  });
+
+  // Add item to cart
+  app.post("/api/carts/:id/items", requireAuth, async (req, res) => {
+    try {
+      const cartId = parseInt(req.params.id);
+      const cart = await storage.getCart(cartId);
+      
+      if (!cart) {
+        return res.status(404).json({ error: 'Cart not found' });
+      }
+
+      // Check if user owns this cart
+      if (cart.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const itemData = insertCartItemSchema.parse({
+        ...req.body,
+        cartId
+      });
+
+      const cartItem = await storage.addCartItem(itemData);
+      
+      // Update cart total
+      await storage.updateCartTotal(cartId);
+      
+      res.status(201).json(cartItem);
+    } catch (error: any) {
+      console.error('Add cart item error:', error);
+      res.status(500).json({ error: 'Failed to add item to cart' });
+    }
+  });
+
+  // Update cart item
+  app.put("/api/carts/:cartId/items/:itemId", requireAuth, async (req, res) => {
+    try {
+      const cartId = parseInt(req.params.cartId);
+      const itemId = parseInt(req.params.itemId);
+      
+      const cart = await storage.getCart(cartId);
+      if (!cart || cart.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const updateData = insertCartItemSchema.partial().parse(req.body);
+      const updatedItem = await storage.updateCartItem(itemId, updateData);
+      
+      // Update cart total
+      await storage.updateCartTotal(cartId);
+      
+      res.json(updatedItem);
+    } catch (error: any) {
+      console.error('Update cart item error:', error);
+      res.status(500).json({ error: 'Failed to update cart item' });
+    }
+  });
+
+  // Remove item from cart
+  app.delete("/api/carts/:cartId/items/:itemId", requireAuth, async (req, res) => {
+    try {
+      const cartId = parseInt(req.params.cartId);
+      const itemId = parseInt(req.params.itemId);
+      
+      const cart = await storage.getCart(cartId);
+      if (!cart || cart.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      await storage.removeCartItem(itemId);
+      
+      // Update cart total
+      await storage.updateCartTotal(cartId);
+      
+      res.json({ message: 'Item removed from cart' });
+    } catch (error: any) {
+      console.error('Remove cart item error:', error);
+      res.status(500).json({ error: 'Failed to remove item from cart' });
+    }
+  });
+
+  // Convert cart to quote
+  app.post("/api/carts/:id/convert-to-quote", requireAuth, async (req, res) => {
+    try {
+      const cartId = parseInt(req.params.id);
+      const cart = await storage.getCartWithItems(cartId);
+      
+      if (!cart || cart.userId !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const { clientId, validUntil, notes } = req.body;
+      
+      if (!clientId) {
+        return res.status(400).json({ error: 'Client ID is required' });
+      }
+
+      const quote = await storage.convertCartToQuote(cartId, {
+        clientId,
+        validUntil: validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days default
+        notes: notes || '',
+        salesRepId: req.user.id
+      });
+
+      // Mark cart as converted
+      await storage.updateCart(cartId, { status: 'converted' });
+
+      res.status(201).json(quote);
+    } catch (error: any) {
+      console.error('Convert cart to quote error:', error);
+      res.status(500).json({ error: 'Failed to convert cart to quote' });
+    }
+  });
+
   // Consultation requests - create as showroom visits
   app.post("/api/consultations", async (req, res) => {
     try {
