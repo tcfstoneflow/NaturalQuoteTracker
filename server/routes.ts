@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema, insertSalesRepProfileSchema, insertSalesRepFavoriteSlabSchema, insertSalesRepPortfolioImageSchema, insertSalesRepAppointmentSchema, insertWorkflowSchema, insertWorkflowStepSchema, insertWorkflowInstanceSchema, insertWorkflowStepInstanceSchema, insertWorkflowTemplateSchema, insertWorkflowCommentSchema } from "@shared/schema";
+import { insertClientSchema, insertProductSchema, insertQuoteSchema, insertQuoteLineItemSchema, insertSalesTargetSchema, insertSalesRepProfileSchema, insertSalesRepFavoriteSlabSchema, insertSalesRepPortfolioImageSchema, insertSalesRepAppointmentSchema, insertWorkflowSchema, insertWorkflowStepSchema, insertWorkflowInstanceSchema, insertWorkflowStepInstanceSchema, insertWorkflowTemplateSchema, insertWorkflowCommentSchema, insertCartSchema, insertCartItemSchema } from "@shared/schema";
 import { translateNaturalLanguageToSQL, analyzeSQLResult } from "./ai";
 import { generateQuotePDF } from "./pdf";
 import { sendQuoteEmail } from "./email";

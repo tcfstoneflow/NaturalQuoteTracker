@@ -514,6 +514,35 @@ export const salesRepAppointments = pgTable("sales_rep_appointments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Cart management for quotes and orders
+export const carts = pgTable("carts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id),
+  name: text("name").notNull().default("Untitled Cart"),
+  description: text("description"),
+  type: text("type").notNull().default("quote"), // "quote", "order"
+  status: text("status").notNull().default("active"), // "active", "converted", "abandoned"
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).default("0.00"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const cartItems = pgTable("cart_items", {
+  id: serial("id").primaryKey(),
+  cartId: integer("cart_id").references(() => carts.id).notNull(),
+  productId: integer("product_id").references(() => products.id),
+  slabId: integer("slab_id").references(() => slabs.id),
+  itemType: text("item_type").notNull(), // "product", "slab"
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  customSpecs: jsonb("custom_specs"), // Custom specifications for the item
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // E-commerce relations
 export const ecommerceOrdersRelations = relations(ecommerceOrders, ({ many, one }) => ({
   orderItems: many(ecommerceOrderItems),
@@ -555,11 +584,39 @@ export const salesTargetsRelations = relations(salesTargets, ({ one }) => ({
   }),
 }));
 
+export const cartsRelations = relations(carts, ({ many, one }) => ({
+  items: many(cartItems),
+  user: one(users, {
+    fields: [carts.userId],
+    references: [users.id],
+  }),
+  client: one(clients, {
+    fields: [carts.clientId],
+    references: [clients.id],
+  }),
+}));
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+  cart: one(carts, {
+    fields: [cartItems.cartId],
+    references: [carts.id],
+  }),
+  product: one(products, {
+    fields: [cartItems.productId],
+    references: [products.id],
+  }),
+  slab: one(slabs, {
+    fields: [cartItems.slabId],
+    references: [slabs.id],
+  }),
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   quotes: many(quotes),
   clients: many(clients),
   showroomVisits: many(showroomVisits),
   salesTargets: many(salesTargets),
+  carts: many(carts),
 }));
 
 // Insert schemas
@@ -740,6 +797,17 @@ export const insertClientConsultationSchema = createInsertSchema(clientConsultat
   updatedAt: true,
 });
 
+export const insertCartSchema = createInsertSchema(carts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCartItemSchema = createInsertSchema(cartItems).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -820,6 +888,12 @@ export type InsertSalesRepAppointment = z.infer<typeof insertSalesRepAppointment
 
 export type ClientConsultation = typeof clientConsultations.$inferSelect;
 export type InsertClientConsultation = z.infer<typeof insertClientConsultationSchema>;
+
+export type Cart = typeof carts.$inferSelect;
+export type InsertCart = z.infer<typeof insertCartSchema>;
+
+export type CartItem = typeof cartItems.$inferSelect;
+export type InsertCartItem = z.infer<typeof insertCartItemSchema>;
 
 // Extended types for API responses
 export type QuoteWithDetails = Quote & {
