@@ -15,7 +15,8 @@ import {
   Target,
   Activity,
   ShoppingCart,
-  Layers
+  Layers,
+  GitBranch
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -27,6 +28,7 @@ const navigation = [
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
   { name: "Quotes", href: "/quotes", icon: FileText },
+  { name: "Workflows", href: "/workflows", icon: GitBranch },
   { name: "Showroom Visits", href: "/showroom-visits", icon: Calendar },
   { name: "Reports", href: "/reports", icon: TrendingUp },
   { name: "SQL Query Tool", href: "/sql-query", icon: Database },
