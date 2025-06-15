@@ -104,7 +104,15 @@ export class SimpleDatabaseStorage implements IStorage {
     return await withRetry(async () => {
       const [user] = await db
         .insert(users)
-        .values(insertUser)
+        .values({
+          username: insertUser.username,
+          email: insertUser.email,
+          passwordHash: (insertUser as any).passwordHash || (insertUser as any).password,
+          firstName: insertUser.firstName,
+          lastName: insertUser.lastName,
+          role: insertUser.role || 'sales_rep',
+          isActive: insertUser.isActive !== false
+        })
         .returning();
       return user;
     });
@@ -164,7 +172,15 @@ export class SimpleDatabaseStorage implements IStorage {
         totalRevenue: "0",
         pendingQuotes: 0,
         lowStockProducts: 0,
-        recentActivities: 0
+        recentActivities: 0,
+        activeClients: clientCount.count,
+        inventoryItems: productCount.count,
+        revenueChange: "0",
+        clientsChange: 0,
+        quotesChange: 0,
+        slabsChange: 0,
+        lowStockCount: 0,
+        expiringQuotesCount: 0
       };
     });
   }

@@ -41,7 +41,9 @@ pool.on('connect', (client) => {
   reconnectAttempts = 0;
   
   // Set connection parameters for better stability
-  client.query('SET application_name = $1', ['stone-crm-app']);
+  client.query("SET application_name = 'stone-crm-app'").catch(err => {
+    console.warn('Failed to set application name:', err.message);
+  });
 });
 
 pool.on('remove', () => {
