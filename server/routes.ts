@@ -687,7 +687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotes = await storage.getClientQuotes(clientId);
       
       // Get client activities (store visits)
-      const activities = await storage.getActivitiesByEntityId('client', clientId);
+      const activities = await storage.getActivitiesByEntityId(clientId, 'client');
       
       // Combine and sort activities
       const allActivities = [

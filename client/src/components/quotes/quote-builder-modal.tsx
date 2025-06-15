@@ -35,6 +35,11 @@ interface LineItem {
   unitPrice: string;
   totalPrice: string;
   product?: any;
+  slabId?: number;
+  slab?: any;
+  length?: string;
+  width?: string;
+  area?: string;
 }
 
 export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteBuilderModalProps) {
@@ -86,6 +91,12 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
 
   const { data: users } = useQuery({
     queryKey: ['/api/users'],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Fetch slabs data
+  const { data: slabs } = useQuery({
+    queryKey: ['/api/slabs'],
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -272,12 +283,49 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
   };
 
   const addProductToQuote = (product: any) => {
+    // Find the first available slab that matches this product
+    const matchingSlab = slabs?.find((slab: any) => 
+      slab.bundleId === product.bundleId && 
+      slab.isActive && 
+      slab.status === 'available'
+    );
+
+    let unitPrice = parseFloat(product.price || "0");
+    let length = "";
+    let width = "";
+    let area = "";
+
+    if (matchingSlab) {
+      // Use slab dimensions for area calculation
+      const slabLength = parseFloat(matchingSlab.length || "0");
+      const slabWidth = parseFloat(matchingSlab.width || "0");
+      
+      if (slabLength > 0 && slabWidth > 0) {
+        // Calculate area in square feet (assuming dimensions are in inches)
+        const areaInSqFt = (slabLength * slabWidth) / 144;
+        
+        // Calculate total price as price per sqft × area
+        unitPrice = parseFloat(product.price || "0") * areaInSqFt;
+        
+        length = slabLength.toString();
+        width = slabWidth.toString();
+        area = areaInSqFt.toFixed(2);
+      }
+    }
+
     const newItem = {
       productId: product.id,
       quantity: "1",
-      unitPrice: product.price?.toString() || "0",
-      totalPrice: product.price?.toString() || "0",
+      unitPrice: unitPrice.toFixed(2),
+      totalPrice: unitPrice.toFixed(2),
+      product: product,
+      slabId: matchingSlab?.id,
+      slab: matchingSlab,
+      length: length,
+      width: width,
+      area: area,
     };
+    
     setLineItems([...lineItems, newItem]);
     setInventorySearchQuery("");
     setIsInventoryDropdownOpen(false);
@@ -291,26 +339,67 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
     const updated = [...lineItems];
     updated[index] = { ...updated[index], [field]: value };
 
-    // Calculate total price when quantity or unit price changes
-    if (field === 'quantity' || field === 'unitPrice') {
+    // Calculate total price when quantity, unit price, length, or width changes
+    if (field === 'quantity' || field === 'unitPrice' || field === 'length' || field === 'width') {
       const quantity = parseFloat(field === 'quantity' ? value : updated[index].quantity) || 0;
-      const unitPrice = parseFloat(field === 'unitPrice' ? value : updated[index].unitPrice) || 0;
+      let unitPrice = parseFloat(field === 'unitPrice' ? value : updated[index].unitPrice) || 0;
+      
+      // If length or width changed, recalculate unit price based on area
+      if (field === 'length' || field === 'width') {
+        const length = parseFloat(field === 'length' ? value : updated[index].length || "0");
+        const width = parseFloat(field === 'width' ? value : updated[index].width || "0");
+        
+        if (length > 0 && width > 0 && updated[index].product) {
+          const areaInSqFt = (length * width) / 144;
+          const pricePerSqFt = parseFloat(updated[index].product.price || "0");
+          unitPrice = pricePerSqFt * areaInSqFt;
+          
+          updated[index].unitPrice = unitPrice.toFixed(2);
+          updated[index].area = areaInSqFt.toFixed(2);
+        }
+      }
+      
       updated[index].totalPrice = (quantity * unitPrice).toFixed(2);
     }
 
-    // Update unit price when product changes
+    // Update unit price and slab selection when product changes
     if (field === 'productId') {
-      const product = products?.find(p => p.id === parseInt(value));
+      const product = products?.find((p: any) => p.id === parseInt(value));
       if (product) {
-        // Calculate unit price as: (slab length in inches × slab width in inches ÷ 144) × price per sqft
-        let unitPrice = parseFloat(product.price);
-        if (product.slabLength && product.slabWidth) {
-          const slabSqFt = (parseFloat(product.slabLength) * parseFloat(product.slabWidth)) / 144;
-          unitPrice = slabSqFt * parseFloat(product.price);
+        // Find the first available slab that matches this product
+        const matchingSlab = slabs?.find((slab: any) => 
+          slab.bundleId === product.bundleId && 
+          slab.isActive && 
+          slab.status === 'available'
+        );
+
+        let unitPrice = parseFloat(product.price || "0");
+        let length = "";
+        let width = "";
+        let area = "";
+
+        if (matchingSlab) {
+          const slabLength = parseFloat(matchingSlab.length || "0");
+          const slabWidth = parseFloat(matchingSlab.width || "0");
+          
+          if (slabLength > 0 && slabWidth > 0) {
+            const areaInSqFt = (slabLength * slabWidth) / 144;
+            unitPrice = parseFloat(product.price || "0") * areaInSqFt;
+            
+            length = slabLength.toString();
+            width = slabWidth.toString();
+            area = areaInSqFt.toFixed(2);
+          }
         }
         
         updated[index].unitPrice = unitPrice.toFixed(2);
         updated[index].product = product;
+        updated[index].slabId = matchingSlab?.id;
+        updated[index].slab = matchingSlab;
+        updated[index].length = length;
+        updated[index].width = width;
+        updated[index].area = area;
+        
         const quantity = parseFloat(updated[index].quantity) || 0;
         updated[index].totalPrice = (quantity * unitPrice).toFixed(2);
       }
@@ -536,7 +625,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
             {lineItems.map((item, index) => (
               <Card key={index} className="mb-4">
                 <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div className="md:col-span-2">
                       <Label>Product *</Label>
                       <Select
@@ -554,9 +643,14 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
                           ))}
                         </SelectContent>
                       </Select>
+                      {item.slab && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Slab: {item.slab.slabId || 'Auto-selected'}
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <Label>Quantity (slabs) *</Label>
+                      <Label>Quantity *</Label>
                       <Input
                         type="number"
                         step="1"
@@ -567,25 +661,38 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
                       />
                     </div>
                     <div>
-                      <Label>Price Per Slab *</Label>
+                      <Label>Length (in)</Label>
                       <Input
                         type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={item.unitPrice}
-                        onChange={(e) => updateLineItem(index, 'unitPrice', e.target.value)}
-                        readOnly={item.product && item.product.slabLength && item.product.slabWidth}
+                        step="0.1"
+                        placeholder="0"
+                        value={item.length || ""}
+                        onChange={(e) => updateLineItem(index, 'length', e.target.value)}
+                        className="text-sm"
                       />
                     </div>
-                    <div className="flex flex-col">
-                      <Label>Total: ${item.totalPrice}</Label>
+                    <div>
+                      <Label>Width (in)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        placeholder="0"
+                        value={item.width || ""}
+                        onChange={(e) => updateLineItem(index, 'width', e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label>Area: {item.area || "0"} sq ft</Label>
+                      <Label>Unit Price: ${item.unitPrice}</Label>
+                      <Label className="font-semibold">Total: ${item.totalPrice}</Label>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => removeLineItem(index)}
-                        className="text-error-red hover:bg-red-50 mt-auto"
+                        className="text-error-red hover:bg-red-50 mt-1"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </Button>
                     </div>
                   </div>

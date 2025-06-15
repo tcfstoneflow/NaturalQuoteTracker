@@ -585,13 +585,9 @@ export const salesTargetsRelations = relations(salesTargets, ({ one }) => ({
 
 export const cartsRelations = relations(carts, ({ many, one }) => ({
   items: many(cartItems),
-  user: one(users, {
-    fields: [carts.userId],
-    references: [users.id],
-  }),
-  client: one(clients, {
+  client: one(users, {
     fields: [carts.clientId],
-    references: [clients.id],
+    references: [users.id],
   }),
 }));
 
