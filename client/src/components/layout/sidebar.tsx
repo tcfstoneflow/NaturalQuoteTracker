@@ -26,7 +26,8 @@ import {
   Bell,
   Check,
   X,
-  UserPlus
+  UserPlus,
+  Bug
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -179,18 +180,20 @@ export default function Sidebar() {
             </div>
           </div>
           
-          {/* Notifications Bell */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell size={18} />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-error-red text-white text-xs rounded-full flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
+          {/* Action Icons */}
+          <div className="flex flex-col space-y-2">
+            {/* Notifications Bell */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell size={18} />
+                  {notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-error-red text-white text-xs rounded-full flex items-center justify-center">
+                      {notificationCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <div className="p-3 border-b flex justify-between items-center">
                 <h4 className="font-semibold text-sm">Notifications</h4>
@@ -350,6 +353,12 @@ export default function Sidebar() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          {/* Bug Report Icon */}
+          <Button variant="ghost" size="icon" className="relative">
+            <Bug size={18} />
+          </Button>
+          </div>
         </div>
       </div>
 
