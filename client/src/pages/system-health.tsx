@@ -460,6 +460,16 @@ export default function SystemHealth() {
                   <p className="text-sm text-muted-foreground">API response time</p>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Hygiene</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">TBD</div>
+                  <p className="text-sm text-muted-foreground">System hygiene status</p>
+                </CardContent>
+              </Card>
             </div>
           )}
         </TabsContent>

@@ -74,6 +74,7 @@ export default function Quotes() {
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRfpModalOpen, setIsRfpModalOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState("");
 
   const queryClient = useQueryClient();
@@ -438,13 +439,23 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                 </Select>
               </div>
             </div>
-            <Button 
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-accent-orange hover:bg-accent-orange text-white"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Quote Builder
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={() => setIsRfpModalOpen(true)}
+                variant="outline"
+                className="border-accent-orange text-accent-orange hover:bg-accent-orange hover:text-white"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                RFP
+              </Button>
+              <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-accent-orange hover:bg-accent-orange text-white"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Quote Builder
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -870,6 +881,115 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
         onClose={() => setIsEditModalOpen(false)}
         editQuote={selectedQuote}
       />
+
+      {/* RFP Modal */}
+      <Dialog open={isRfpModalOpen} onOpenChange={setIsRfpModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <FileText className="h-5 w-5" />
+              <span>Create Request for Proposal (RFP)</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="rfp-title">RFP Title</Label>
+                <input
+                  id="rfp-title"
+                  type="text"
+                  placeholder="Enter RFP title"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="rfp-client">Client/Organization</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients?.map((client: any) => (
+                      <SelectItem key={client.id} value={client.id.toString()}>
+                        {client.company || client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="rfp-description">Project Description</Label>
+                <Textarea
+                  id="rfp-description"
+                  placeholder="Describe the project requirements, scope, and specifications"
+                  rows={4}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="rfp-deadline">Submission Deadline</Label>
+                  <input
+                    id="rfp-deadline"
+                    type="date"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="rfp-budget">Estimated Budget</Label>
+                  <input
+                    id="rfp-budget"
+                    type="number"
+                    placeholder="0.00"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="rfp-requirements">Technical Requirements</Label>
+                <Textarea
+                  id="rfp-requirements"
+                  placeholder="List specific technical requirements, materials, dimensions, etc."
+                  rows={3}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="rfp-evaluation">Evaluation Criteria</Label>
+                <Textarea
+                  id="rfp-evaluation"
+                  placeholder="How will proposals be evaluated? (e.g., price, quality, timeline, experience)"
+                  rows={3}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsRfpModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                className="bg-accent-orange hover:bg-accent-orange text-white"
+                onClick={() => {
+                  toast({
+                    title: "RFP Created",
+                    description: "Request for Proposal has been created and sent to vendors.",
+                  });
+                  setIsRfpModalOpen(false);
+                }}
+              >
+                Create RFP
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
