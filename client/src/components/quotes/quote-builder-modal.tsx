@@ -389,7 +389,7 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
         <div className="space-y-6">
           {/* Client Selection and Project Details */}
           <div className="grid grid-cols-1 gap-6">
-            <div className="relative">
+            <div className="relative" ref={clientDropdownRef}>
               <Label htmlFor="client">Select Client *</Label>
               <div className="relative">
                 <Input
