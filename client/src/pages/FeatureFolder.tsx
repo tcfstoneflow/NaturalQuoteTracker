@@ -27,7 +27,7 @@ const featureCategories = [
     ]
   },
   {
-    title: "KPI Tracking & Analytics",
+    title: "KPI Tracking",
     description: "Monitor key performance indicators across different business areas",
     features: [
       { name: "Marketing KPI", href: "/marketing-kpi", icon: TrendingUp, description: "Track marketing performance metrics" },
