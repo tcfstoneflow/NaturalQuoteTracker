@@ -366,11 +366,6 @@ export default function Sidebar() {
           </Button>
           </div>
         </div>
-        
-        {/* Rock Emoji - positioned equidistant from logo */}
-        <div className="flex justify-center pt-3">
-          <span className="text-2xl">🪨</span>
-        </div>
       </div>
 
       {/* Navigation Menu */}
