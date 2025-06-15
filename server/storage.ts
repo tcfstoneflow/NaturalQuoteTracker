@@ -2570,13 +2570,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(quotes)
       .where(
-        and(
-          gte(quotes.createdAt, currentMonth),
-          or(
-            eq(quotes.salesRepId, sql`ANY(${teamMembers.map(m => m.id)})`),
-            eq(quotes.createdBy, salesLeaderId)
-          )
-        )
+        gte(quotes.createdAt, currentMonth)
       );
 
     return {
