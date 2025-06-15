@@ -51,6 +51,8 @@ export default function Clients() {
   const [quoteToDelete, setQuoteToDelete] = useState<{id: number, name: string} | null>(null);
   const [aiSummary, setAiSummary] = useState<string>("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isVisitorVisitModalOpen, setIsVisitorVisitModalOpen] = useState(false);
+  const [isLoggingVisit, setIsLoggingVisit] = useState(false);
   const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
     name: "",
@@ -546,6 +548,43 @@ export default function Clients() {
     }
   };
 
+  const logVisitorVisit = async () => {
+    if (!viewingClient || isLoggingVisit) return;
+
+    setIsLoggingVisit(true);
+    try {
+      const response = await apiRequest("POST", "/api/clients/log-visit", {
+        clientId: viewingClient.id,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Visit Logged",
+          description: `Store visit recorded for ${viewingClient.name}`,
+        });
+        
+        // Refresh client quotes to update activity history
+        queryClient.invalidateQueries({
+          queryKey: ['/api/quotes', { clientId: viewingClient.id }]
+        });
+        
+        setIsVisitorVisitModalOpen(false);
+      } else {
+        throw new Error('Failed to log visit');
+      }
+    } catch (error: any) {
+      console.error("Error logging visit:", error);
+      toast({
+        title: "Error",
+        description: "Failed to log store visit. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingVisit(false);
+    }
+  };
+
   // Bulk import helper functions
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -941,15 +980,24 @@ export default function Clients() {
                 <div className="flex justify-between items-center">
                   <DialogTitle>Client Details</DialogTitle>
                   {viewingClient && (
-                    <Button 
-                      onClick={() => {
-                        handleOpenNewQuoteModal(viewingClient);
-                      }}
-                      className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2 ml-[25px] mr-[25px] mt-[5px] mb-[5px]"
-                    >
-                      <span className="text-lg">+</span>
-                      New Quote
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => setIsVisitorVisitModalOpen(true)}
+                        className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2"
+                      >
+                        <span className="text-lg">+</span>
+                        Visitor Visit
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          handleOpenNewQuoteModal(viewingClient);
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-2"
+                      >
+                        <span className="text-lg">+</span>
+                        New Quote
+                      </Button>
+                    </div>
                   )}
                 </div>
               </DialogHeader>
@@ -1640,6 +1688,39 @@ export default function Clients() {
             onClose={() => setIsEditQuoteModalOpen(false)}
             editQuote={editingQuote}
           />
+
+          {/* Visitor Visit Confirmation Modal */}
+          <Dialog open={isVisitorVisitModalOpen} onOpenChange={setIsVisitorVisitModalOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Log Store Visit</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Are you sure you want to log a store visit for <strong>{viewingClient?.name}</strong>?
+                </p>
+                <p className="text-xs text-gray-500">
+                  This will record the current date and time ({new Date().toLocaleString()}) in the client's activity history.
+                </p>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsVisitorVisitModalOpen(false)}
+                    disabled={isLoggingVisit}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={logVisitorVisit}
+                    disabled={isLoggingVisit}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    {isLoggingVisit ? "Logging..." : "Confirm Visit"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           
           <CardContent>
             {isLoading ? (
