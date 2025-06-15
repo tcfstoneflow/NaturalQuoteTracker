@@ -21,7 +21,8 @@ import {
   Workflow,
   Folder,
   Truck,
-  Building2
+  Building2,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -52,6 +53,7 @@ const featureFolderNavigation = [
 
 const adminNavigation = [
   { name: "System Access", href: "/user-management", icon: UserCog },
+  { name: "OAuth Accounts", href: "/oauth-accounts", icon: Shield },
   { name: "System Health", href: "/system-health", icon: Activity },
   { name: "Tracking", href: "/feature-folder", icon: Folder },
 ];
