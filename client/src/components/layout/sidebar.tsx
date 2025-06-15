@@ -54,12 +54,15 @@ export default function Sidebar() {
   const isAdmin = user?.role === 'admin';
   const isInventorySpecialist = user?.role === 'inventory_specialist';
   const isSalesRep = user?.role === 'sales_rep';
+  const isSalesLeader = user?.role === 'sales_leader';
   
   // Filter navigation based on user role
   const getVisibleNavigation = () => {
     if (isAdmin) {
-      // Admins see everything except sales dashboard (they have main dashboard)
-      return navigation.filter(item => item.href !== '/sales-dashboard');
+      // Admins see everything except sales dashboard and sales leader dashboard
+      return navigation.filter(item => 
+        item.href !== '/sales-dashboard' && item.href !== '/sales-leader'
+      );
     } else if (isInventorySpecialist) {
       // Inventory specialists can see dashboard, inventory, and reports
       return navigation.filter(item => 
@@ -69,6 +72,11 @@ export default function Sidebar() {
       // Sales reps can see sales dashboard, clients, quotes, and showroom visits (no main dashboard or reports)
       return navigation.filter(item => 
         ['/sales-dashboard', '/clients', '/quotes', '/showroom-visits'].includes(item.href)
+      );
+    } else if (isSalesLeader) {
+      // Sales leaders can see sales leader dashboard, main dashboard, clients, quotes, reports, and team management
+      return navigation.filter(item => 
+        ['/', '/sales-leader', '/clients', '/quotes', '/reports', '/showroom-visits', '/user-management'].includes(item.href)
       );
     }
     return navigation;
@@ -115,8 +123,8 @@ export default function Sidebar() {
             );
           })}
           
-          {/* Admin-only navigation */}
-          {isAdmin && (
+          {/* Admin and Sales Leader navigation */}
+          {(isAdmin || isSalesLeader) && (
             <>
               {adminOnlyNavigation.map((item) => {
                 const Icon = item.icon;
