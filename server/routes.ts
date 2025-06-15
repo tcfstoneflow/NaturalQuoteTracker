@@ -4978,6 +4978,57 @@ Your body text starts here with proper spacing.`;
     }
   });
 
+  // Workflow management routes (Admin only)
+  app.get("/api/workflows", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      // Return empty array for now since workflow storage methods are not implemented
+      res.json([]);
+    } catch (error: any) {
+      console.error('Get workflows error:', error);
+      res.status(500).json({ error: 'Failed to fetch workflows' });
+    }
+  });
+
+  app.post("/api/workflows", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      // Return mock response for now
+      res.status(201).json({ id: 1, ...req.body });
+    } catch (error: any) {
+      console.error('Create workflow error:', error);
+      res.status(500).json({ error: 'Failed to create workflow' });
+    }
+  });
+
+  app.get("/api/workflow-instances", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      // Return empty array for now
+      res.json([]);
+    } catch (error: any) {
+      console.error('Get workflow instances error:', error);
+      res.status(500).json({ error: 'Failed to fetch workflow instances' });
+    }
+  });
+
+  app.post("/api/workflow-instances", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      // Return mock response for now
+      res.status(201).json({ id: 1, ...req.body });
+    } catch (error: any) {
+      console.error('Create workflow instance error:', error);
+      res.status(500).json({ error: 'Failed to create workflow instance' });
+    }
+  });
+
+  app.get("/api/workflow-templates", requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+      // Return empty array for now
+      res.json([]);
+    } catch (error: any) {
+      console.error('Get workflow templates error:', error);
+      res.status(500).json({ error: 'Failed to fetch workflow templates' });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket server for real-time notifications

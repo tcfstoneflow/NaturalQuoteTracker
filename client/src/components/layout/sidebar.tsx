@@ -28,10 +28,13 @@ const navigation = [
   { name: "All Slabs", href: "/all-slabs", icon: Layers },
   { name: "Counter Fixtures", href: "/counter-fixtures", icon: ShoppingCart },
   { name: "Quotes", href: "/quotes", icon: FileText },
-  { name: "Workflows", href: "/workflows", icon: GitBranch },
   { name: "Showroom Visits", href: "/showroom-visits", icon: Calendar },
   { name: "Reports", href: "/reports", icon: TrendingUp },
   { name: "SQL Query Tool", href: "/sql-query", icon: Database },
+];
+
+const adminOnlyNavigation = [
+  { name: "Workflows", href: "/workflows", icon: GitBranch },
 ];
 
 const adminNavigation = [
@@ -114,6 +117,27 @@ export default function Sidebar() {
           {/* Admin-only navigation */}
           {isAdmin && (
             <>
+              {adminOnlyNavigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = location === item.href;
+                
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                        isActive
+                          ? "text-primary bg-blue-50"
+                          : "text-secondary-custom hover:text-primary hover:bg-neutral-100"
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span>{item.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+              
               <li className="pt-4">
                 <div className="px-4 py-2">
                   <p className="text-xs font-semibold text-secondary-custom uppercase tracking-wider">

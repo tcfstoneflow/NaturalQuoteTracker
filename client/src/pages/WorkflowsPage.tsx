@@ -11,12 +11,44 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Play, Clock, CheckCircle, XCircle, Users, FileText, Settings } from "lucide-react";
+import { Plus, Play, Clock, CheckCircle, XCircle, Users, FileText, Settings, Shield } from "lucide-react";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function WorkflowsPage() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Check if user has admin role
+  const isAdmin = user?.role === 'admin';
+
+  // Redirect non-admin users
+  if (!isAdmin) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Shield className="h-12 w-12 text-red-500" />
+            </div>
+            <CardTitle className="text-xl">Access Restricted</CardTitle>
+            <CardDescription>
+              Workflow management is only available to administrators.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              Contact your system administrator if you need access to workflow functionality.
+            </p>
+            <Button variant="outline" onClick={() => window.history.back()}>
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Mock data for demonstration since workflow API endpoints are not yet implemented
   const workflows = [
