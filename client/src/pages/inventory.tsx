@@ -94,6 +94,7 @@ export default function Inventory() {
     slabLength: "",
     slabWidth: "",
     location: "",
+    stage: "Active",
     imageUrl: "",
     seoTitle: "",
     seoDescription: "",
@@ -251,6 +252,7 @@ export default function Inventory() {
       slabLength: "",
       slabWidth: "",
       location: "",
+      stage: "Active",
       imageUrl: "",
       seoTitle: "",
       seoDescription: "",
@@ -606,6 +608,22 @@ export default function Inventory() {
                   </div>
 
                   <div>
+                    <Label htmlFor="stage">Stage</Label>
+                    <Select value={formData.stage} onValueChange={(value) => setFormData({...formData, stage: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select stage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STAGES.map((stage) => (
+                          <SelectItem key={stage} value={stage}>
+                            {stage}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
                     <Label htmlFor="imageUrl">Image</Label>
                     <ImageUpload
                       value={formData.imageUrl}
@@ -644,6 +662,7 @@ export default function Inventory() {
                 <TableHead>Stock</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Stage</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -664,6 +683,11 @@ export default function Inventory() {
                   </TableCell>
                   <TableCell>${product.price}/{product.unit}</TableCell>
                   <TableCell>{product.location || "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant={product.stage === "Active" ? "default" : product.stage === "Hold" ? "secondary" : "outline"}>
+                      {product.stage}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Button 
@@ -686,6 +710,7 @@ export default function Inventory() {
                             slabLength: product.slabLength || "",
                             slabWidth: product.slabWidth || "",
                             location: product.location || "",
+                            stage: product.stage,
                             imageUrl: product.imageUrl || "",
                             seoTitle: "",
                             seoDescription: "",
