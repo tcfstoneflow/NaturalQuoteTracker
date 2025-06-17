@@ -60,6 +60,7 @@ export default function Inventory() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [stoneNameFilter, setStoneNameFilter] = useState<string>("all");
   const [gradeFilter, setGradeFilter] = useState<string>("all");
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<string>("all");
@@ -107,15 +108,17 @@ export default function Inventory() {
       (product.bundleId && product.bundleId.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    const matchesStoneName = stoneNameFilter === "all" || product.name === stoneNameFilter;
     const matchesGrade = gradeFilter === "all" || product.grade === gradeFilter;
     const matchesSupplier = supplierFilter === "all" || product.supplier === supplierFilter;
 
-    return matchesSearch && matchesCategory && matchesGrade && matchesSupplier;
+    return matchesSearch && matchesCategory && matchesStoneName && matchesGrade && matchesSupplier;
   }) || [];
 
   // Get unique values for filters
   const uniqueSuppliers = [...new Set((products as Product[])?.map(p => p.supplier) || [])];
   const uniqueGrades = [...new Set((products as Product[])?.map(p => p.grade) || [])];
+  const uniqueStoneNames = [...new Set((products as Product[])?.map(p => p.name) || [])];
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -288,6 +291,20 @@ export default function Inventory() {
             </SelectContent>
           </Select>
 
+          <Select value={stoneNameFilter} onValueChange={setStoneNameFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Stone Name" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stone Names</SelectItem>
+              {uniqueStoneNames.sort().map((stoneName) => (
+                <SelectItem key={stoneName} value={stoneName}>
+                  {stoneName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select value={gradeFilter} onValueChange={setGradeFilter}>
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Grade" />
@@ -322,6 +339,7 @@ export default function Inventory() {
             onClick={() => {
               setSearchQuery("");
               setCategoryFilter("all");
+              setStoneNameFilter("all");
               setGradeFilter("all");
               setSupplierFilter("all");
               setStockFilter("all");
