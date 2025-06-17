@@ -265,37 +265,159 @@ DEPLOYMENT_STATUS = {
 }
 
 # =============================================================================
-# DEVELOPMENT ROADMAP
+# CONNECTED MODULES & COMPONENTS
 # =============================================================================
 
-ROADMAP = {
-    "Current_Status": "Production Ready - Core CRM functionality complete",
+CONNECTED_MODULES = {
+    "Frontend_Pages": {
+        "Authentication": "client/src/pages/login.tsx",
+        "Dashboard": "client/src/pages/index.tsx",
+        "Quotes_Management": "client/src/pages/quotes.tsx",
+        "Pipeline_Tracking": "client/src/pages/pipeline.tsx",
+        "Client_Management": "client/src/pages/contacts.tsx",
+        "Inventory_Management": "client/src/pages/inventory.tsx",
+        "All_Slabs": "client/src/pages/all-slabs.tsx",
+        "Slab_Management": "client/src/pages/slab-management.tsx",
+        "User_Management": "client/src/pages/user-management.tsx",
+        "System_Health": "client/src/pages/system-health.tsx",
+        "SQL_Query_Tool": "client/src/pages/sql-query.tsx",
+        "Reports": "client/src/pages/reports.tsx",
+        "Shopping_Cart": "client/src/pages/cart.tsx",
+        "Sales_Dashboard": "client/src/pages/sales-dashboard.tsx"
+    },
     
-    "Phase_1_Completed": [
-        "✓ Complete CRM infrastructure",
-        "✓ Quote management with pipeline tracking", 
-        "✓ Inventory management system",
-        "✓ User authentication and authorization",
-        "✓ Analytics dashboard",
-        "✓ PDF generation and email integration",
-        "✓ RFP (Request for Proposal) system"
-    ],
+    "Core_Components": {
+        "Layout": {
+            "Sidebar": "client/src/components/layout/sidebar.tsx",
+            "Main_Layout": "client/src/components/layout/layout.tsx"
+        },
+        "Quote_System": {
+            "Quote_Builder": "client/src/components/quotes/quote-builder-modal.tsx",
+            "Quote_Details": "Integrated in quotes.tsx",
+            "RFP_Module": "Integrated in quotes.tsx"
+        },
+        "UI_Components": {
+            "Charts": "client/src/components/ui/ (various chart components)",
+            "Forms": "client/src/components/ui/form.tsx",
+            "Modals": "client/src/components/ui/dialog.tsx",
+            "Tables": "client/src/components/ui/table.tsx",
+            "Navigation": "client/src/components/ui/ (various nav components)"
+        }
+    },
     
-    "Phase_2_Enhancements": [
-        "Advanced reporting and analytics",
-        "Mobile-responsive optimizations", 
-        "API rate limiting and caching",
-        "Advanced search and filtering",
-        "Bulk operations and data import/export"
-    ],
+    "Backend_Services": {
+        "Core_Server": "server/index.ts",
+        "API_Routes": "server/routes.ts",
+        "Database_Layer": "server/storage.ts",
+        "Database_Connection": "server/db.ts",
+        "Authentication": "server/auth.ts",
+        "Enhanced_Auth": "server/enhanced-auth.ts",
+        "AI_Services": "server/ai.ts",
+        "AI_Rendering": "server/ai-rendering.ts",
+        "Python_Rendering": "server/python-rendering.ts",
+        "PDF_Generation": "server/pdf.ts",
+        "Email_Service": "server/email.ts",
+        "Validation": "server/validation.ts",
+        "Configuration": "server/config.ts",
+        "Rate_Limiter": "server/rate-limiter.ts",
+        "Performance_Monitor": "server/performance-monitor.ts",
+        "Database_Maintenance": "server/database-maintenance.ts",
+        "Cleanup_Tasks": "server/cleanup-expired-images.ts",
+        "Scheduled_Tasks": "server/scheduled-tasks.ts",
+        "Cache_Management": "server/cache.ts",
+        "Client_Analysis": "server/client-analysis.ts",
+        "Constant_Contact": "server/constant-contact.ts",
+        "Vite_Integration": "server/vite.ts"
+    },
     
-    "Phase_3_Integrations": [
-        "OAuth provider integrations (Google, Microsoft)",
-        "Advanced AI features and automation",
-        "Third-party logistics integrations",
-        "Advanced workflow automation",
-        "Custom reporting builder"
-    ]
+    "Database_Schema": {
+        "Schema_Definition": "shared/schema.ts",
+        "Configuration": "drizzle.config.ts",
+        "Core_Tables": [
+            "users (authentication and profiles)",
+            "clients (customer management)",
+            "products (inventory and bundled slabs)",
+            "slabs (individual stone pieces)",
+            "quotes (pricing and pipeline tracking)",
+            "quote_line_items (quote details)",
+            "carts (shopping functionality)",
+            "cart_items (cart contents)",
+            "activities (audit trail)",
+            "mfa_codes (security)",
+            "user_profiles (extended user data)",
+            "tags (product categorization)",
+            "product_tags (tag associations)",
+            "sales_rep_profiles (sales team data)",
+            "sales_rep_favorite_slabs (preferences)",
+            "sales_rep_portfolio_images (showcases)",
+            "sales_rep_appointments (scheduling)",
+            "client_consultations (meeting records)",
+            "consultations (consultation system)",
+            "showroom_visits (visitor tracking)",
+            "product_reviews (feedback system)",
+            "product_gallery_images (product photos)",
+            "shopping_cart (e-commerce)",
+            "ecommerce_orders (order management)",
+            "ecommerce_order_items (order details)"
+        ]
+    },
+    
+    "External_Integrations": {
+        "AI_Processing": {
+            "OpenAI_GPT": "Natural language queries and data analysis",
+            "Image_Processing": "Python scripts with OpenCV, Pillow, rembg"
+        },
+        "Payment_Systems": {
+            "Stripe_Integration": "@stripe/stripe-js for payment processing",
+            "Webhook_Handlers": "Stripe webhook processing in routes"
+        },
+        "Email_Services": {
+            "SendGrid": "@sendgrid/mail for transactional emails",
+            "Nodemailer": "Backup email service",
+            "Constant_Contact": "Marketing email integration"
+        },
+        "Real_Time": {
+            "WebSocket_Server": "Custom WebSocket implementation",
+            "Notification_System": "Real-time user notifications"
+        }
+    },
+    
+    "Utility_Modules": {
+        "Client_Utils": {
+            "API_Client": "client/src/lib/queryClient.ts",
+            "Hooks": "client/src/hooks/ (custom React hooks)",
+            "Utils": "client/src/lib/utils.ts"
+        },
+        "Configuration_Files": {
+            "TypeScript": "tsconfig.json",
+            "Tailwind": "tailwind.config.ts",
+            "PostCSS": "postcss.config.js",
+            "Vite": "vite.config.ts",
+            "Package": "package.json",
+            "Components": "components.json"
+        },
+        "Asset_Management": {
+            "Uploads": "upload/ directory",
+            "Attached_Assets": "attached_assets/ directory",
+            "Generated_Content": "Various generated files (PDFs, images)"
+        }
+    },
+    
+    "Development_Scripts": {
+        "Image_Processing": "slab_render.py (kitchen countertop visualization)",
+        "Database_Management": "npm run db:push (schema migrations)",
+        "Development_Server": "npm run dev (full-stack development)",
+        "Chat_Compilation": "chat-history-compilation.js"
+    },
+    
+    "Security_Modules": {
+        "Authentication_Flow": "Session-based with role management",
+        "Password_Security": "bcryptjs hashing and validation",
+        "Role_Authorization": "Middleware for route protection",
+        "Data_Validation": "Zod schemas throughout the application",
+        "SQL_Protection": "Drizzle ORM parameterized queries",
+        "Session_Management": "Express sessions with PostgreSQL store"
+    }
 }
 
 if __name__ == "__main__":
@@ -305,4 +427,5 @@ if __name__ == "__main__":
     print(f"Architecture Components: {len(SYSTEM_ARCHITECTURE)} layers")
     print(f"Integrations: {len(OAUTH_AND_INTEGRATIONS)} systems")
     print(f"Feature Modules: {len(FEATURE_MODULES)} modules")
+    print(f"Connected Modules: {len(CONNECTED_MODULES)} categories")
     print("\nStatus: Production Ready ✓")
