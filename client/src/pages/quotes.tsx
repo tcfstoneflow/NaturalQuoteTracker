@@ -232,6 +232,29 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     },
   });
 
+  const updateSalesStageMutation = useMutation({
+    mutationFn: ({ id, pipelineStage }: { id: number; pipelineStage: string }) => 
+      quotesApi.update(id, { pipelineStage }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      toast({
+        title: "Success",
+        description: "Sales stage updated successfully",
+      });
+      // Update the selected quote to reflect the change
+      if (selectedQuote) {
+        setSelectedQuote({ ...selectedQuote, pipelineStage: variables.pipelineStage });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const updatePipelineStageMutation = useMutation({
     mutationFn: ({ id, pipelineStage }: { id: number; pipelineStage: string }) => 
       quotesApi.update(id, { pipelineStage }),
@@ -352,7 +375,8 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                          quote.projectName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
     const matchesCreatedBy = createdByFilter === "all" || quote.createdBy?.toString() === createdByFilter;
-    return matchesSearch && matchesStatus && matchesCreatedBy;
+    const matchesSalesStage = salesStageFilter === "all" || quote.pipelineStage === salesStageFilter;
+    return matchesSearch && matchesStatus && matchesCreatedBy && matchesSalesStage;
   });
 
   const getStatusColor = (status: string) => {
@@ -362,6 +386,17 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'expired': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getSalesStageColor = (stage: string) => {
+    switch (stage) {
+      case 'Active': return 'bg-blue-100 text-blue-800';
+      case 'At Risk': return 'bg-orange-100 text-orange-800';
+      case 'Actioned': return 'bg-purple-100 text-purple-800';
+      case 'Closed': return 'bg-gray-100 text-gray-800';
+      case 'Won': return 'bg-green-100 text-green-800';
+      default: return 'bg-blue-100 text-blue-800';
     }
   };
 
@@ -529,6 +564,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                     <TableHead>Project</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Sales Stage</TableHead>
                     <TableHead>Last Touch</TableHead>
                     {user?.user?.role === 'admin' && <TableHead>Created By</TableHead>}
                     <TableHead>Actions</TableHead>
@@ -575,6 +611,11 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                               </Badge>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`${getSalesStageColor(quote.pipelineStage)} border-0`}>
+                            {quote.pipelineStage || 'Active'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm text-secondary-custom">
@@ -770,6 +811,36 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                           </div>
                         </div>
                       )}
+                      
+                      {/* Sales Stage Selector */}
+                      <div>
+                        <Label className="text-sm font-medium text-secondary-custom">Sales Stage</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge className={`${getSalesStageColor(selectedQuote.pipelineStage)} border-0`}>
+                            {selectedQuote.pipelineStage || 'Active'}
+                          </Badge>
+                          <Select 
+                            value={selectedQuote.pipelineStage || "Active"} 
+                            onValueChange={(value) => {
+                              updateSalesStageMutation.mutate({ 
+                                id: selectedQuote.id, 
+                                pipelineStage: value 
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-48">
+                              <SelectValue placeholder="Select sales stage" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Active">Active</SelectItem>
+                              <SelectItem value="At Risk">At Risk</SelectItem>
+                              <SelectItem value="Actioned">Actioned</SelectItem>
+                              <SelectItem value="Closed">Closed</SelectItem>
+                              <SelectItem value="Won">Won</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
