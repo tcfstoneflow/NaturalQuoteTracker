@@ -668,6 +668,7 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
   updatedAt: true,
 }).extend({
   validUntil: z.string().or(z.date()).transform((val) => typeof val === 'string' ? new Date(val) : val),
+  pipelineStage: z.enum(["In-Flight", "At Risk", "Actioned", "Closed", "Won"]).optional(),
 });
 
 // Create a simplified schema for quote line items that doesn't require quoteId
