@@ -30,6 +30,7 @@ interface Product {
   slabLength: string | null;
   slabWidth: string | null;
   location: string | null;
+  stage: string;
   imageUrl: string | null;
   bundleId: string | null;
   barcodes: string[] | null;
@@ -49,6 +50,12 @@ const CATEGORIES = [
   "Other"
 ];
 
+const STAGES = [
+  "Active",
+  "Hold",
+  "Sold"
+];
+
 const GRADES = ["Premium", "Standard", "Commercial"];
 const FINISH_OPTIONS = ["Polished", "Leather", "Brushed", "Matte"];
 const UNITS = ["sq ft", "linear ft", "slab"];
@@ -63,6 +70,7 @@ export default function Inventory() {
   const [stoneNameFilter, setStoneNameFilter] = useState<string>("all");
   const [gradeFilter, setGradeFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
+  const [stageFilter, setStageFilter] = useState<string>("all");
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<string>("all");
   const [priceRangeFilter, setPriceRangeFilter] = useState<string>("all");
@@ -112,9 +120,10 @@ export default function Inventory() {
     const matchesStoneName = stoneNameFilter === "all" || product.name === stoneNameFilter;
     const matchesGrade = gradeFilter === "all" || product.grade === gradeFilter;
     const matchesLocation = locationFilter === "all" || product.location === locationFilter;
+    const matchesStage = stageFilter === "all" || product.stage === stageFilter;
     const matchesSupplier = supplierFilter === "all" || product.supplier === supplierFilter;
 
-    return matchesSearch && matchesCategory && matchesStoneName && matchesGrade && matchesLocation && matchesSupplier;
+    return matchesSearch && matchesCategory && matchesStoneName && matchesGrade && matchesLocation && matchesStage && matchesSupplier;
   }) || [];
 
   // Get unique values for filters
@@ -336,6 +345,20 @@ export default function Inventory() {
             </SelectContent>
           </Select>
 
+          <Select value={stageFilter} onValueChange={setStageFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stages</SelectItem>
+              {STAGES.map((stage) => (
+                <SelectItem key={stage} value={stage}>
+                  {stage}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select value={supplierFilter} onValueChange={setSupplierFilter}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Supplier" />
@@ -359,6 +382,7 @@ export default function Inventory() {
               setStoneNameFilter("all");
               setGradeFilter("all");
               setLocationFilter("all");
+              setStageFilter("all");
               setSupplierFilter("all");
               setStockFilter("all");
               setPriceRangeFilter("all");

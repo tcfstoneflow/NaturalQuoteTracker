@@ -82,6 +82,7 @@ export const products = pgTable("products", {
   slabLength: decimal("slab_length", { precision: 8, scale: 2 }), // length in inches
   slabWidth: decimal("slab_width", { precision: 8, scale: 2 }), // width in inches
   location: text("location"), // storage location
+  stage: text("stage").notNull().default("Active"), // "Active", "Hold", "Sold"
   barcodes: text("barcodes").array(), // array of barcode strings for individual slabs
   imageUrl: text("image_url"),
   aiHeadline: text("ai_headline"), // AI-generated marketing headline
