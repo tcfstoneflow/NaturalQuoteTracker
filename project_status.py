@@ -420,6 +420,266 @@ CONNECTED_MODULES = {
     }
 }
 
+# =============================================================================
+# LOGGING SYSTEM & LOCATIONS
+# =============================================================================
+
+LOGGING_SYSTEM = {
+    "Server_Logs": {
+        "Express_Server": {
+            "Location": "Console output from server/index.ts",
+            "Format": "Timestamp [express] HTTP_METHOD endpoint STATUS_CODE response_time :: response_data",
+            "Examples": [
+                "POST /api/auth/login 200 in 420ms :: {\"user\":{\"id\":2,\"username\":\"admin\"}}",
+                "GET /api/quotes 304 in 4455ms :: [{\"id\":47,\"quoteNumber\":\"QT-2025-894738\"}]",
+                "GET /api/auth/user 401 in 3ms :: {\"error\":\"Authentication required\"}"
+            ],
+            "Content": [
+                "HTTP request/response logging",
+                "Response times and status codes", 
+                "Authentication attempts",
+                "API endpoint performance",
+                "Error responses"
+            ]
+        },
+        
+        "Database_Operations": {
+            "Location": "Console output from database operations",
+            "Format": "Database pool connection established/removed",
+            "Examples": [
+                "Database pool connection established",
+                "Database connection removed from pool",
+                "Database operation failed (attempt 1/3): Cannot convert undefined or null to object"
+            ],
+            "Content": [
+                "Connection pool management",
+                "Query execution status",
+                "Connection lifecycle tracking",
+                "Database error reporting",
+                "Retry mechanism logging"
+            ]
+        },
+        
+        "System_Health": {
+            "Location": "server/performance-monitor.ts and scheduled tasks",
+            "Format": "System health check completed: Status",
+            "Examples": [
+                "System health check completed: System is healthy",
+                "Starting scheduled maintenance tasks...",
+                "Scheduled maintenance tasks started"
+            ],
+            "Content": [
+                "Health check results",
+                "Maintenance task execution",
+                "Performance monitoring",
+                "Resource usage tracking"
+            ]
+        }
+    },
+    
+    "Client_Logs": {
+        "WebSocket_Connection": {
+            "Location": "Browser console from WebSocket client",
+            "Format": "Method -log: timestamp - [\"message\"]",
+            "Examples": [
+                "WebSocket connected",
+                "Received WebSocket message: {\"type\":\"connected\",\"message\":\"Connected to notification system\"}",
+                "WebSocket connection confirmed"
+            ],
+            "Content": [
+                "Real-time connection status",
+                "WebSocket message flow",
+                "Connection establishment/teardown",
+                "Notification system status"
+            ]
+        },
+        
+        "Vite_Development": {
+            "Location": "Browser console from Vite HMR",
+            "Format": "[vite] operation details",
+            "Examples": [
+                "[vite] connecting...",
+                "[vite] hmr update /src/pages/quotes.tsx",
+                "Browserslist: browsers data (caniuse-lite) is 8 months old"
+            ],
+            "Content": [
+                "Hot module replacement updates",
+                "File change notifications",
+                "Build system warnings",
+                "Development server status"
+            ]
+        },
+        
+        "Application_Warnings": {
+            "Location": "Browser console warnings",
+            "Format": "Warning: Description",
+            "Examples": [
+                "Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}."
+            ],
+            "Content": [
+                "Accessibility warnings",
+                "React component warnings",
+                "UI library notifications",
+                "Development-time alerts"
+            ]
+        }
+    },
+    
+    "Error_Handling": {
+        "API_Errors": {
+            "Location": "server/routes.ts error handling blocks",
+            "Format": "console.error('Operation error:', error)",
+            "Examples": [
+                "Update cart error: Error message",
+                "Quote approval error: Error details",
+                "Team performance report error: Error info"
+            ],
+            "Content": [
+                "API endpoint errors",
+                "Database operation failures",
+                "Authentication errors",
+                "Validation failures"
+            ]
+        },
+        
+        "Authentication_Logs": {
+            "Location": "server/auth.ts and server/enhanced-auth.ts",
+            "Format": "Authentication event logging",
+            "Examples": [
+                "Failed login attempt for user: username",
+                "Account locked due to too many failed attempts",
+                "Password reset requested for: email"
+            ],
+            "Content": [
+                "Login success/failure tracking",
+                "Account lockout events",
+                "Password reset requests",
+                "Session management events"
+            ]
+        },
+        
+        "Application_Errors": {
+            "Location": "Try-catch blocks throughout the application",
+            "Format": "Error context with stack traces",
+            "Content": [
+                "Unhandled promise rejections",
+                "Runtime JavaScript errors",
+                "Network request failures",
+                "Component rendering errors"
+            ]
+        }
+    },
+    
+    "Business_Logic_Logs": {
+        "Quote_Operations": {
+            "Location": "server/routes.ts quote endpoints",
+            "Content": [
+                "Quote creation and updates",
+                "Pipeline stage changes", 
+                "PDF generation events",
+                "Email sending status"
+            ]
+        },
+        
+        "Inventory_Tracking": {
+            "Location": "server/routes.ts inventory endpoints",
+            "Content": [
+                "Stock level changes",
+                "Product updates",
+                "Slab status modifications",
+                "Bundle management operations"
+            ]
+        },
+        
+        "User_Activity": {
+            "Location": "server/storage.ts activity creation",
+            "Content": [
+                "User action tracking",
+                "Entity modifications",
+                "Audit trail generation",
+                "System event recording"
+            ]
+        }
+    },
+    
+    "External_Service_Logs": {
+        "Email_Services": {
+            "Location": "server/email.ts and server/constant-contact.ts",
+            "Content": [
+                "SendGrid email delivery status",
+                "Constant Contact API responses",
+                "Email template generation",
+                "Delivery failure notifications"
+            ]
+        },
+        
+        "AI_Services": {
+            "Location": "server/ai.ts and server/ai-rendering.ts",
+            "Content": [
+                "OpenAI API requests and responses",
+                "Natural language query processing",
+                "Image generation operations",
+                "AI service error handling"
+            ]
+        },
+        
+        "Payment_Processing": {
+            "Location": "Stripe webhook handlers in server/routes.ts",
+            "Content": [
+                "Payment transaction logs",
+                "Webhook event processing",
+                "Subscription management",
+                "Payment failure notifications"
+            ]
+        }
+    },
+    
+    "Performance_Monitoring": {
+        "Response_Times": {
+            "Location": "Express middleware logging",
+            "Format": "Endpoint response time tracking",
+            "Content": [
+                "API endpoint performance metrics",
+                "Database query execution times",
+                "Slow query identification",
+                "Performance bottleneck detection"
+            ]
+        },
+        
+        "Resource_Usage": {
+            "Location": "server/performance-monitor.ts",
+            "Content": [
+                "Memory usage tracking",
+                "CPU utilization monitoring",
+                "Database connection pool status",
+                "System resource alerts"
+            ]
+        }
+    },
+    
+    "Development_Logs": {
+        "Build_Process": {
+            "Location": "Vite build output and npm scripts",
+            "Content": [
+                "Compilation status",
+                "Bundle size information",
+                "Dependency updates",
+                "Build warnings and errors"
+            ]
+        },
+        
+        "Database_Migrations": {
+            "Location": "Drizzle Kit output",
+            "Content": [
+                "Schema migration logs",
+                "Database structure changes",
+                "Migration success/failure status",
+                "Data migration progress"
+            ]
+        }
+    }
+}
+
 if __name__ == "__main__":
     print("Natural Stone Distribution CRM - Project Status")
     print("=" * 50)
@@ -428,4 +688,5 @@ if __name__ == "__main__":
     print(f"Integrations: {len(OAUTH_AND_INTEGRATIONS)} systems")
     print(f"Feature Modules: {len(FEATURE_MODULES)} modules")
     print(f"Connected Modules: {len(CONNECTED_MODULES)} categories")
+    print(f"Logging System: {len(LOGGING_SYSTEM)} log categories")
     print("\nStatus: Production Ready ✓")
