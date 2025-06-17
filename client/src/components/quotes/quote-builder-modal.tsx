@@ -532,7 +532,8 @@ export default function QuoteBuilderModal({ isOpen, onClose, editQuote }: QuoteB
       totalAmount: totals.total,
       salesRepId: salesRepId === "none" || !salesRepId ? null : parseInt(salesRepId),
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-      status: sendEmail ? 'sent' : 'draft',
+      status: sendEmail ? 'sent' : 'approved',
+      pipelineStage: 'In-Flight',
     };
 
     const quoteLineItems = lineItems.map(item => ({
