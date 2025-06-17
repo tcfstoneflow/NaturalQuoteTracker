@@ -476,7 +476,7 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Users</SelectItem>
-                    {users?.map((user: any) => (
+                    {users?.filter((user: any) => user.isActive && user.role === 'sales_rep').map((user: any) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.firstName || user.username}
                       </SelectItem>
