@@ -663,105 +663,122 @@ export default function Inventory() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Bundle ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <Badge variant="outline">{product.bundleId}</Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>{product.supplier}</TableCell>
-                  <TableCell>{product.grade}</TableCell>
-                  <TableCell>
-                    <Badge variant={product.stockQuantity > 10 ? "default" : "destructive"}>
-                      {product.stockQuantity}
+          {STAGES.map((stage) => {
+            const stageProducts = filteredProducts.filter(product => product.stage === stage);
+            
+            return (
+              <div key={stage} className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    {stage} Bundles
+                    <Badge variant={stage === "Active" ? "default" : stage === "Hold" ? "secondary" : "outline"}>
+                      {stageProducts.length}
                     </Badge>
-                  </TableCell>
-                  <TableCell>${product.price}/{product.unit}</TableCell>
-                  <TableCell>{product.location || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant={product.stage === "Active" ? "default" : product.stage === "Hold" ? "secondary" : "outline"}>
-                      {product.stage}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setEditingProduct(product);
-                          setFormData({
-                            bundleId: product.bundleId || "",
-                            name: product.name,
-                            description: product.description || "",
-                            supplier: product.supplier,
-                            category: product.category,
-                            grade: product.grade,
-                            thickness: product.thickness,
-                            finish: product.finish,
-                            price: product.price,
-                            wholesalePrice: product.wholesalePrice || "",
-                            unit: product.unit,
-                            stockQuantity: product.stockQuantity.toString(),
-                            slabLength: product.slabLength || "",
-                            slabWidth: product.slabWidth || "",
-                            location: product.location || "",
-                            stage: product.stage,
-                            imageUrl: product.imageUrl || "",
-                            seoTitle: "",
-                            seoDescription: "",
-                            seoUrl: "",
-                            metaKeywords: "",
-                            socialTitle: "",
-                            socialDescription: "",
-                            socialImage: ""
-                          });
-                          setIsOpen(true);
-                        }}
-                      >
-                        <Pencil size={16} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setLocation(`/slab-management/${product.id}`)}
-                      >
-                        <Settings size={16} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm("Are you sure you want to delete this bundle?")) {
-                            deleteMutation.mutate(product.id);
-                          }
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </h3>
+                </div>
+                
+                {stageProducts.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Bundle ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Supplier</TableHead>
+                        <TableHead>Grade</TableHead>
+                        <TableHead>Stock</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {stageProducts.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell>
+                            <Badge variant="outline">{product.bundleId}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell>{product.category}</TableCell>
+                          <TableCell>{product.supplier}</TableCell>
+                          <TableCell>{product.grade}</TableCell>
+                          <TableCell>
+                            <Badge variant={product.stockQuantity > 10 ? "default" : "destructive"}>
+                              {product.stockQuantity}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>${product.price}/{product.unit}</TableCell>
+                          <TableCell>{product.location || "-"}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingProduct(product);
+                                  setFormData({
+                                    bundleId: product.bundleId || "",
+                                    name: product.name,
+                                    description: product.description || "",
+                                    supplier: product.supplier,
+                                    category: product.category,
+                                    grade: product.grade,
+                                    thickness: product.thickness,
+                                    finish: product.finish,
+                                    price: product.price,
+                                    wholesalePrice: product.wholesalePrice || "",
+                                    unit: product.unit,
+                                    stockQuantity: product.stockQuantity.toString(),
+                                    slabLength: product.slabLength || "",
+                                    slabWidth: product.slabWidth || "",
+                                    location: product.location || "",
+                                    stage: product.stage,
+                                    imageUrl: product.imageUrl || "",
+                                    seoTitle: "",
+                                    seoDescription: "",
+                                    seoUrl: "",
+                                    metaKeywords: "",
+                                    socialTitle: "",
+                                    socialDescription: "",
+                                    socialImage: ""
+                                  });
+                                  setIsOpen(true);
+                                }}
+                              >
+                                <Pencil size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setLocation(`/slab-management/${product.id}`)}
+                              >
+                                <Settings size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm("Are you sure you want to delete this bundle?")) {
+                                    deleteMutation.mutate(product.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No {stage.toLowerCase()} bundles found
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
     </div>
