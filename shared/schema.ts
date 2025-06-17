@@ -77,6 +77,7 @@ export const products = pgTable("products", {
   thickness: text("thickness").notNull(), // "2cm", "3cm"
   finish: text("finish").notNull(), // "Polished", "Leather", "Brushed", "Matte"
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  wholesalePrice: decimal("wholesale_price", { precision: 10, scale: 2 }),
   unit: text("unit").notNull().default("sqft"),
   stockQuantity: integer("stock_quantity").notNull().default(0),
   slabLength: decimal("slab_length", { precision: 8, scale: 2 }), // length in inches

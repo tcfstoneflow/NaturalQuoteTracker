@@ -25,6 +25,7 @@ interface Product {
   thickness: string;
   finish: string;
   price: string;
+  wholesalePrice: string | null;
   unit: string;
   stockQuantity: number;
   slabLength: string | null;
@@ -89,6 +90,7 @@ export default function Inventory() {
     thickness: "",
     finish: "",
     price: "",
+    wholesalePrice: "",
     unit: "sq ft",
     stockQuantity: "",
     slabLength: "",
@@ -247,6 +249,7 @@ export default function Inventory() {
       thickness: "",
       finish: "",
       price: "",
+      wholesalePrice: "",
       unit: "sq ft",
       stockQuantity: "",
       slabLength: "",
@@ -539,7 +542,7 @@ export default function Inventory() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-4 gap-4">
                     <div>
                       <Label htmlFor="price">Price</Label>
                       <Input
@@ -547,6 +550,15 @@ export default function Inventory() {
                         value={formData.price}
                         onChange={(e) => setFormData({...formData, price: e.target.value})}
                         placeholder="e.g., 45.99"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="wholesalePrice">Wholesale Price</Label>
+                      <Input
+                        id="wholesalePrice"
+                        value={formData.wholesalePrice}
+                        onChange={(e) => setFormData({...formData, wholesalePrice: e.target.value})}
+                        placeholder="e.g., 35.99"
                       />
                     </div>
                     <div>
@@ -705,6 +717,7 @@ export default function Inventory() {
                             thickness: product.thickness,
                             finish: product.finish,
                             price: product.price,
+                            wholesalePrice: product.wholesalePrice || "",
                             unit: product.unit,
                             stockQuantity: product.stockQuantity.toString(),
                             slabLength: product.slabLength || "",
