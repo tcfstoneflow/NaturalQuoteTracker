@@ -69,6 +69,7 @@ export default function Quotes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [createdByFilter, setCreatedByFilter] = useState("all");
+  const [salesStageFilter, setSalesStageFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -481,6 +482,19 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                         {user.firstName || user.username}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+                <Select value={salesStageFilter} onValueChange={setSalesStageFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by sales stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sales Stages</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="At Risk">At Risk</SelectItem>
+                    <SelectItem value="Actioned">Actioned</SelectItem>
+                    <SelectItem value="Closed">Closed</SelectItem>
+                    <SelectItem value="Won">Won</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
