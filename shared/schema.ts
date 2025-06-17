@@ -157,6 +157,7 @@ export const quotes = pgTable("quotes", {
   clientId: integer("client_id").notNull(),
   projectName: text("project_name").notNull(),
   status: text("status").notNull().default("pending"), // "pending", "approved", "rejected", "expired", "draft", "sent"
+  pipelineStage: text("pipeline_stage").notNull().default("In-Flight"), // "In-Flight", "At Risk", "Actioned", "Closed", "Won"
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull().default("0"),
   taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).notNull().default("0.085"),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull().default("0"),

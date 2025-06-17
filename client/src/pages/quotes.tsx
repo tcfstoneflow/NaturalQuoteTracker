@@ -231,6 +231,30 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
     },
   });
 
+  const updatePipelineStageMutation = useMutation({
+    mutationFn: ({ id, pipelineStage }: { id: number; pipelineStage: string }) => 
+      quotesApi.update(id, { pipelineStage }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/pipeline'] });
+      toast({
+        title: "Success",
+        description: "Pipeline stage updated successfully",
+      });
+      // Update the selected quote to reflect the change
+      if (selectedQuote) {
+        setSelectedQuote({ ...selectedQuote, pipelineStage: variables.pipelineStage });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => quotesApi.delete(id),
     onSuccess: () => {
@@ -655,6 +679,34 @@ const CreatedByInfo = ({ createdBy }: { createdBy: number | null }) => {
                               <SelectItem value="pending">Pending</SelectItem>
                               <SelectItem value="approved">Approved</SelectItem>
                               <SelectItem value="rejected">Rejected</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-secondary-custom">Pipeline Stage</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="text-sm font-medium">
+                            {selectedQuote.pipelineStage || 'In-Flight'}
+                          </span>
+                          <Select 
+                            value={selectedQuote.pipelineStage || 'In-Flight'} 
+                            onValueChange={(value) => {
+                              updatePipelineStageMutation.mutate({ 
+                                id: selectedQuote.id, 
+                                pipelineStage: value 
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="In-Flight">In-Flight</SelectItem>
+                              <SelectItem value="At Risk">At Risk</SelectItem>
+                              <SelectItem value="Actioned">Actioned</SelectItem>
+                              <SelectItem value="Closed">Closed</SelectItem>
+                              <SelectItem value="Won">Won</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
