@@ -38,6 +38,24 @@ export const mfaCodes = pgTable("mfa_codes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Audit logs for security and compliance
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  action: text("action").notNull(), // "create", "update", "delete", "login", "logout"
+  resource: text("resource").notNull(), // "user", "quote", "product", "client"
+  resourceId: text("resource_id"), // ID of the affected resource
+  details: text("details"), // JSON string with additional details
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index("audit_logs_user_idx").on(table.userId),
+  actionIdx: index("audit_logs_action_idx").on(table.action),
+  resourceIdx: index("audit_logs_resource_idx").on(table.resource),
+  createdAtIdx: index("audit_logs_created_at_idx").on(table.createdAt),
+}));
+
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
