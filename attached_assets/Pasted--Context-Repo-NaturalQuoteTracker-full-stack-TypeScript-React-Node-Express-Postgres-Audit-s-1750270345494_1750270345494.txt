@@ -1,0 +1,82 @@
+### Context
+Repo: NaturalQuoteTracker (full-stack TypeScript/React, Node/Express, Postgres)
+
+Audit summary (2025-06-17):
+• Monolithic backend, no service/API layers  
+• No DB migrations, constraints, or transactions  
+• Console-only logging; no centralized logs or retries  
+• Missing input validation, RBAC, rate-limiting, CORS, audit log  
+• Zero automated tests  
+• In-process background jobs  
+• No CI/CD, monitoring, or backups  
+• React front-end lacks error boundaries, accessibility, and design system  
+• Docs minimal
+
+---
+
+### Objective
+Transform the prototype into a production-ready MVP—fast—while preserving existing business logic.
+
+---
+
+### Deliverables
+1. **Project Restructure**  
+   • Split backend into `controllers/`, `services/`, `routes/`, `jobs/`  
+   • Add `src/config/` for env & secrets (`dotenv`)  
+   • Auto-generate OpenAPI spec (`/docs/openapi.yaml`)
+
+2. **Database & Integrity**  
+   • Add DrizzleORM (or Prisma) migrations  
+   • Enforce FK constraints, unique indexes, seed data  
+   • Wrap multi-step ops in SQL transactions
+
+3. **Security & Validation**  
+   • Global Zod validation middleware  
+   • JWT auth + role-based authorization (Admin, Sales, Viewer)  
+   • Helmet, CORS, rate-limiting middlewares  
+   • `audit_log` table + middleware
+
+4. **Logging & Jobs**  
+   • Replace console logs with Winston JSON logs  
+   • Introduce BullMQ + Redis for durable background jobs (retry/back-off, alerts)
+
+5. **Testing & CI**  
+   • Unit tests with Vitest, integration with Supertest, E2E with Playwright  
+   • Add `.replitci` that runs the test suite on every push
+
+6. **Frontend Hardening**  
+   • React Error Boundaries  
+   • Adopt shadcn/ui + Radix for accessible components  
+   • Basic Cypress a11y tests
+
+7. **DevOps**  
+   • `Dockerfile` + `docker-compose.yml` for env parity  
+   • Nightly `pg_dump` backup script; README restore steps  
+   • Health-check & uptime monitor hook
+
+8. **Documentation**  
+   • Rewrite `README.md` with setup + Mermaid architecture diagram  
+   • Add `CONTRIBUTING.md` and JSDoc on public functions
+
+---
+
+### Constraints
+* TypeScript strict mode everywhere  
+* No breaking changes to existing public REST contracts  
+* Favor lightweight libs over heavy frameworks  
+* Target ≤ 500 new LOC per major category; clarity over cleverness
+
+---
+
+### Task List
+Generate one PR that:  
+- [ ] scaffolds the new folder structure  
+- [ ] adds migrations & seeds  
+- [ ] plugs in validation & security middleware  
+- [ ] swaps logging system  
+- [ ] wires up BullMQ queue  
+- [ ] includes a Vitest sample suite  
+- [ ] sets up CI script  
+- [ ] updates docs
+
+Return the full diff, updated files, and any required env vars.

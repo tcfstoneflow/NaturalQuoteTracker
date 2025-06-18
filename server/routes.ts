@@ -224,6 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes with rate limiting
   app.post("/api/auth/login", authLimiter, login);
   app.post("/api/auth/register", requireAuth, requireRole(['admin']), authLimiter, register);
+  //app.post("/api/auth/register", authLimiter, register);
   app.post("/api/auth/logout", logout);
   app.get("/api/auth/user", requireAuth, getCurrentUser);
 

@@ -10,6 +10,7 @@
     
     <script>
         async function createTestUser() {
+            console.log('create test user');
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
@@ -18,10 +19,10 @@
                     },
                     credentials: 'include',
                     body: JSON.stringify({
-                        username: 'testuser' + Date.now(),
-                        email: 'test' + Date.now() + '@example.com',
-                        password: 'password123',
-                        firstName: 'Test',
+                        username: 'TestUser' + Date.now(),
+                        email: 'test' + Date.now() + '@test.com',
+                        password: 'testpass1!',
+                        firstName: 'Test,
                         lastName: 'User',
                         role: 'sales_rep',
                         isActive: true
