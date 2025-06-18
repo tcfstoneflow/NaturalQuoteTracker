@@ -6,8 +6,6 @@ export const redis = new Redis({
   host: env.REDIS_HOST,
   port: env.REDIS_PORT,
   password: env.REDIS_PASSWORD,
-  enableReadyCheck: false,
-  maxRetriesPerRequest: null,
   lazyConnect: true,
 });
 

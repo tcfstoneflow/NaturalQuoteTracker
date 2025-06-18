@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { z } from 'zod';
 import { env } from '../config/env.js';
 import logger from '../config/logger.js';
+import '../types/express.js';
 
 export interface AuthUser {
   id: number;
@@ -23,7 +24,12 @@ const jwtPayloadSchema = z.object({
 });
 
 export function generateToken(user: AuthUser): string {
-  return jwt.sign(user, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
+  const options: SignOptions = { expiresIn: env.JWT_EXPIRES_IN };
+  return jwt.sign(
+    { id: user.id, username: user.username, email: user.email, role: user.role },
+    env.JWT_SECRET,
+    options
+  );
 }
 
 export function verifyToken(token: string): AuthUser | null {
@@ -38,7 +44,7 @@ export function verifyToken(token: string): AuthUser | null {
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction): void {
   const token = req.headers.authorization?.replace('Bearer ', '') || 
-                req.session?.token ||
+                (req.session as any)?.token ||
                 req.cookies?.token;
 
   if (!token) {
