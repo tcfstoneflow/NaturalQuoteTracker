@@ -1,0 +1,219 @@
+openapi: 3.0.3
+info:
+  title: Natural Stone Distribution CRM API
+  description: Advanced business management platform with data intelligence
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@naturalstonecrm.com
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+  - url: https://api.naturalstonecrm.com/api
+    description: Production server
+
+security:
+  - BearerAuth: []
+  - SessionAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      tags: [System]
+      security: []
+      responses:
+        200:
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: boolean
+                      redis:
+                        type: boolean
+
+  /auth/login:
+    post:
+      summary: User Login
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /quotes:
+    get:
+      summary: Get all quotes
+      tags: [Quotes]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected, expired]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        200:
+          description: List of quotes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quote'
+
+    post:
+      summary: Create new quote
+      tags: [Quotes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuote'
+      responses:
+        201:
+          description: Quote created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionId
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [admin, sales_manager, sales_rep, inventory_specialist, viewer]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Quote:
+      type: object
+      properties:
+        id:
+          type: integer
+        quoteNumber:
+          type: string
+        clientId:
+          type: integer
+        projectName:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, expired, draft, sent]
+        pipelineStage:
+          type: string
+          enum: [Active, At Risk, Actioned, Closed, Won]
+        totalAmount:
+          type: string
+          format: decimal
+        validUntil:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateQuote:
+      type: object
+      required:
+        - clientId
+        - projectName
+        - validUntil
+      properties:
+        clientId:
+          type: integer
+        projectName:
+          type: string
+        notes:
+          type: string
+        validUntil:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+        issues:
+          type: array
+          items:
+            type: object

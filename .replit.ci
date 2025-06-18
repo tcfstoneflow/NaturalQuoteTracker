@@ -1,0 +1,32 @@
+#!/bin/bash
+# Replit CI/CD Pipeline Configuration
+
+set -e
+
+echo "Starting CI/CD Pipeline..."
+
+# Install dependencies
+echo "Installing dependencies..."
+npm ci
+
+# Run linting
+echo "Running TypeScript checks..."
+npm run check
+
+# Run tests
+echo "Running test suite..."
+npm run test
+
+# Build application
+echo "Building application..."
+npm run build
+
+# Run security audit
+echo "Running security audit..."
+npm audit --audit-level=moderate
+
+# Database migration (if needed)
+echo "Running database migrations..."
+npm run db:push
+
+echo "CI/CD Pipeline completed successfully!"
